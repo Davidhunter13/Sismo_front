@@ -41,6 +41,8 @@ test('las páginas nuevas cargan', async ({ page }) => {
     ['/simulacro', 'Simulacro'],
     ['/ficha-medica', 'Ficha médica'],
     ['/sismos', 'Sismos recientes'],
+    ['/encuesta', 'Encuesta de usabilidad'],
+    ['/mochila', 'Mochila de emergencia'],
   ];
   for (const [path, title] of routes) await goTo(page, path, title);
 });
@@ -64,17 +66,146 @@ test('alerta: botón 123 y métricas de activación', async ({ page }) => {
   expect(alert).toMatchObject({ isDrill: false, source: 'app' });
 });
 
+test('SOS toma la ubicación automáticamente aunque no haya una guardada', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 4.65, longitude: -74.1, accuracy: 15 });
+  await onboard(page, false);
+  expect((await readStorage(page)).lastLocation).toBeNull();
+  await activateAlert(page);
+  await expect.poll(async () => (await readStorage(page)).alerts[0].location?.latitude, { timeout: 15_000 }).toBe(4.65);
+  expect((await readStorage(page)).locationPermission).toBe('concedido');
+});
+
+test('modo atrapado: al salir se retoman las señales normales', async ({ page }) => {
+  await onboard(page, false);
+  await activateAlert(page);
+  const v = view(page);
+  await v.getByRole('button', { name: 'Activar modo atrapado' }).click();
+  await expect(v.getByRole('button', { name: 'Reactivar sirena' })).toBeDisabled();
+  await v.getByRole('button', { name: 'Salir del modo atrapado' }).click();
+  await expect(v.getByRole('button', { name: 'Silenciar sirena' })).toBeEnabled();
+  await expect(v.locator('.alert-hero--flash')).toHaveCount(1);
+});
+
 test('simulacro: da la señal y registra el tiempo de reacción', async ({ page }) => {
   await onboard(page, false);
-  await goTo(page, '/simulacro', 'Simulacro');
+  // Se entra desde el acceso rápido de Inicio (Inicio queda debajo en la pila de vistas).
+  await view(page).locator('.quick-tile', { hasText: 'Simulacro' }).click();
+  await expect(page).toHaveURL(/\/simulacro$/);
+  await page.waitForTimeout(450);
   await view(page).getByRole('button', { name: 'Comenzar simulacro' }).click();
   await expect(page).toHaveURL(/\/inicio$/);
-  await expect(view(page).getByText('¡SISMO! Active la alerta ahora')).toBeVisible({ timeout: 12_000 });
+  // El aviso del simulacro (no el texto de las instrucciones, que dice lo mismo).
+  await expect(view(page).locator('.drill-banner--go')).toBeVisible({ timeout: 12_000 });
   await activateAlert(page);
   await expect(view(page).getByText(/Simulacro · reacción/)).toBeVisible();
   const alert = (await readStorage(page)).alerts[0];
   expect(alert.isDrill).toBe(true);
   expect(alert.metrics.confirmedAt).toBeGreaterThan(alert.metrics.drillSignalAt);
+
+  // Al finalizar un simulacro se abre la encuesta SUS.
+  await view(page).getByRole('button', { name: /Finalizar alerta/ }).click();
+  await page.locator('ion-alert').getByRole('button', { name: 'Finalizar' }).click();
+  await expect(page).toHaveURL(/\/encuesta\?alerta=/);
+});
+
+test('encuesta SUS: calcula y guarda el puntaje', async ({ page }) => {
+  await onboard(page, false);
+  await goTo(page, '/encuesta', 'Encuesta de usabilidad');
+  const v = view(page);
+  const send = v.getByRole('button', { name: /Enviar respuestas/ });
+  await expect(send).toBeDisabled();
+  // 4 en las afirmaciones impares y 2 en las pares → 75.
+  for (let i = 1; i <= 10; i++) {
+    await v.getByRole('radiogroup', { name: `Afirmación ${i}` }).locator('.sus-option').nth(i % 2 ? 3 : 1).click();
+  }
+  await send.click();
+  await expect(v.getByRole('heading', { name: 'Puntaje SUS: 75' })).toBeVisible();
+  expect((await readStorage(page)).susResponses[0]).toMatchObject({ score: 75 });
+});
+
+test('mochila: lista base, vencimientos y aviso en el inicio', async ({ page }) => {
+  await onboard(page, false);
+  await goTo(page, '/mochila', 'Mochila de emergencia');
+  const v = view(page);
+  await expect(v.locator('.kit-item')).toHaveCount(13);
+  await v.locator('.kit-item').first().locator('input[type="date"]').fill('2020-01-01');
+  await expect(v.locator('.kit-item').first()).toContainText('Vencido');
+  await expect(v.getByText(/Revise y reemplace/)).toBeVisible();
+  await goTo(page, '/inicio', 'Panel principal');
+  await expect(view(page).locator('.quick-tile--warn', { hasText: 'Mochila' })).toContainText('1 por revisar');
+});
+
+test('modo atrapado: pausa las señales continuas', async ({ page }) => {
+  await onboard(page, false);
+  await activateAlert(page);
+  const v = view(page);
+  await v.getByRole('button', { name: 'Activar modo atrapado' }).click();
+  await expect(v.getByRole('button', { name: 'Salir del modo atrapado' })).toBeVisible();
+  await expect(v.getByRole('button', { name: /sirena$/ })).toBeDisabled();
+  await v.getByRole('button', { name: 'Salir del modo atrapado' }).click();
+  await expect(v.getByRole('button', { name: 'Activar modo atrapado' })).toBeVisible();
+});
+
+test('detección de caídas: pregunta «¿Está bien?» y permite pedir ayuda', async ({ page }) => {
+  await onboard(page, false);
+  await goTo(page, '/configuracion', 'Configuración');
+  await view(page).getByRole('switch', { name: 'Detección de caídas' }).click();
+  // Esperar a que se guarde antes de recargar la página.
+  await expect.poll(async () => (await readStorage(page)).settings.fallDetection).toBe(true);
+  await goTo(page, '/inicio', 'Panel principal');
+
+  const fall = () =>
+    page.evaluate(() => {
+      const fire = (z: number) =>
+        window.dispatchEvent(new DeviceMotionEvent('devicemotion', { accelerationIncludingGravity: { x: 0, y: 0, z } }));
+      fire(0.5); // caída libre
+      fire(30); // impacto
+    });
+
+  await fall();
+  const dialog = page.getByRole('alertdialog', { name: '¿Está bien?' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Pedir ayuda ahora' }).click();
+  await expect(page).toHaveURL(/\/alerta$/);
+  expect((await readStorage(page)).alerts[0]).toMatchObject({ source: 'deteccion_automatica', eventType: 'emergencia_general' });
+});
+
+test('navegación: engranaje y luego la casita vuelve al inicio desde cualquier pestaña', async ({ page }) => {
+  await onboard(page);
+  for (const [tab, url] of [['Inicio', /\/inicio$/], ['Ubicación', /\/ubicacion$/], ['Guía', /\/guia$/]] as const) {
+    if (tab !== 'Inicio') {
+      await view(page).locator('.bottom-nav').getByRole('button', { name: tab, exact: true }).click();
+      await expect(page).toHaveURL(url);
+      await page.waitForTimeout(450);
+    }
+    await view(page).getByRole('button', { name: 'Configuración' }).click();
+    await expect(page).toHaveURL(/\/configuracion$/);
+    await page.waitForTimeout(450);
+    await view(page).locator('.bottom-nav').getByRole('button', { name: 'Inicio', exact: true }).click();
+    await expect(page).toHaveURL(/\/inicio$/);
+    await page.waitForTimeout(450);
+    await expect(view(page).locator('.app-header__subtitle')).toHaveText('Panel principal');
+  }
+});
+
+test('navegación: desde una página secundaria la casita vuelve al inicio y no deja vistas superpuestas', async ({ page }) => {
+  await onboard(page);
+  for (const tile of ['Simulacro', 'Estadísticas', 'Mochila']) {
+    await view(page).locator('.quick-tile', { hasText: tile }).click();
+    await page.waitForTimeout(450);
+    await view(page).locator('.bottom-nav').getByRole('button', { name: 'Inicio', exact: true }).click();
+    await expect(page).toHaveURL(/\/inicio$/);
+    await page.waitForTimeout(450);
+    await expect(view(page).locator('.app-header__subtitle')).toHaveText('Panel principal');
+    // Solo una vista visible dentro del enrutador.
+    await expect(page.locator('ion-router-outlet > .ion-page:not(.ion-page-hidden)')).toHaveCount(1);
+  }
+});
+
+test('inicio: «Avisar que estoy bien» requiere contactos reales', async ({ page }) => {
+  await onboard(page); // modo demo: solo contactos ficticios
+  await expect(view(page).getByRole('button', { name: 'Avisar que estoy bien' })).toBeDisabled();
 });
 
 test('ficha médica: compartida por defecto en la alerta; se puede desactivar', async ({ page }) => {
@@ -96,7 +227,7 @@ test('ficha médica: compartida por defecto en la alerta; se puede desactivar', 
   await goTo(page, '/ficha-medica', 'Ficha médica');
   await view(page).getByRole('switch', { name: 'Compartir en la alerta y en el SMS' }).click();
   await view(page).getByRole('button', { name: 'Guardar ficha' }).click();
-  expect((await readStorage(page)).medical.showOnAlert).toBe(false);
+  await expect.poll(async () => (await readStorage(page)).medical.showOnAlert).toBe(false);
   await goTo(page, '/inicio', 'Panel principal');
   await activateAlert(page);
   await expect(view(page).locator('.medical-card')).toHaveCount(0);

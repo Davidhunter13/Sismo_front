@@ -2,6 +2,7 @@
 import { IonFooter, useIonRouter } from '@ionic/react';
 import { BookOpen, History, Home, MapPin, Users, type LucideIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { goToRoot } from '../utils/navigation';
 
 const items: { path: string; label: string; icon: LucideIcon }[] = [
   { path: '/inicio', label: 'Inicio', icon: Home },
@@ -25,7 +26,7 @@ export function BottomNavigation() {
               key={path}
               className={`bottom-nav__item${active ? ' is-active' : ''}`}
               aria-current={active ? 'page' : undefined}
-              onClick={() => !active && router.push(path, 'root', 'replace')}
+              onClick={() => !active && goToRoot(router, path)}
             >
               <Icon size={22} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
               <span>{label}</span>

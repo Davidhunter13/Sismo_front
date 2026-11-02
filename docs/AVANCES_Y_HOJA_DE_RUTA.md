@@ -22,9 +22,10 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Canal digital | Solo simulación | SMS a contactos con ubicación y punto de encuentro + SMS «Estoy bien» al finalizar |
 | Ubicación | Una lectura al tocar un botón | Afinado de GPS (hasta 10 s) y actualización cada 2 min durante la alerta |
 | Mapa | Esquema SVG | Pestañas «Esquema» y «Mapa real» (OpenStreetMap) con punto de encuentro |
-| Información | Guía de emergencia | + Sismos recientes (USGS) y ficha médica opcional |
-| Validación | Sin datos | Métricas de tiempo por activación, simulacro con cronómetro, estadísticas y CSV |
-| Pruebas automáticas | 18 pruebas e2e | 30 pruebas e2e (móvil y escritorio) |
+| Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica, lectura en voz alta de la guía y mochila de emergencia |
+| Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
+| Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
+| Calidad | 18 pruebas e2e | 48 pruebas e2e + 39 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -83,7 +84,40 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Confirmación → SMS abierto | Hasta que se abre la app de mensajes (no confirma el envío) |
 | Señal del simulacro → confirmación | Tiempo de reacción en simulacros |
 
-### 2.7 Base técnica (iteraciones anteriores)
+### 2.7 Supervivencia en un sismo
+
+- **Modo atrapado:** para quien queda bajo escombros. Apaga las señales continuas, baja el brillo y deja apagar la pantalla. Cada 3 minutos emite una ráfaga corta: tres pitidos de silbato y un ciclo de linterna SOS (Android) o vibración (navegador). En Android lo ejecuta el servicio nativo con un WakeLock parcial, así que sigue con la pantalla apagada. **Al salir del modo se retoman las señales normales** según la configuración.
+- **Silbato de rescate:** opción de sonido en Configuración («Sirena» o «Silbato»). Tres pitidos de ~3,1 kHz (señal internacional de auxilio): se oye mejor entre escombros y gasta menos batería que la sirena.
+- **Batería en el SMS:** el aviso incluye «Batería: X %» para que los contactos sepan cuánto tiempo queda para comunicarse.
+- **Detección de caídas («¿Está bien?»):** con la app abierta, el acelerómetro detecta caída libre seguida de impacto, o un impacto muy fuerte. Muestra una cuenta regresiva de 30 s con «Estoy bien» y «Pedir ayuda ahora»; si nadie responde, activa la alerta (origen `deteccion_automatica`). **Desactivada por defecto** por posibles falsas alarmas.
+- **Ubicación automática al dar SOS:** se toma al activar la alerta aunque no hubiera una guardada; si el permiso no se había pedido, se pide en ese momento. Solo deja de intentarlo si el permiso fue denegado.
+- Archivos: `trappedService.ts`, `batteryService.ts`, `fallDetectionService.ts`, `components/FallDetector.tsx`, `sirenService.ts`; `AlertService.java`, `SismoNativePlugin.java`.
+
+### 2.8 Validación para la tesis
+
+- **Encuesta SUS** (`/encuesta`): las 10 afirmaciones estándar con escala 1–5. Calcula el puntaje 0–100 con su interpretación (68 es el promedio de referencia). **Se abre sola al finalizar un simulacro** (en ese caso no se ofrece el SMS «Estoy bien»). Las respuestas son anónimas.
+- **Estadísticas:** resumen SUS (n, promedio, mediana) y **CSV de SUS** aparte del CSV de métricas.
+- **Pruebas unitarias (Vitest, 39):** texto del SMS (ubicación, punto de encuentro, ficha médica, batería, «Estoy bien»), normalización de teléfonos, métricas y CSV (incluida la protección contra inyección de fórmulas), filtro de sismos y validación de datos externos, puntaje SUS, mochila y detector de caídas.
+- **Integración continua (GitHub Actions):** en cada `push` corre lint, tipos, pruebas unitarias y e2e, y genera el **APK descargable** desde la pestaña *Actions*.
+
+### 2.9 Preparación y comodidad
+
+- **«Avisar que estoy bien»** desde Inicio: SMS a los contactos sin activar una alerta (por ejemplo, después de un temblor).
+- **Mochila de emergencia** (`/mochila`): lista base de 13 elementos (orientativa), marcar listos, fecha de vencimiento por elemento, agregar o quitar elementos propios. Avisos de elementos vencidos o por vencer (≤ 30 días) y de revisión cada 6 meses, en la página y en el acceso rápido de Inicio.
+- **Importar contactos de la agenda:** botón «De la agenda» en Contactos. Precarga nombre y teléfono; la persona elige la relación y confirma. No pide permiso de leer toda la agenda.
+- **Lectura en voz alta de la guía:** botón «Escuchar» en cada tarjeta de la guía de emergencia (voz del sistema en Android, Web Speech API en el navegador).
+
+### 2.10 Correcciones
+
+| Problema reportado | Causa | Solución |
+|---|---|---|
+| Tras tocar el engranaje (Configuración) y luego la casita, seguía viéndose Configuración | Ionic deja visible la vista apilada al «reemplazar» la ruta por una vista que ya está debajo en la pila | Nueva función `goToRoot` (`utils/navigation.ts`) que reinicia la pila; se usa en la barra inferior, el simulacro, los accesos rápidos y el widget |
+| «Comenzar simulacro» no hacía nada al entrar desde Inicio | Misma causa: la vista de Simulacro quedaba encima | Misma solución |
+| El simulacro podía guardar «activó antes de la señal» aunque la señal ya se hubiera mostrado | La activación leía el estado del simulacro desde una vista con datos desactualizados | El estado del simulacro se lee de una referencia siempre actualizada del estado global |
+| Al salir del modo atrapado no volvían las señales | Solo se restauraba la pantalla encendida | Se reactivan sonido, linterna, vibración y destello según la configuración |
+| Con SOS sin ubicación guardada, la alerta quedaba sin ubicación | Solo se pedía con permiso ya concedido | Se toma automáticamente al activar (ver 2.7) |
+
+### 2.11 Base técnica (iteraciones anteriores)
 
 - App Android con Capacitor, ícono adaptativo y márgenes de zona segura (Android 15+ dibuja de borde a borde).
 - Permisos al abrir la app: ubicación y notificaciones.
@@ -104,6 +138,11 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Ficha médica compartida por defecto en la alerta y el SMS, con opción de desactivarla | En una emergencia es más útil que rescatistas y contactos la conozcan; el usuario conserva el control. El aviso de la página explica qué se comparte |
 | CSV sin datos personales | Permite compartir métricas para la tesis sin exponer a nadie |
 | Sismos: descarga general y filtro local | No revelar la ubicación del usuario a terceros |
+| Modo atrapado en el servicio nativo con WakeLock | Con la pantalla apagada Android suspende la app web; el servicio mantiene las ráfagas |
+| Detección de caídas desactivada por defecto y siempre con «¿Está bien?» | Dejar caer el teléfono no debe activar una alerta; la cuenta regresiva permite cancelar |
+| Tras un simulacro se ofrece la encuesta y no el SMS «Estoy bien» | No tiene sentido avisar a la familia de un ejercicio; sí medir la usabilidad |
+| Importar contactos con el selector del sistema | Acceso solo al contacto elegido, sin permiso sobre toda la agenda |
+| Recordatorios de la mochila dentro de la app | Evita otro permiso y otra dependencia (notificaciones programadas) |
 
 ---
 
@@ -116,6 +155,11 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Sismos recientes:** dependen de internet y del catálogo del USGS, que puede tardar minutos en publicar.
 - **Métricas de señales:** si una señal tarda más que el cierre del diálogo de confirmación (unos 200 ms), su tiempo puede quedar sin registrar.
 - **Simulacro:** se cancela si se cierra la app; no se guarda la espera en curso.
+- **Detección de caídas:** solo con la app abierta en primer plano; los umbrales son empíricos y deben calibrarse con pruebas reales.
+- **Modo atrapado en el navegador:** solo funciona mientras la pestaña esté visible.
+- **Mochila:** los recordatorios aparecen al abrir la app; no hay notificaciones programadas.
+- **Lectura en voz alta:** depende de que el teléfono tenga una voz en español instalada.
+- **Batería en el SMS:** no disponible en iPhone ni en Firefox (no exponen la Battery API).
 
 ---
 
@@ -125,10 +169,13 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas e2e (Playwright, móvil y escritorio) | **30 de 30** superadas |
-| Cubierto por pruebas nuevas | Páginas nuevas, botón 123, métricas, simulacro, ficha médica (compartida por defecto y desactivable), estadísticas y CSV, sismos (con datos simulados del USGS) |
-| Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, linterna SOS, vibración, notificación, widget, acceso rápido, SMS y llamada |
-| Sin pruebas automáticas | Texto del SMS (alerta con ficha médica y «Estoy bien»), punto de encuentro, actualización periódica de ubicación |
+| Pruebas unitarias (Vitest) | **39 de 39** superadas |
+| Pruebas e2e (Playwright, móvil y escritorio) | **48 de 48** superadas |
+| Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
+| Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
+| Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
+| Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |
+| Sin pruebas automáticas | Punto de encuentro, actualización periódica de la ubicación, funciones nativas de Android |
 
 ---
 
@@ -139,7 +186,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | 1 | **Prueba en dispositivo físico** de todo lo listado en la sección 5 | Requisito antes de validar con usuarios |
 | 2 | Canal automático con **ntfy** (tema aleatorio por usuario, invitación por QR) | Notificación push a contactos sin servidor propio |
 | 3 | Envío automático de la ubicación actualizada por ntfy | Seguimiento si la persona se desplaza |
-| 4 | Pruebas automáticas faltantes (sección 5) | Cobertura del 20 % humano del modelo 80/20 |
+| 4 | Pruebas automáticas faltantes (sección 5) y calibración de los umbrales de caída con pruebas reales | Cobertura del 20 % humano del modelo 80/20 |
+| 4b | Notificaciones programadas para la mochila | Recordatorios aunque no se abra la app |
 | 5 | Proyecto iOS | Ampliar el alcance a iPhone |
 | 6 | Alertas oficiales del Servicio Geológico Colombiano | Fuente nacional además del USGS |
 | 7 | Funcionamiento sin conexión (PWA / service worker) | La guía y la alerta local disponibles sin red |

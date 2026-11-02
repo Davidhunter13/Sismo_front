@@ -63,16 +63,16 @@ Declarados en `android/app/src/main/AndroidManifest.xml`:
 |---|---|---|
 | Ubicación (precisa y aproximada) | Adjuntar la posición a la alerta y actualizarla durante ella | Al abrir la app |
 | Notificaciones (Android 13+) | Mostrar la alerta activa con la pantalla bloqueada y el botón «Silenciar sirena» | Al abrir la app, después del de ubicación |
-| Servicio en primer plano y vibración | Mantener sirena, linterna y vibración con la pantalla bloqueada | No se pide (se concede al instalar) |
+| Servicio en primer plano, vibración y `WAKE_LOCK` | Mantener sirena, linterna, vibración y el modo atrapado con la pantalla bloqueada | No se pide (se concede al instalar) |
 
-La linterna usa `CameraManager.setTorchMode`, que **no requiere permiso de cámara**. El SMS y la llamada al 123 no requieren permisos: SISMO abre la app de mensajes o el marcador.
+La linterna usa `CameraManager.setTorchMode`, que **no requiere permiso de cámara**. El SMS y la llamada al 123 no requieren permisos: SISMO abre la app de mensajes o el marcador. Importar un contacto usa el selector del sistema, que solo da acceso al contacto elegido (sin el permiso de leer toda la agenda).
 
 ### Funciones nativas (código propio en `android/app/src/main/java/co/edu/poli/sismo/`)
 
 | Archivo | Qué hace |
 |---|---|
-| `AlertService.java` | Servicio en primer plano: sirena (AudioTrack, uso «alarma»), linterna en código SOS y vibración SOS. Sigue con la pantalla bloqueada. Notificación con «Silenciar sirena» |
-| `SismoNativePlugin.java` | Puente con la app web: señales, pantalla encendida, permiso de notificaciones, accesos SOS y exportar CSV |
+| `AlertService.java` | Servicio en primer plano: sirena o silbato (AudioTrack, uso «alarma»), linterna en código SOS, vibración SOS y **modo atrapado** (ráfagas cada 3 min con WakeLock). Sigue con la pantalla bloqueada. Notificación con «Silenciar sonido» |
+| `SismoNativePlugin.java` | Puente con la app web: señales, modo atrapado, brillo, pantalla encendida, batería, voz (TextToSpeech), selector de contactos, permiso de notificaciones, accesos SOS y exportar CSV |
 | `SosTileService.java` | Acceso rápido «SOS SISMO» en el panel de ajustes rápidos |
 | `SosWidgetProvider.java` | Widget SOS para la pantalla de inicio |
 
@@ -101,23 +101,34 @@ Si el celular sigue mostrando el ícono anterior, desinstale la app y vuelva a i
 | `npm run android` | Compila, sincroniza con `android/` y abre Android Studio |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Verificación de TypeScript |
+| `npm run test:unit` | Pruebas unitarias (Vitest) de la lógica: SMS, métricas, sismos, SUS, mochila y detección de caídas |
 | `npm run test:e2e` | Pruebas Playwright en vista móvil (Pixel 7) y de escritorio (1440×900) |
 | `npm run screenshots` | Regenera `screenshots/visual/` y `screenshots/codigo/` |
 
 La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 
+### Integración continua (GitHub Actions)
+
+`.github/workflows/ci.yml` corre en cada `push` o pull request a `main`:
+
+1. **Lint, tipos y pruebas:** `lint`, `typecheck`, `test:unit` y `test:e2e`. Si fallan las pruebas e2e, sube los resultados como artefacto.
+2. **APK de Android:** compila `app-debug.apk` y lo deja descargable en la pestaña *Actions* del repositorio (artefacto `sismo-debug-apk`, 14 días).
+
 ## Flujo de una alerta
 
-1. Se toca **SOS** (en Inicio, en el widget o en el acceso rápido) y se elige el tipo de evento.
-2. Al confirmar se activan según Configuración: **sirena**, **linterna en código SOS (··· ––– ···)** (solo Android), **vibración SOS** y el destello de la tarjeta. La **pantalla se mantiene encendida** y, si hay permiso, la **ubicación se actualiza** al activar y cada 2 minutos.
-3. En la vista de alerta: **Llamar al 123**, **Enviar SMS a mis contactos** (incluye ubicación, punto de encuentro y ficha médica), apagar/reactivar cada señal y ver la **ficha médica** (salvo que el usuario haya desactivado «Compartir»).
-4. «Estoy a salvo · Finalizar alerta» detiene todas las señales, guarda la alerta y ofrece enviar el SMS **«Estoy bien»**.
+1. Se toca **SOS** (en Inicio, en el widget o en el acceso rápido) y se elige el tipo de evento. Con **detección de caídas** activada, una caída o impacto fuerte muestra «¿Está bien?» con 30 s de cuenta regresiva; si nadie responde, la alerta se activa sola.
+2. Al confirmar se activan según Configuración: **sirena o silbato de rescate**, **linterna en código SOS (··· ––– ···)** (solo Android), **vibración SOS** y el destello de la tarjeta. La **pantalla se mantiene encendida** y la **ubicación se toma automáticamente** (aunque no hubiera una guardada; si el permiso no se había pedido, se pide) y se actualiza cada 2 minutos.
+3. En la vista de alerta: **Llamar al 123**, **Enviar SMS a mis contactos** (ubicación, punto de encuentro, ficha médica y **nivel de batería**), apagar/reactivar cada señal, **modo atrapado** y la **ficha médica** (salvo que el usuario haya desactivado «Compartir»).
+4. **Modo atrapado:** apaga las señales continuas, baja el brillo y deja apagar la pantalla; cada 3 minutos suenan tres pitidos de silbato y destella la linterna SOS. Al salir del modo se retoman las señales normales.
+5. «Estoy a salvo · Finalizar alerta» detiene todas las señales, guarda la alerta y ofrece enviar el SMS **«Estoy bien»**. Si era un simulacro, abre la **encuesta SUS**.
+
+Desde Inicio también se puede **avisar que está bien** por SMS sin activar una alerta.
 
 Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación → sirena/linterna/vibración/SMS) para la página de Estadísticas.
 
 ## Vistas y rutas
 
-`/bienvenida` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica`
+`/bienvenida` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila`
 
 ## Qué es real y qué es simulado
 
@@ -131,6 +142,12 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 | Sismos recientes | Catálogo público del USGS (M ≥ 2,5); requiere internet. La ubicación no se envía: se filtra en el dispositivo |
 | Ficha médica | Guardada en el dispositivo. «Compartir en la alerta y en el SMS» viene **activado por defecto**: se muestra en la pantalla de alerta y se incluye en el SMS. El usuario puede desactivarlo |
 | Punto de encuentro | Guardado en el dispositivo e incluido en el SMS de alerta |
+| Modo atrapado | Real en Android (servicio nativo, sigue con la pantalla apagada). En el navegador solo mientras la pestaña esté visible (silbato y vibración) |
+| Detección de caídas | Real con la app abierta (acelerómetro). Desactivada por defecto: puede dar falsas alarmas |
+| Encuesta SUS | Real; respuestas anónimas en el dispositivo, exportables a CSV |
+| Mochila de emergencia | Real; recordatorios **dentro de la app** (no hay notificaciones programadas) |
+| Lectura en voz alta de la guía | Android: voz del sistema; navegador: Web Speech API |
+| Importar contactos | Android (selector del sistema) y Chrome Android (Contact Picker API) |
 | Geolocalización | Real si el usuario concede el permiso (en web requiere HTTPS o localhost) |
 | Coordenadas de prueba | Fijas y **rotuladas** como de prueba; nunca se presentan como la posición del usuario |
 | Mapa | Dos pestañas en Ubicación: «Esquema» (SVG, sin internet) y «Mapa real» (Leaflet + OpenStreetMap, requiere conexión y revela a OSM la zona consultada) |
@@ -150,12 +167,15 @@ src/
 ├── context/      Estado global (AppStateProvider + useAppState)
 ├── pages/        Una página por vista
 ├── services/     storageService, demoData, locationService, sirenService, torchService, vibrationService,
-│                 screenService, signalsService, smsService, metricsService, quakeService,
-│                 sosRequestService, nativeBridge (plugin SismoNative)
+│                 screenService, signalsService, trappedService, smsService, batteryService, metricsService,
+│                 quakeService, susService, kitService, speechService, contactPickerService,
+│                 fallDetectionService, sosRequestService, nativeBridge (plugin SismoNative)
+│                 + *.test.ts (pruebas unitarias Vitest)
 ├── types/        Tipos del dominio
-├── utils/        Formato de fechas y validación de contactos
+├── utils/        Formato de fechas, validación de contactos y navegación (goToRoot)
 └── styles/       theme.css (tokens) y global.css
 tests/            e2e.spec.ts y funciones.e2e.spec.ts (funcionales), screenshots.spec.ts (evidencias)
+.github/workflows/ci.yml  Integración continua (lint, tipos, pruebas y APK)
 android/          Proyecto nativo de Android generado por Capacitor (abrir con Android Studio)
 assets/           Imágenes fuente del ícono de la app
 capacitor.config.ts  Id de la app (co.edu.poli.sismo), nombre y carpeta web (dist)

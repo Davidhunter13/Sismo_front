@@ -9,22 +9,24 @@ import { RELATIONSHIPS, validateContact } from '../utils/contactValidation';
 interface ContactFormModalProps {
   isOpen: boolean;
   contact: Contact | null;
+  /** Datos con los que se precarga un contacto nuevo (p. ej. importado de la agenda). */
+  initial?: ContactInput | null;
   onSave: (input: ContactInput) => void;
   onClose: () => void;
 }
 
 const empty: ContactInput = { name: '', relationship: '', phone: '' };
 
-export function ContactFormModal({ isOpen, contact, onSave, onClose }: ContactFormModalProps) {
+export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: ContactFormModalProps) {
   const [form, setForm] = useState<ContactInput>(empty);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone } : empty);
+      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone } : initial ?? empty);
       setTouched(false);
     }
-  }, [isOpen, contact]);
+  }, [isOpen, contact, initial]);
 
   const errors = validateContact(form);
   const fieldClass = (field: keyof ContactInput) => (touched && errors[field] ? 'ion-invalid ion-touched' : '');

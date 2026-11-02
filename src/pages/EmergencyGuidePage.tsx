@@ -4,9 +4,10 @@ import {
   Backpack, Building2, Car, ClipboardList, DoorOpen, HeartHandshake, Home, Landmark, MessageSquareText, ShieldAlert, Trees, Wrench,
   type LucideIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { EmergencyInstructionCard } from '../components/EmergencyInstructionCard';
+import { isSpeechSupported, speak, stopSpeaking } from '../services/speechService';
 
 type Moment = 'antes' | 'durante' | 'despues';
 
@@ -84,11 +85,33 @@ const labels: Record<Moment, string> = { antes: 'Antes', durante: 'Durante', des
 
 export default function EmergencyGuidePage() {
   const [moment, setMoment] = useState<Moment>('durante');
+  const [speaking, setSpeaking] = useState<string | null>(null);
   const section = guide[moment];
+
+  // Al salir de la página o cambiar de pestaña se detiene la lectura.
+  useEffect(() => stopSpeaking, []);
+
+  const listen = async (title: string, steps: string[]) => {
+    if (speaking === title) {
+      stopSpeaking();
+      setSpeaking(null);
+      return;
+    }
+    const text = `${title}. ${steps.map((s, i) => `Paso ${i + 1}: ${s}`).join(' ')}`;
+    setSpeaking(title);
+    const ok = await speak(text, () => setSpeaking((s) => (s === title ? null : s)));
+    if (!ok) setSpeaking(null);
+  };
+
+  const changeMoment = (m: Moment) => {
+    stopSpeaking();
+    setSpeaking(null);
+    setMoment(m);
+  };
 
   return (
     <AppLayout title="Guía de emergencia" backTo="/inicio">
-      <IonSegment value={moment} onIonChange={(e) => setMoment(e.detail.value as Moment)} className="segment">
+      <IonSegment value={moment} onIonChange={(e) => changeMoment(e.detail.value as Moment)} className="segment">
         {(Object.keys(labels) as Moment[]).map((m) => (
           <IonSegmentButton key={m} value={m}><IonLabel>{labels[m]}</IonLabel></IonSegmentButton>
         ))}
@@ -96,7 +119,14 @@ export default function EmergencyGuidePage() {
 
       <p className="muted">{section.intro}</p>
       <div className="list">
-        {section.cards.map((c) => <EmergencyInstructionCard key={c.title} {...c} />)}
+        {section.cards.map((c) => (
+          <EmergencyInstructionCard
+            key={c.title}
+            {...c}
+            speaking={speaking === c.title}
+            onListen={isSpeechSupported() ? () => void listen(c.title, c.steps) : undefined}
+          />
+        ))}
       </div>
 
       <div className="callout callout--info">

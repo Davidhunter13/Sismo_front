@@ -13,7 +13,10 @@ import EmergencyGuidePage from './pages/EmergencyGuidePage';
 import HistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import LocationPage from './pages/LocationPage';
+import { FallDetector } from './components/FallDetector';
+import KitPage from './pages/KitPage';
 import MedicalPage from './pages/MedicalPage';
+import SurveyPage from './pages/SurveyPage';
 import QuakesPage from './pages/QuakesPage';
 import SettingsPage from './pages/SettingsPage';
 import DrillPage from './pages/DrillPage';
@@ -21,6 +24,7 @@ import StatsPage from './pages/StatsPage';
 import { requestLocationPermissionOnNative } from './services/locationService';
 import { SismoNative } from './services/nativeBridge';
 import { requestSosDialog } from './services/sosRequestService';
+import { goToRoot } from './utils/navigation';
 import WelcomePage from './pages/WelcomePage';
 
 setupIonicReact({ mode: 'md' });
@@ -46,7 +50,7 @@ function Routes() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !onboarded) return;
     const openSos = () => {
-      router.push('/inicio', 'root', 'replace');
+      goToRoot(router, '/inicio');
       requestSosDialog();
     };
     void SismoNative.consumeLaunchAction().then(({ action }) => action === 'sos' && openSos()).catch(() => undefined);
@@ -57,24 +61,29 @@ function Routes() {
   }, [router, onboarded]);
 
   return (
-    <IonRouterOutlet>
-      <Route exact path="/bienvenida" component={WelcomePage} />
-      <Route exact path="/inicio" component={HomePage} />
-      <Route exact path="/alerta" component={AlertPage} />
-      <Route exact path="/ubicacion" component={LocationPage} />
-      <Route exact path="/contactos" component={ContactsPage} />
-      <Route exact path="/historial" component={HistoryPage} />
-      <Route exact path="/historial/:id" component={AlertDetailPage} />
-      <Route exact path="/guia" component={EmergencyGuidePage} />
-      <Route exact path="/configuracion" component={SettingsPage} />
-      <Route exact path="/estadisticas" component={StatsPage} />
-      <Route exact path="/simulacro" component={DrillPage} />
-      <Route exact path="/sismos" component={QuakesPage} />
-      <Route exact path="/ficha-medica" component={MedicalPage} />
-      <Route exact path="/">
-        <Redirect to={data.settings.onboarded ? '/inicio' : '/bienvenida'} />
-      </Route>
-    </IonRouterOutlet>
+    <>
+      <FallDetector />
+      <IonRouterOutlet>
+        <Route exact path="/bienvenida" component={WelcomePage} />
+        <Route exact path="/inicio" component={HomePage} />
+        <Route exact path="/alerta" component={AlertPage} />
+        <Route exact path="/ubicacion" component={LocationPage} />
+        <Route exact path="/contactos" component={ContactsPage} />
+        <Route exact path="/historial" component={HistoryPage} />
+        <Route exact path="/historial/:id" component={AlertDetailPage} />
+        <Route exact path="/guia" component={EmergencyGuidePage} />
+        <Route exact path="/configuracion" component={SettingsPage} />
+        <Route exact path="/estadisticas" component={StatsPage} />
+        <Route exact path="/simulacro" component={DrillPage} />
+        <Route exact path="/sismos" component={QuakesPage} />
+        <Route exact path="/ficha-medica" component={MedicalPage} />
+        <Route exact path="/encuesta" component={SurveyPage} />
+        <Route exact path="/mochila" component={KitPage} />
+        <Route exact path="/">
+          <Redirect to={data.settings.onboarded ? '/inicio' : '/bienvenida'} />
+        </Route>
+      </IonRouterOutlet>
+    </>
   );
 }
 

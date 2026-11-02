@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonToggle, useIonAlert, useIonRouter, useIonToast } from '@ionic/react';
 import {
-  BellOff, CheckCircle2, Eye, Flashlight, FlashlightOff, HeartPulse, MessageSquare, Phone, Radio, Send, ShieldCheck, Siren, Smartphone,
+  BatteryLow, BellOff, CheckCircle2, Eye, Flashlight, FlashlightOff, HeartPulse, MessageSquare, Phone, Radio, Send, ShieldCheck, Siren, Smartphone,
   Timer, Volume2, VolumeX,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -11,13 +11,18 @@ import { LocationStatusCard } from '../components/LocationStatusCard';
 import { DemoBadge, LocalBadge, StatusBadge } from '../components/StatusBadge';
 import { deliveryBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
+import { getBatteryLevel } from '../services/batteryService';
 import { formatMs, metricValue } from '../services/metricsService';
-import { refreshNativeSignals } from '../services/signalsService';
+import { isNative } from '../services/nativeBridge';
+import { keepScreenOn } from '../services/screenService';
+import { isTrapped, startTrapped, stopTrapped, TRAPPED_INTERVAL_MS } from '../services/trappedService';
+import { refreshNativeSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
 import { buildAlertMessage, buildSafeMessage, openSmsComposer } from '../services/smsService';
 import { isTorchApiAvailable, isTorchOn, startTorchBlink, stopTorch } from '../services/torchService';
 import { isVibrating, isVibrationSupported, startVibration, stopVibration } from '../services/vibrationService';
 import { eventTypeLabel, formatDuration, formatTime } from '../utils/format';
+import { goToRoot } from '../utils/navigation';
 
 const deliveryText = {
   pendiente: 'Simulando el envío a sus contactos…',
@@ -42,6 +47,7 @@ export default function AlertPage() {
   const playing = isSirenPlaying();
   const torchOn = isTorchOn();
   const vibrating = isVibrating();
+  const trapped = isTrapped();
 
   // Reloj para la duración; también refresca el estado real de las señales (en Android se pueden
   // apagar desde la notificación).
@@ -52,15 +58,33 @@ export default function AlertPage() {
     return () => window.clearInterval(t);
   }, []);
 
-  const sendSms = () => {
+  const sendSms = async () => {
     if (!activeAlert) return;
     markSmsOpened();
-    openSmsComposer(smsContacts, buildAlertMessage(data.settings.userName, activeAlert.eventType, activeAlert.location, data.meetingPoint, data.medical));
+    const battery = await getBatteryLevel();
+    openSmsComposer(
+      smsContacts,
+      buildAlertMessage(data.settings.userName, activeAlert.eventType, activeAlert.location, data.meetingPoint, data.medical, battery),
+    );
   };
 
   const toggleSound = async () => {
     if (playing) stopSiren();
-    else await startSiren();
+    else await startSiren(data.settings.alarmSound);
+    tick((n) => n + 1);
+  };
+
+  const toggleTrapped = async () => {
+    if (trapped) {
+      // Al salir se retoma la alerta normal: señales continuas según la configuración y pantalla encendida.
+      await stopTrapped();
+      await keepScreenOn(true);
+      startAlertSignals(data.settings);
+      setFlash(data.settings.visualSignalEnabled && !data.settings.reduceMotion);
+    } else {
+      setFlash(false);
+      await startTrapped();
+    }
     tick((n) => n + 1);
   };
 
@@ -95,10 +119,15 @@ export default function AlertPage() {
 
   const finish = () => {
     if (!activeAlert) return;
-    const { eventType } = activeAlert;
+    const { eventType, isDrill, id } = activeAlert;
     setFlash(false);
     endAlert();
     presentToast({ message: 'Alerta finalizada y guardada en el historial.', duration: 2500, color: 'success', position: 'top' });
+    // Tras un simulacro no se avisa a la familia: se ofrece la encuesta de usabilidad.
+    if (isDrill) {
+      router.push(`/encuesta?alerta=${encodeURIComponent(id)}`, 'forward', 'replace');
+      return;
+    }
     if (smsContacts.length === 0) {
       goHome();
       return;
@@ -127,7 +156,7 @@ export default function AlertPage() {
           <ShieldCheck size={44} aria-hidden="true" />
           <h2>No hay una alerta activa</h2>
           <p className="muted">Puede activar una desde el botón SOS del panel principal.</p>
-          <button className="btn btn--primary" onClick={() => router.push('/inicio', 'root', 'replace')}>Ir al inicio</button>
+          <button className="btn btn--primary" onClick={() => goToRoot(router, '/inicio')}>Ir al inicio</button>
         </section>
       </AppLayout>
     );
@@ -135,6 +164,7 @@ export default function AlertPage() {
 
   const delivery = deliveryBadge[activeAlert.digitalStatus];
   const soundAllowed = data.settings.soundEnabled && isSirenSupported();
+  const soundName = data.settings.alarmSound === 'silbato' ? 'silbato' : 'sirena';
   const reaction = metricValue(activeAlert, 'drillReaction');
   const medical = data.medical?.showOnAlert ? data.medical : null;
 
@@ -194,12 +224,25 @@ export default function AlertPage() {
         </p>
       </section>
 
+      <section className={`card trapped-card${trapped ? ' trapped-card--on' : ''}`}>
+        <h2 className="card__title"><BatteryLow size={18} aria-hidden="true" /> Modo atrapado</h2>
+        <p className="small">
+          {trapped
+            ? `Activo: cada ${TRAPPED_INTERVAL_MS / 60_000} minutos suenan tres pitidos de silbato${isNative() ? ' y destella la linterna SOS' : ' y vibra'}. La pantalla puede apagarse para ahorrar batería.`
+            : 'Si queda atrapado/a, ahorra batería: apaga las señales continuas y emite una ráfaga corta (silbato y linterna) cada 3 minutos para que los rescatistas lo/la encuentren.'}
+        </p>
+        <button className={`btn btn--block ${trapped ? 'btn--dark' : 'btn--outline'}`} onClick={toggleTrapped}>
+          <BatteryLow size={18} aria-hidden="true" /> {trapped ? 'Salir del modo atrapado' : 'Activar modo atrapado'}
+        </button>
+      </section>
+
       <section className="card">
         <h2 className="card__title">Señales locales</h2>
+        {trapped && <p className="callout callout--info small">Las señales continuas están en pausa por el modo atrapado.</p>}
         <div className="signal-row">
-          <button className={`btn ${playing ? 'btn--dark' : 'btn--outline'}`} onClick={toggleSound} disabled={!soundAllowed}>
+          <button className={`btn ${playing ? 'btn--dark' : 'btn--outline'}`} onClick={toggleSound} disabled={!soundAllowed || trapped}>
             {playing ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
-            {playing ? 'Silenciar sirena' : 'Reactivar sirena'}
+            {playing ? `Silenciar ${soundName}` : `Reactivar ${soundName}`}
           </button>
           <StatusBadge tone={playing ? 'danger' : 'neutral'} label={playing ? 'Sonando' : 'En silencio'} icon={playing ? Volume2 : BellOff} />
         </div>
@@ -207,7 +250,7 @@ export default function AlertPage() {
           <p className="small muted">El sonido está desactivado en Configuración o el navegador no lo soporta.</p>
         )}
         <div className="signal-row">
-          <button className={`btn ${vibrating ? 'btn--dark' : 'btn--outline'}`} onClick={toggleVibration} disabled={!isVibrationSupported()}>
+          <button className={`btn ${vibrating ? 'btn--dark' : 'btn--outline'}`} onClick={toggleVibration} disabled={!isVibrationSupported() || trapped}>
             <Smartphone size={18} aria-hidden="true" />
             {vibrating ? 'Detener vibración' : 'Vibración SOS'}
           </button>
@@ -228,7 +271,7 @@ export default function AlertPage() {
         </div>
         {data.settings.reduceMotion && <p className="small muted">Desactivada por la opción «Reducir animaciones».</p>}
         <div className="signal-row">
-          <button className={`btn ${torchOn ? 'btn--dark' : 'btn--outline'}`} onClick={toggleTorch} disabled={!flash || !isTorchApiAvailable()}>
+          <button className={`btn ${torchOn ? 'btn--dark' : 'btn--outline'}`} onClick={toggleTorch} disabled={!flash || !isTorchApiAvailable() || trapped}>
             {torchOn ? <FlashlightOff size={18} aria-hidden="true" /> : <Flashlight size={18} aria-hidden="true" />}
             {torchOn ? 'Apagar linterna' : 'Linterna SOS'}
           </button>
@@ -241,13 +284,15 @@ export default function AlertPage() {
             ? 'Destella en código SOS (··· ––– ···). Solo usa el flash; no se toman ni envían imágenes.'
             : 'La linterna requiere un navegador compatible (p. ej. Chrome en Android) y conexión segura (HTTPS).'}
         </p>
-        <p className="small muted">La pantalla permanece encendida mientras la alerta está activa.</p>
+        <p className="small muted">
+          {trapped ? 'En modo atrapado la pantalla puede apagarse.' : 'La pantalla permanece encendida mientras la alerta está activa.'}
+        </p>
       </section>
 
       <LocationStatusCard snapshot={activeAlert.location} permission={data.locationPermission} compact />
-      {data.locationPermission === 'concedido' && (
+      {data.locationPermission !== 'denegado' && data.locationPermission !== 'no_disponible' && (
         <p className="small muted center">
-          La ubicación se actualiza cada 2 minutos durante la alerta
+          La ubicación se toma automáticamente al activar la alerta y se actualiza cada 2 minutos
           {activeAlert.locationUpdates ? ` · ${activeAlert.locationUpdates} actualización(es)` : ''}.
         </p>
       )}

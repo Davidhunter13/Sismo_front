@@ -8,6 +8,8 @@ export const defaultSettings: Settings = {
   soundEnabled: true,
   visualSignalEnabled: true,
   vibrationEnabled: true,
+  alarmSound: 'sirena',
+  fallDetection: false,
   highContrast: false,
   largeText: false,
   reduceMotion: false,
@@ -26,6 +28,8 @@ export function createEmptyData(): AppData {
     locationPermission: 'sin_solicitar',
     medical: null,
     meetingPoint: null,
+    susResponses: [],
+    kit: null,
   };
 }
 
@@ -43,6 +47,7 @@ export function loadData(): AppData {
       settings: { ...empty.settings, ...parsed.settings },
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
       alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
+      susResponses: Array.isArray(parsed.susResponses) ? parsed.susResponses : [],
     };
   } catch {
     return createEmptyData();

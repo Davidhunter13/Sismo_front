@@ -5,6 +5,7 @@ import { isNative, SismoNative } from './nativeBridge';
 import { keepScreenOn } from './screenService';
 import { startSiren, stopSiren, syncNativeSiren } from './sirenService';
 import { startTorchBlink, stopTorch, syncNativeTorch } from './torchService';
+import { stopTrapped, syncNativeTrapped } from './trappedService';
 import { startVibration, stopVibration, syncNativeVibration } from './vibrationService';
 
 /**
@@ -14,7 +15,7 @@ import { startVibration, stopVibration, syncNativeVibration } from './vibrationS
  */
 export function startAlertSignals(settings: Settings): void {
   if (settings.soundEnabled) {
-    void startSiren().then((ok) => ok && mark('sirenAt'));
+    void startSiren(settings.alarmSound).then((ok) => ok && mark('sirenAt'));
   }
   if (isNative() && settings.visualSignalEnabled && !settings.reduceMotion) {
     void startTorchBlink().then((r) => r === 'ok' && mark('torchAt'));
@@ -25,6 +26,7 @@ export function startAlertSignals(settings: Settings): void {
 }
 
 export function stopAlertSignals(): void {
+  void stopTrapped();
   stopSiren();
   stopTorch();
   stopVibration();
@@ -39,6 +41,7 @@ export async function refreshNativeSignals(): Promise<void> {
     syncNativeSiren(s.siren);
     syncNativeTorch(s.torch);
     syncNativeVibration(s.vibration);
+    syncNativeTrapped(s.trapped);
   } catch {
     // Plugin no disponible: se conserva el último estado conocido.
   }

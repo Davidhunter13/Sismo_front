@@ -1,12 +1,13 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useIonToast } from '@ionic/react';
-import { Info, UserPlus, Users } from 'lucide-react';
+import { BookUser, Info, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactCard } from '../components/ContactCard';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
+import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
 import type { Contact, ContactInput } from '../types';
 
 export default function ContactsPage() {
@@ -15,12 +16,27 @@ export default function ContactsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [toDelete, setToDelete] = useState<Contact | null>(null);
+  const [imported, setImported] = useState<ContactInput | null>(null);
 
   const toast = (message: string, color = 'success') => presentToast({ message, duration: 2200, color, position: 'top' });
 
   const openNew = () => {
     setEditing(null);
+    setImported(null);
     setFormOpen(true);
+  };
+
+  // Importar de la agenda: precarga nombre y teléfono; la persona elige la relación y confirma.
+  const importContact = async () => {
+    try {
+      const picked = await pickContact();
+      if (!picked) return;
+      setEditing(null);
+      setImported({ name: picked.name, relationship: '', phone: picked.phone });
+      setFormOpen(true);
+    } catch {
+      toast('No se pudo abrir la agenda.', 'warning');
+    }
   };
 
   const save = (input: ContactInput) => {
@@ -38,12 +54,20 @@ export default function ContactsPage() {
     <AppLayout title="Contactos de confianza" backTo="/inicio">
       <div className="callout callout--info">
         <Info size={20} aria-hidden="true" />
-        <p>Los contactos configurados en el prototipo <strong>no recibirán alertas automáticamente</strong>. Use solo datos ficticios.</p>
+        <p>
+          Sus contactos <strong>no reciben alertas automáticamente</strong>: durante una alerta SISMO abre la app de mensajes con el
+          aviso listo y usted confirma el envío. Los contactos del modo de demostración son ficticios y nunca reciben SMS.
+        </p>
       </div>
 
       <div className="section-head">
         <h2 className="section-title">Mis contactos ({data.contacts.length})</h2>
-        <button className="btn btn--primary btn--sm" onClick={openNew}><UserPlus size={16} aria-hidden="true" /> Agregar</button>
+        <div className="btn-pair">
+          {isContactPickerSupported() && (
+            <button className="btn btn--outline btn--sm" onClick={importContact}><BookUser size={16} aria-hidden="true" /> De la agenda</button>
+          )}
+          <button className="btn btn--primary btn--sm" onClick={openNew}><UserPlus size={16} aria-hidden="true" /> Agregar</button>
+        </div>
       </div>
 
       {data.contacts.length === 0 ? (
@@ -69,7 +93,7 @@ export default function ContactsPage() {
         </ul>
       )}
 
-      <ContactFormModal isOpen={formOpen} contact={editing} onSave={save} onClose={() => setFormOpen(false)} />
+      <ContactFormModal isOpen={formOpen} contact={editing} initial={imported} onSave={save} onClose={() => setFormOpen(false)} />
 
       <ConfirmationDialog
         isOpen={!!toDelete}

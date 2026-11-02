@@ -401,6 +401,57 @@ ion-toggle { --track-background-checked: var(--navy); flex-shrink: 0; }
 .quake-mag--mid { background: var(--warning-bg); color: var(--warning); }
 .quake-mag--high { background: var(--danger-bg); color: var(--danger); }
 
+/* ---------- Modo atrapado ---------- */
+.trapped-card { border-left: 4px solid var(--warning); }
+.trapped-card--on { background: var(--warning-bg); }
+
+/* ---------- «¿Está bien?» (detección de caídas) ---------- */
+.fall-overlay {
+  position: fixed; inset: 0; z-index: 30000; display: grid; place-items: center; padding: 16px;
+  background: rgba(11, 37, 69, 0.75);
+}
+.fall-dialog {
+  width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  background: var(--card); color: var(--text); border-radius: var(--radius); padding: 24px 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.fall-dialog svg { color: var(--red); }
+.fall-count { font-size: 2.6rem; font-weight: 850; color: var(--red); font-variant-numeric: tabular-nums; }
+
+/* ---------- Encuesta SUS ---------- */
+.sus-item { border: 1px solid var(--border); margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.sus-item legend { float: left; width: 100%; padding: 0; font-size: 0.92rem; line-height: 1.45; }
+.sus-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; clear: both; }
+.sus-option {
+  display: grid; place-items: center; min-height: 44px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--card); font-weight: 750; color: var(--navy);
+}
+.sus-option input { position: absolute; opacity: 0; pointer-events: none; }
+.sus-option:focus-within { outline: 3px solid #5b9bf0; outline-offset: 2px; }
+.sus-option--on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.sus-ends { display: flex; justify-content: space-between; }
+
+/* ---------- Mochila de emergencia ---------- */
+.kit-list { list-style: none; margin: 0; padding: 0; }
+.kit-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.kit-item:last-child { border-bottom: 0; }
+.kit-item ion-checkbox { margin-top: 2px; flex-shrink: 0; }
+.kit-item__body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kit-item__name { font-weight: 600; font-size: 0.92rem; overflow-wrap: anywhere; }
+.kit-item__name--done { color: var(--muted); text-decoration: line-through; }
+.kit-expiry { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+.kit-expiry--warn { color: var(--warning); }
+.kit-expiry--bad { color: var(--danger); }
+.kit-date { display: flex; align-items: center; gap: 8px; }
+.kit-date input { font: inherit; padding: 4px 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); }
+.kit-add { display: flex; gap: 8px; align-items: flex-end; margin-top: 12px; }
+.kit-add ion-input { flex: 1; }
+
+/* ---------- Inicio y guía ---------- */
+.quick-tile--warn { border-color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning); }
+.quick-tile--warn small { color: var(--warning); font-weight: 700; }
+.instruction-card__listen { margin-left: auto; flex-shrink: 0; }
+
 /* ---------- Punto de encuentro en el mapa ---------- */
 .real-map__meeting { fill: var(--success); fill-opacity: 1; stroke: #fff; stroke-width: 3; }
 .real-map__canvas--pick { cursor: crosshair; outline: 3px dashed var(--info); outline-offset: -3px; }

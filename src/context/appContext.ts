@@ -1,7 +1,8 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { createContext, useContext } from 'react';
 import type {
-  AlertRecord, AlertSource, AppData, Contact, ContactInput, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint, Settings,
+  AlertRecord, AlertSource, AppData, Contact, ContactInput, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
+  MeetingPoint, Settings, SusResponse,
 } from '../types';
 
 /** Simulacro en curso: primero se espera un tiempo aleatorio y luego se da la señal. */
@@ -23,6 +24,8 @@ export interface AppStateValue {
   cancelDrill: () => void;
   setMedical: (medical: MedicalInfo | null) => void;
   setMeetingPoint: (point: MeetingPoint | null) => void;
+  addSusResponse: (response: SusResponse) => void;
+  setKit: (kit: EmergencyKit | null) => void;
   setLocation: (snapshot: LocationSnapshot | null, permission?: LocationPermission) => void;
   setLocationPermission: (permission: LocationPermission) => void;
   setDemoMode: (enabled: boolean) => void;

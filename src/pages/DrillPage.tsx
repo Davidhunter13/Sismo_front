@@ -1,10 +1,11 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useIonRouter } from '@ionic/react';
-import { BarChart3, Play, Timer } from 'lucide-react';
+import { BarChart3, ClipboardCheck, Play, Timer } from 'lucide-react';
 import { AppLayout } from '../components/AppLayout';
 import { useAppState } from '../context/appContext';
 import { formatMs, metricValue } from '../services/metricsService';
 import { formatTime } from '../utils/format';
+import { goToRoot } from '../utils/navigation';
 
 /**
  * Simulacro guiado: tras una espera aleatoria aparece la señal «¡SISMO!» en el panel principal y se mide
@@ -17,7 +18,7 @@ export default function DrillPage() {
 
   const start = () => {
     startDrill();
-    router.push('/inicio', 'root', 'replace');
+    goToRoot(router, '/inicio');
   };
 
   return (
@@ -29,6 +30,7 @@ export default function DrillPage() {
           <li>Tras unos segundos aparecerá el aviso <strong>«¡SISMO! Active la alerta ahora»</strong>.</li>
           <li>Toque SOS y confirme lo más rápido posible.</li>
           <li>La sirena, la linterna y la vibración se activan como en una emergencia real. Finalice la alerta al terminar.</li>
+          <li>Al finalizar se abre la encuesta de usabilidad (SUS): son 10 preguntas rápidas.</li>
         </ol>
         <p className="small muted">El resultado se guarda en el historial como simulacro y alimenta las estadísticas.</p>
         <button className="btn btn--primary btn--lg btn--block" onClick={start} disabled={!!activeAlert}>
@@ -54,9 +56,14 @@ export default function DrillPage() {
             })}
           </ul>
         )}
-        <button className="btn btn--ghost btn--block" onClick={() => router.push('/estadisticas', 'forward')}>
-          <BarChart3 size={18} aria-hidden="true" /> Ver estadísticas
-        </button>
+        <div className="btn-pair">
+          <button className="btn btn--ghost" onClick={() => router.push('/estadisticas', 'forward')}>
+            <BarChart3 size={18} aria-hidden="true" /> Estadísticas
+          </button>
+          <button className="btn btn--ghost" onClick={() => router.push('/encuesta', 'forward')}>
+            <ClipboardCheck size={18} aria-hidden="true" /> Encuesta SUS
+          </button>
+        </div>
       </section>
     </AppLayout>
   );

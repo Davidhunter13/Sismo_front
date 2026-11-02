@@ -1,7 +1,8 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
-  AlertRecord, AlertSource, AppData, ContactInput, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint, Settings,
+  AlertRecord, AlertSource, AppData, ContactInput, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint,
+  Settings, SusResponse,
 } from '../types';
 import { clearData, createEmptyData, loadData, newId, saveData } from '../services/storageService';
 import { demoAlerts, demoContacts } from '../services/demoData';
@@ -33,6 +34,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(loadData);
   // El simulacro no se guarda: si se cierra la app, se cancela.
   const [drill, setDrill] = useState<DrillState | null>(null);
+  // Copia siempre actualizada: activateAlert puede ejecutarse desde una vista con un cierre antiguo
+  // (Ionic conserva vistas montadas), así que el simulacro se lee de aquí y no del cierre.
+  const drillRef = useRef<DrillState | null>(null);
+  useEffect(() => {
+    drillRef.current = drill;
+  }, [drill]);
 
   useEffect(() => saveData(data), [data]);
 
@@ -88,7 +95,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const activateAlert = useCallback(
     (eventType: EventType, source: AlertSource = 'app') => {
       const simulated = data.settings.demoMode;
-      const metrics = takeTrace();
+      const currentDrill = drillRef.current;
+      const metrics = { ...takeTrace(), drillSignalAt: currentDrill?.signalAt };
       const alert: AlertRecord = {
         id: newId(),
         eventType,
@@ -101,7 +109,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         isSeed: false,
         metrics,
         // Si se activa antes de la señal, cuenta como simulacro pero sin tiempo de reacción.
-        isDrill: drill !== null,
+        isDrill: currentDrill !== null,
         source,
         locationUpdates: 0,
       };
@@ -114,7 +122,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }));
       return alert;
     },
-    [data.settings.demoMode, data.lastLocation, data.contacts.length, drill],
+    [data.settings.demoMode, data.lastLocation, data.contacts.length],
   );
 
   // Pantalla encendida mientras haya una alerta activa.
@@ -123,19 +131,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     void keepScreenOn(hasActiveAlert);
   }, [hasActiveAlert]);
 
-  // Ubicación actualizada durante la alerta: al activarla y cada LOCATION_REFRESH_MS, si hay permiso.
-  // Solo se guarda en el dispositivo; el SMS usa la más reciente.
+  // Ubicación automática durante la alerta: se toma al activarla (aunque no hubiera una guardada; si el
+  // permiso no se había pedido, se pide en ese momento) y se actualiza cada LOCATION_REFRESH_MS.
+  // Solo se guarda en el dispositivo; el SMS usa la más reciente. No se insiste si el permiso fue denegado.
   const activeAlertId = activeAlert?.id;
-  const canLocate = data.locationPermission === 'concedido';
+  const canLocate = data.locationPermission !== 'denegado' && data.locationPermission !== 'no_disponible';
   useEffect(() => {
     if (!activeAlertId || !canLocate) return;
     let cancelled = false;
     const refresh = async () => {
       const result = await requestDeviceLocation();
-      if (cancelled || !result.snapshot) return;
+      if (cancelled) return;
+      if (!result.snapshot) {
+        // Sin señal o tiempo agotado: se reintenta en el siguiente ciclo. Solo un rechazo detiene los intentos.
+        if (result.permission === 'denegado') setData((d) => ({ ...d, locationPermission: 'denegado' }));
+        return;
+      }
       const snapshot = result.snapshot;
       setData((d) => ({
         ...d,
+        locationPermission: 'concedido',
         lastLocation: snapshot,
         alerts: d.alerts.map((a) =>
           a.id === activeAlertId && a.status === 'activa'
@@ -194,6 +209,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setData((d) => ({ ...d, meetingPoint }));
   }, []);
 
+  const addSusResponse = useCallback((response: SusResponse) => {
+    setData((d) => ({ ...d, susResponses: [response, ...d.susResponses] }));
+  }, []);
+
+  const setKit = useCallback((kit: EmergencyKit | null) => {
+    setData((d) => ({ ...d, kit }));
+  }, []);
+
   const setLocation = useCallback((snapshot: LocationSnapshot | null, permission?: LocationPermission) => {
     setData((d) => ({ ...d, lastLocation: snapshot, locationPermission: permission ?? d.locationPermission }));
   }, []);
@@ -239,6 +262,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     cancelDrill,
     setMedical,
     setMeetingPoint,
+    addSusResponse,
+    setKit,
     setLocation,
     setLocationPermission,
     setDemoMode,

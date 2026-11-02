@@ -1,13 +1,14 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonInput, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
-import { AlertTriangle, Eye, FlaskConical, MapPin, RotateCcw, Trash2, User, Volume2 } from 'lucide-react';
+import { IonInput, IonLabel, IonSegment, IonSegmentButton, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
+import { Activity, AlertTriangle, Eye, FlaskConical, MapPin, RotateCcw, Trash2, User, Volume2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { StatusBadge } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
-import type { Settings } from '../types';
+import { FALL_COUNTDOWN_S, isMotionSupported } from '../services/fallDetectionService';
+import type { AlarmSound, Settings } from '../types';
 
 type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
 
@@ -76,6 +77,33 @@ export default function SettingsPage() {
             <IonToggle checked={settings[key]} onIonChange={(e) => updateSettings({ [key]: e.detail.checked })} aria-label={label} />
           </div>
         ))}
+        <div className="stack">
+          <span><strong>Sonido de la alarma</strong><small className="muted"> · El silbato (tres pitidos agudos) se oye mejor entre escombros.</small></span>
+          <IonSegment value={settings.alarmSound} onIonChange={(e) => updateSettings({ alarmSound: e.detail.value as AlarmSound })} className="segment">
+            <IonSegmentButton value="sirena"><IonLabel>Sirena</IonLabel></IonSegmentButton>
+            <IonSegmentButton value="silbato"><IonLabel>Silbato</IonLabel></IonSegmentButton>
+          </IonSegment>
+        </div>
+      </section>
+
+      <section className="card">
+        <h2 className="card__title"><Activity size={18} aria-hidden="true" /> Detección de caídas</h2>
+        <div className="toggle-row toggle-row--plain">
+          <span>
+            <strong>Preguntar «¿Está bien?» tras una caída</strong>
+            <small>
+              Con la app abierta, si el acelerómetro detecta una caída o un impacto fuerte, pregunta durante {FALL_COUNTDOWN_S} s y,
+              si no responde, activa la alerta. Puede dar falsas alarmas (por ejemplo, si se le cae el teléfono).
+            </small>
+          </span>
+          <IonToggle
+            checked={settings.fallDetection}
+            disabled={!isMotionSupported()}
+            onIonChange={(e) => updateSettings({ fallDetection: e.detail.checked })}
+            aria-label="Detección de caídas"
+          />
+        </div>
+        {!isMotionSupported() && <p className="small muted">Este dispositivo o navegador no ofrece el acelerómetro.</p>}
       </section>
 
       <section className="card card--demo">

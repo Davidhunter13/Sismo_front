@@ -1,17 +1,19 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonLabel, IonSegment, IonSegmentButton, useIonToast } from '@ionic/react';
-import { BarChart3, Download, Info } from 'lucide-react';
+import { IonLabel, IonSegment, IonSegmentButton, useIonRouter, useIonToast } from '@ionic/react';
+import { BarChart3, ClipboardCheck, Download, Info } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { useAppState } from '../context/appContext';
 import { alertsToCsv, formatMs, metricLabels, metricValue, summarize, type MetricKey } from '../services/metricsService';
 import { isNative, SismoNative } from '../services/nativeBridge';
+import { susGrade, susToCsv } from '../services/susService';
 
 type Filter = 'todas' | 'reales' | 'simulacros';
 const METRICS: MetricKey[] = ['decision', 'siren', 'torch', 'vibration', 'sms', 'drillReaction'];
 
 /** Métricas de validación del prototipo, calculadas solo con alertas reales del dispositivo (sin datos de ejemplo). */
 export default function StatsPage() {
+  const router = useIonRouter();
   const [presentToast] = useIonToast();
   const { data } = useAppState();
   const [filter, setFilter] = useState<Filter>('todas');
@@ -27,9 +29,12 @@ export default function StatsPage() {
   const withLocation = alerts.filter((a) => a.location?.source === 'dispositivo').length;
   const pct = (n: number) => (alerts.length ? `${Math.round((n / alerts.length) * 100)} %` : '—');
 
-  const exportCsv = async () => {
-    const csv = alertsToCsv(alerts);
-    const filename = `sismo-metricas-${new Date().toISOString().slice(0, 10)}.csv`;
+  const sus = summarize(data.susResponses.map((r) => r.score));
+
+  const exportCsv = (kind: 'metricas' | 'sus') =>
+    exportFile(`sismo-${kind}-${new Date().toISOString().slice(0, 10)}.csv`, kind === 'sus' ? susToCsv(data.susResponses) : alertsToCsv(alerts));
+
+  const exportFile = async (filename: string, csv: string) => {
     try {
       if (isNative()) {
         await SismoNative.shareCsv({ filename, content: csv });
@@ -90,9 +95,27 @@ export default function StatsPage() {
         )}
       </section>
 
-      <button className="btn btn--primary btn--block" onClick={exportCsv} disabled={alerts.length === 0}>
+      <button className="btn btn--primary btn--block" onClick={() => void exportCsv('metricas')} disabled={alerts.length === 0}>
         <Download size={18} aria-hidden="true" /> Exportar CSV
       </button>
+
+      <section className="card stack">
+        <h2 className="card__title"><ClipboardCheck size={18} aria-hidden="true" /> Usabilidad (SUS)</h2>
+        {sus.count === 0 ? (
+          <p className="muted small">Aún no hay respuestas. La encuesta se ofrece al finalizar un simulacro.</p>
+        ) : (
+          <p className="small">
+            <strong>{sus.count}</strong> respuesta(s) · promedio <strong>{sus.mean?.toFixed(1)}</strong> ({susGrade(sus.mean ?? 0)}) ·
+            mediana {sus.median?.toFixed(1)}. Referencia: 68.
+          </p>
+        )}
+        <div className="btn-pair">
+          <button className="btn btn--outline" onClick={() => router.push('/encuesta', 'forward')}>Responder encuesta</button>
+          <button className="btn btn--outline" onClick={() => void exportCsv('sus')} disabled={sus.count === 0}>
+            <Download size={16} aria-hidden="true" /> CSV SUS
+          </button>
+        </div>
+      </section>
 
       <section className="card">
         <h2 className="card__title"><Info size={18} aria-hidden="true" /> Cómo se mide</h2>

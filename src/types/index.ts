@@ -36,7 +36,35 @@ export interface Contact {
 }
 
 /** Origen de la activación del SOS. */
-export type AlertSource = 'app' | 'acceso_rapido';
+export type AlertSource = 'app' | 'acceso_rapido' | 'deteccion_automatica';
+
+/** Sonido de la alarma: sirena (alcance) o silbato de rescate (tres pitidos agudos, se oye entre escombros). */
+export type AlarmSound = 'sirena' | 'silbato';
+
+export interface SusResponse {
+  id: string;
+  answeredAt: string;
+  /** Respuestas 1–5 a las 10 afirmaciones del cuestionario SUS, en orden. */
+  answers: number[];
+  /** Puntaje SUS 0–100. */
+  score: number;
+  /** Id de la alerta de simulacro que se acababa de hacer, si aplica. */
+  drillAlertId?: string;
+}
+
+export interface KitItem {
+  id: string;
+  name: string;
+  checked: boolean;
+  /** Fecha de vencimiento AAAA-MM-DD (agua, pilas, medicamentos...). */
+  expiresOn?: string;
+  isDefault: boolean;
+}
+
+export interface EmergencyKit {
+  items: KitItem[];
+  lastReviewedAt?: string;
+}
 
 /**
  * Marcas de tiempo (ms desde epoch) de una activación, para las métricas de validación.
@@ -96,6 +124,9 @@ export interface Settings {
   soundEnabled: boolean;
   visualSignalEnabled: boolean;
   vibrationEnabled: boolean;
+  alarmSound: AlarmSound;
+  /** Detección de caída o impacto fuerte con el acelerómetro (desactivada por defecto por falsos positivos). */
+  fallDetection: boolean;
   highContrast: boolean;
   largeText: boolean;
   reduceMotion: boolean;
@@ -114,6 +145,8 @@ export interface AppData {
   /** Ficha médica opcional; se guarda solo en este dispositivo y nunca se envía. */
   medical: MedicalInfo | null;
   meetingPoint: MeetingPoint | null;
+  susResponses: SusResponse[];
+  kit: EmergencyKit | null;
 }
 
 export type ContactInput = Pick<Contact, 'name' | 'relationship' | 'phone'>;

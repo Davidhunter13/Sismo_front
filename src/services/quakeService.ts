@@ -64,7 +64,7 @@ function parseFeature(f: unknown): Quake | null {
  */
 export async function fetchNearbyQuakes(period: QuakePeriod, origin: { latitude: number; longitude: number } | null): Promise<Quake[]> {
   const ctrl = new AbortController();
-  const timer = window.setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(FEEDS[period], { signal: ctrl.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -79,6 +79,6 @@ export async function fetchNearbyQuakes(period: QuakePeriod, origin: { latitude:
         );
     return nearby.sort((a, b) => b.time - a.time);
   } finally {
-    window.clearTimeout(timer);
+    clearTimeout(timer);
   }
 }

@@ -29,6 +29,7 @@ export function buildAlertMessage(
   location: LocationSnapshot | null,
   meetingPoint: MeetingPoint | null = null,
   medical: MedicalInfo | null = null,
+  batteryLevel: number | null = null,
 ): string {
   const who = userName.trim() || 'Un contacto suyo';
   const lines = [`ALERTA SISMO: ${who} activó una alerta (${eventTypeLabel[eventType]}).`];
@@ -47,15 +48,22 @@ export function buildAlertMessage(
   }
   const med = medicalSummary(medical);
   if (med) lines.push(`Info médica: ${med}`);
+  // Les dice a los contactos cuánto tiempo queda para comunicarse.
+  if (batteryLevel != null) lines.push(`Batería: ${batteryLevel} %`);
   lines.push('Si puede, comuníquese o llame a la línea 123.');
   return lines.join('\n');
 }
 
-/** Mensaje de cierre: avisa a los contactos que la persona está a salvo. */
-export function buildSafeMessage(userName: string, eventType: EventType, endedAt: Date = new Date()): string {
+/**
+ * Aviso de que la persona está a salvo: al finalizar una alerta (con `eventType`) o en cualquier momento
+ * desde el panel principal, por ejemplo después de un temblor (sin `eventType`).
+ */
+export function buildSafeMessage(userName: string, eventType?: EventType, at: Date = new Date()): string {
   const who = userName.trim() || 'Su contacto';
-  const hour = endedAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-  return `SISMO: ${who} está a salvo. La alerta (${eventTypeLabel[eventType]}) finalizó a las ${hour}.`;
+  const hour = at.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+  return eventType
+    ? `SISMO: ${who} está a salvo. La alerta (${eventTypeLabel[eventType]}) finalizó a las ${hour}.`
+    : `SISMO: ${who} está bien. Aviso enviado a las ${hour}.`;
 }
 
 /** Deja solo dígitos y el "+" inicial, que es lo que entiende el esquema sms:. */

@@ -8,8 +8,8 @@ import { eventTypeLabel } from '../utils/format';
  */
 let trace: AlertMetrics = {};
 
-export function beginTrace(drillSignalAt?: number): void {
-  trace = { sosPressedAt: Date.now(), drillSignalAt };
+export function beginTrace(): void {
+  trace = { sosPressedAt: Date.now() };
 }
 
 export function mark(key: keyof AlertMetrics): void {

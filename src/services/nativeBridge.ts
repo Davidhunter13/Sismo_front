@@ -1,19 +1,28 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
+import type { AlarmSound } from '../types';
 
 /**
  * Plugin propio de Android (android/app/src/main/java/co/edu/poli/sismo/SismoNativePlugin.java).
  * Solo existe en la app nativa; en el navegador cada servicio usa su alternativa web.
  */
 export interface SismoNativePlugin {
-  startSiren(): Promise<void>;
+  startSiren(options?: { sound: AlarmSound }): Promise<void>;
+  startTrapped(options: { intervalMs: number }): Promise<void>;
+  stopTrapped(): Promise<void>;
+  setBrightness(options: { level: number }): Promise<void>;
+  getBattery(): Promise<{ level: number; charging: boolean }>;
+  speak(options: { text: string }): Promise<void>;
+  stopSpeaking(): Promise<void>;
+  isSpeaking(): Promise<{ speaking: boolean }>;
+  pickContact(): Promise<{ cancelled: boolean; name?: string; phone?: string }>;
   stopSiren(): Promise<void>;
   startTorch(): Promise<void>;
   stopTorch(): Promise<void>;
   startVibration(): Promise<void>;
   stopVibration(): Promise<void>;
   stopAll(): Promise<void>;
-  getStatus(): Promise<{ siren: boolean; torch: boolean; vibration: boolean; hasFlash: boolean }>;
+  getStatus(): Promise<{ siren: boolean; torch: boolean; vibration: boolean; trapped: boolean; hasFlash: boolean }>;
   setKeepScreenOn(options: { on: boolean }): Promise<void>;
   requestNotifications(): Promise<{ granted: boolean }>;
   consumeLaunchAction(): Promise<{ action: 'sos' | null }>;
