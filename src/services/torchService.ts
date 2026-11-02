@@ -1,36 +1,38 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { isNative, SismoNative } from './nativeBridge';
 
 /**
- * Linterna intermitente con la API de cámara del navegador (restricción `torch`).
- * Solo funciona en navegadores que exponen el flash (p. ej. Chrome en Android) y en contexto seguro (HTTPS o localhost).
- * La cámara se abre únicamente para encender el flash: no se muestra, graba ni envía ninguna imagen.
+ * Linterna en código SOS (··· ––– ···).
+ * - App Android: servicio nativo con CameraManager.setTorchMode (no abre la cámara ni pide su permiso;
+ *   sigue destellando con la pantalla bloqueada).
+ * - Navegador: API de cámara con la restricción `torch` (Chrome en Android, HTTPS o localhost).
+ *   La cámara se abre solo para el flash: no se muestra, graba ni envía ninguna imagen.
  */
 export type TorchResult = 'ok' | 'unsupported' | 'denied';
 
-/** Medio periodo del parpadeo: 2 destellos por segundo, por debajo del umbral de 3/s (WCAG 2.3.1). */
-const BLINK_MS = 250;
+/**
+ * Duraciones (ms) alternando encendido/apagado, empezando por encendido. Unidad de 250 ms:
+ * punto = 1, raya = 3, pausa entre señales = 1, entre letras = 3, entre repeticiones = 7.
+ * Debe coincidir con SOS_ON_OFF de AlertService.java.
+ */
+const U = 250;
+export const SOS_ON_OFF = [U, U, U, U, U, 3 * U, 3 * U, U, 3 * U, U, 3 * U, 3 * U, U, U, U, U, U, 7 * U];
 
 let stream: MediaStream | null = null;
 let timer: number | null = null;
+let nativeOn = false;
 
 export function isTorchApiAvailable(): boolean {
+  if (isNative()) return true;
   return typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && window.isSecureContext;
 }
 
 export function isTorchOn(): boolean {
-  return timer !== null;
+  return isNative() ? nativeOn : timer !== null;
 }
 
-/** Pide el permiso de cámara por adelantado (abre y cierra la cámara de inmediato, sin usar imágenes). */
-export async function requestCameraPermission(): Promise<boolean> {
-  if (!isTorchApiAvailable() || timer !== null) return timer !== null;
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
-    s.getTracks().forEach((t) => t.stop());
-    return true;
-  } catch {
-    return false;
-  }
+export function syncNativeTorch(on: boolean): void {
+  nativeOn = on;
 }
 
 function setTorch(track: MediaStreamTrack, on: boolean): Promise<void> {
@@ -38,6 +40,16 @@ function setTorch(track: MediaStreamTrack, on: boolean): Promise<void> {
 }
 
 export async function startTorchBlink(): Promise<TorchResult> {
+  if (isNative()) {
+    try {
+      await SismoNative.startTorch();
+      nativeOn = true;
+      return 'ok';
+    } catch {
+      nativeOn = false;
+      return 'unsupported';
+    }
+  }
   if (timer !== null) return 'ok';
   if (!isTorchApiAvailable()) return 'unsupported';
   try {
@@ -51,16 +63,24 @@ export async function startTorchBlink(): Promise<TorchResult> {
     stopTorch();
     return 'unsupported';
   }
-  let on = false;
-  timer = window.setInterval(() => {
-    on = !on;
-    setTorch(track, on).catch(() => stopTorch());
-  }, BLINK_MS);
+  let step = 0;
+  const tick = () => {
+    setTorch(track, step % 2 === 0).catch(() => stopTorch());
+    const wait = SOS_ON_OFF[step];
+    step = (step + 1) % SOS_ON_OFF.length;
+    timer = window.setTimeout(tick, wait);
+  };
+  tick();
   return 'ok';
 }
 
 export function stopTorch(): void {
-  if (timer !== null) window.clearInterval(timer);
+  if (isNative()) {
+    nativeOn = false;
+    void SismoNative.stopTorch().catch(() => undefined);
+    return;
+  }
+  if (timer !== null) window.clearTimeout(timer);
   timer = null;
   stream?.getTracks().forEach((t) => t.stop());
   stream = null;

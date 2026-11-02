@@ -27,6 +27,35 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Señales de alerta en segundo plano (sirena, linterna SOS, vibración). -->
+        <service
+            android:name=".AlertService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Acceso rápido «SOS SISMO» en el panel de ajustes rápidos. -->
+        <service
+            android:name=".SosTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_sos"
+            android:label="@string/tile_sos_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Widget SOS de la pantalla de inicio. -->
+        <receiver
+            android:name=".SosWidgetProvider"
+            android:exported="false"
+            android:label="@string/tile_sos_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sos_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->
@@ -38,8 +67,12 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
-    <!-- Cámara: solo para encender el flash como linterna intermitente; no se capturan imágenes. -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Linterna: CameraManager.setTorchMode no requiere el permiso de cámara. -->
     <uses-feature android:name="android.hardware.camera.flash" android:required="false" />
+
+    <!-- Servicio en primer plano con notificación (sirena/linterna/vibración con pantalla bloqueada). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonLabel, IonSegment, IonSegmentButton, useIonToast } from '@ionic/react';
-import { Crosshair, ExternalLink, FlaskConical, Info, Loader2, MapPinOff, Trash2 } from 'lucide-react';
+import { IonInput, IonLabel, IonSegment, IonSegmentButton, useIonToast } from '@ionic/react';
+import { Crosshair, ExternalLink, Flag, FlaskConical, Info, Loader2, MapPinned, MapPinOff, Trash2 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { LocationMap } from '../components/LocationMap';
@@ -8,6 +8,7 @@ import { LocationStatusCard } from '../components/LocationStatusCard';
 import { useAppState } from '../context/appContext';
 import { testLocation } from '../services/demoData';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
+import { formatCoord } from '../utils/format';
 
 // Leaflet solo se descarga cuando se abre la pestaña «Mapa real».
 const RealMap = lazy(() => import('../components/RealMap'));
@@ -16,10 +17,13 @@ type MapTab = 'esquema' | 'real';
 
 export default function LocationPage() {
   const [presentToast] = useIonToast();
-  const { data, setLocation, setLocationPermission } = useAppState();
+  const { data, setLocation, setLocationPermission, setMeetingPoint } = useAppState();
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<MapTab>('esquema');
-  const { lastLocation, locationPermission } = data;
+  const { lastLocation, locationPermission, meetingPoint } = data;
+  const [label, setLabel] = useState(meetingPoint?.label ?? 'Punto de encuentro');
+  const [picking, setPicking] = useState(false);
+  const labelError = label.trim().length < 2 ? 'Mínimo 2 caracteres.' : '';
 
   useEffect(() => {
     checkLocationPermission().then((p) => {
@@ -35,6 +39,23 @@ export default function LocationPage() {
     else setLocationPermission(result.permission);
     presentToast({ message: result.message, duration: 2800, color: result.snapshot ? 'success' : 'warning', position: 'top' });
   };
+
+  const saveMeeting = (latitude: number, longitude: number) => {
+    setMeetingPoint({ label: label.trim(), latitude, longitude });
+    setPicking(false);
+    presentToast({ message: 'Punto de encuentro guardado.', duration: 2200, color: 'success', position: 'top' });
+  };
+
+  const useCurrentAsMeeting = () => {
+    if (lastLocation) saveMeeting(lastLocation.latitude, lastLocation.longitude);
+  };
+
+  const togglePicking = () => {
+    setPicking((p) => !p);
+    setTab('real');
+  };
+
+  const pickOnMap = (latitude: number, longitude: number) => saveMeeting(latitude, longitude);
 
   const useTest = () => {
     setLocation(testLocation());
@@ -59,7 +80,7 @@ export default function LocationPage() {
           <LocationMap snapshot={lastLocation} />
         ) : lastLocation ? (
           <Suspense fallback={<div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> Cargando mapa…</div>}>
-            <RealMap snapshot={lastLocation} />
+            <RealMap snapshot={lastLocation} meetingPoint={meetingPoint} onPick={picking ? pickOnMap : undefined} />
           </Suspense>
         ) : (
           <div className="real-map__placeholder">
@@ -89,6 +110,40 @@ export default function LocationPage() {
           </div>
         )}
       </div>
+
+      <section className="card stack">
+        <h2 className="card__title"><Flag size={18} aria-hidden="true" /> Punto de encuentro</h2>
+        <p className="small muted">
+          {meetingPoint
+            ? `${meetingPoint.label} · ${formatCoord(meetingPoint.latitude)}, ${formatCoord(meetingPoint.longitude)}. Se incluye en el SMS de alerta.`
+            : 'El lugar donde su familia acordó reunirse. Se incluirá en el SMS de alerta.'}
+        </p>
+        <IonInput
+          className={labelError ? 'ion-invalid ion-touched' : ''}
+          label="Nombre del punto"
+          labelPlacement="stacked"
+          fill="outline"
+          maxlength={40}
+          placeholder="Ej.: Parque del barrio"
+          value={label}
+          errorText={labelError}
+          onIonInput={(e) => setLabel(String(e.detail.value ?? ''))}
+        />
+        {picking && <p className="callout callout--info small">Toque el mapa real para marcar el punto de encuentro.</p>}
+        <div className="btn-pair">
+          <button className="btn btn--outline" onClick={useCurrentAsMeeting} disabled={!!labelError || !lastLocation || lastLocation.source !== 'dispositivo'}>
+            <Crosshair size={16} aria-hidden="true" /> Mi ubicación actual
+          </button>
+          <button className={`btn ${picking ? 'btn--dark' : 'btn--outline'}`} onClick={togglePicking} disabled={!!labelError || !lastLocation}>
+            <MapPinned size={16} aria-hidden="true" /> {picking ? 'Cancelar' : 'Elegir en el mapa'}
+          </button>
+        </div>
+        {meetingPoint && (
+          <button className="btn btn--ghost btn--block" onClick={() => setMeetingPoint(null)}>
+            <Trash2 size={16} aria-hidden="true" /> Quitar punto de encuentro
+          </button>
+        )}
+      </section>
 
       <section className="card">
         <h2 className="card__title"><Info size={18} aria-hidden="true" /> Limitaciones de la geolocalización</h2>

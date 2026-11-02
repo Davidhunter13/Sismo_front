@@ -1,5 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import type { Contact, EventType, LocationSnapshot } from '../types';
+import type { Contact, EventType, LocationSnapshot, MedicalInfo, MeetingPoint } from '../types';
 import { eventTypeLabel } from '../utils/format';
 
 /**
@@ -8,23 +8,54 @@ import { eventTypeLabel } from '../utils/format';
  * Costo: el del plan del usuario. Funciona aunque los datos móviles estén caídos (solo requiere señal).
  */
 
-export function buildAlertMessage(userName: string, eventType: EventType, location: LocationSnapshot | null): string {
+const mapsLink = (lat: number, lng: number) => `https://maps.google.com/?q=${lat.toFixed(5)},${lng.toFixed(5)}`;
+
+/** Resumen de una línea de la ficha médica; vacío si no hay datos o el usuario desactivó «Compartir». */
+export function medicalSummary(medical: MedicalInfo | null): string {
+  if (!medical?.showOnAlert) return '';
+  const parts = [
+    medical.bloodType && `Sangre ${medical.bloodType}`,
+    medical.allergies && `Alergias: ${medical.allergies}`,
+    medical.medications && `Medicamentos: ${medical.medications}`,
+    medical.conditions && `Condiciones: ${medical.conditions}`,
+    medical.notes && `Notas: ${medical.notes}`,
+  ].filter(Boolean);
+  return parts.join('. ');
+}
+
+export function buildAlertMessage(
+  userName: string,
+  eventType: EventType,
+  location: LocationSnapshot | null,
+  meetingPoint: MeetingPoint | null = null,
+  medical: MedicalInfo | null = null,
+): string {
   const who = userName.trim() || 'Un contacto suyo';
   const lines = [`ALERTA SISMO: ${who} activó una alerta (${eventTypeLabel[eventType]}).`];
   if (location) {
-    const lat = location.latitude.toFixed(5);
-    const lng = location.longitude.toFixed(5);
     const precision = location.accuracy != null ? ` (±${Math.round(location.accuracy)} m)` : '';
     lines.push(
       location.source === 'prueba'
-        ? `Ubicación de PRUEBA, no es real: https://maps.google.com/?q=${lat},${lng}`
-        : `Ubicación${precision}: https://maps.google.com/?q=${lat},${lng}`,
+        ? `Ubicación de PRUEBA, no es real: ${mapsLink(location.latitude, location.longitude)}`
+        : `Ubicación${precision}: ${mapsLink(location.latitude, location.longitude)}`,
     );
   } else {
     lines.push('Ubicación no disponible.');
   }
+  if (meetingPoint) {
+    lines.push(`Punto de encuentro: ${meetingPoint.label} ${mapsLink(meetingPoint.latitude, meetingPoint.longitude)}`);
+  }
+  const med = medicalSummary(medical);
+  if (med) lines.push(`Info médica: ${med}`);
   lines.push('Si puede, comuníquese o llame a la línea 123.');
   return lines.join('\n');
+}
+
+/** Mensaje de cierre: avisa a los contactos que la persona está a salvo. */
+export function buildSafeMessage(userName: string, eventType: EventType, endedAt: Date = new Date()): string {
+  const who = userName.trim() || 'Su contacto';
+  const hour = endedAt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+  return `SISMO: ${who} está a salvo. La alerta (${eventTypeLabel[eventType]}) finalizó a las ${hour}.`;
 }
 
 /** Deja solo dígitos y el "+" inicial, que es lo que entiende el esquema sms:. */

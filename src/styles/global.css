@@ -356,6 +356,55 @@ ion-toggle { --track-background-checked: var(--navy); flex-shrink: 0; }
 .sismo-alert .sismo-alert__danger { color: var(--red); }
 .sismo-alert .sismo-alert__confirm { color: var(--navy); }
 
+/* ---------- Simulacro ---------- */
+.drill-banner {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--info-bg); color: var(--info); border: 1px solid #c8d8ee;
+}
+.drill-banner div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.drill-banner small { font-size: 0.78rem; opacity: 0.9; }
+.drill-banner--go { background: var(--red); color: #fff; border-color: var(--red-dark); }
+.drill-banner--go .btn--ghost { background: rgba(255, 255, 255, 0.2); color: #fff; }
+
+/* ---------- Avisos con ícono ---------- */
+.callout--row { display: flex; gap: 10px; align-items: flex-start; }
+
+/* ---------- Ficha médica en la alerta ---------- */
+.medical-card { border-left: 4px solid var(--red); }
+.medical-list { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 0.9rem; }
+.medical-list dt { color: var(--muted); font-weight: 600; }
+.medical-list dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+/* ---------- Estadísticas ---------- */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat-tile { display: flex; flex-direction: column; gap: 4px; padding: 12px; text-align: center; }
+.stat-tile span { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.stat-tile strong { font-size: 1.3rem; color: var(--navy); font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; margin: 0 -4px; }
+.stat-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.stat-table th, .stat-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+.stat-table thead th { color: var(--muted); font-weight: 700; }
+.stat-table tbody th { text-align: left; font-weight: 600; white-space: normal; }
+
+/* ---------- Sismos recientes ---------- */
+.quake-list { list-style: none; margin: 0; padding: 0; }
+.quake-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.quake-row:last-child { border-bottom: 0; }
+.quake-row div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.quake-row strong { font-size: 0.9rem; overflow-wrap: anywhere; }
+.quake-row small { font-size: 0.76rem; color: var(--muted); }
+.quake-mag {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.quake-mag--low { background: var(--success-bg); color: var(--success); }
+.quake-mag--mid { background: var(--warning-bg); color: var(--warning); }
+.quake-mag--high { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- Punto de encuentro en el mapa ---------- */
+.real-map__meeting { fill: var(--success); fill-opacity: 1; stroke: #fff; stroke-width: 3; }
+.real-map__canvas--pick { cursor: crosshair; outline: 3px dashed var(--info); outline-offset: -3px; }
+
 .spin { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 

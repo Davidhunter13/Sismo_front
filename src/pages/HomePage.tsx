@@ -1,8 +1,9 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
-import { BookOpen, History, MapPin, MessageSquare, Radio, Users, Volume2, type LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import {
+  Activity, BarChart3, BookOpen, HeartPulse, History, MapPin, MessageSquare, Radio, Timer, Users, Volume2, type LucideIcon,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertStatusCard } from '../components/AlertStatusCard';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
@@ -11,36 +12,56 @@ import { ServiceIndicator } from '../components/ServiceIndicator';
 import type { BadgeTone } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
-import { isSirenSupported, startSiren } from '../services/sirenService';
-import { startTorchBlink } from '../services/torchService';
-import type { EventType } from '../types';
+import { beginTrace, mark } from '../services/metricsService';
+import { startAlertSignals } from '../services/signalsService';
+import { isSirenSupported } from '../services/sirenService';
+import { onSosDialogRequest } from '../services/sosRequestService';
+import type { AlertSource, EventType } from '../types';
 import { formatLongDate } from '../utils/format';
 
 export default function HomePage() {
   const router = useIonRouter();
-  const { data, activeAlert, activateAlert } = useAppState();
+  const { data, activeAlert, activateAlert, drill, cancelDrill } = useAppState();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const source = useRef<AlertSource>('app');
   const { settings, contacts, locationPermission, lastLocation } = data;
 
-  const onPanic = () => (activeAlert ? router.push('/alerta', 'forward') : setConfirmOpen(true));
+  const openSos = useCallback(
+    (from: AlertSource) => {
+      if (activeAlert) {
+        router.push('/alerta', 'forward');
+        return;
+      }
+      source.current = from;
+      beginTrace(drill?.signalAt);
+      setConfirmOpen(true);
+    },
+    [activeAlert, router, drill?.signalAt],
+  );
+
+  // Widget o acceso rápido de Android.
+  useEffect(() => onSosDialogRequest(() => openSos('acceso_rapido')), [openSos]);
 
   const onConfirm = (value?: unknown) => {
-    activateAlert((value as EventType) ?? 'sismo');
+    activateAlert((value as EventType) ?? 'sismo', source.current);
     router.push('/alerta', 'forward');
   };
 
-  // Sirena y linterna arrancan dentro del toque de confirmación: los navegadores bloquean audio y cámara sin gesto del usuario.
-  // La linterna solo se enciende sola en la app nativa (en escritorio encendería la cámara web sin tener flash).
+  // Las señales arrancan dentro del toque de confirmación (gesto del usuario).
   const onConfirmPress = () => {
-    if (settings.soundEnabled) void startSiren();
-    if (Capacitor.isNativePlatform() && settings.visualSignalEnabled && !settings.reduceMotion) void startTorchBlink();
+    mark('confirmedAt');
+    startAlertSignals(settings);
   };
 
-  const quick: { path: string; label: string; detail: string; icon: LucideIcon }[] = [
-    { path: '/contactos', label: 'Contactos', detail: `${contacts.length} de confianza`, icon: Users },
-    { path: '/ubicacion', label: 'Ubicación', detail: lastLocation ? (lastLocation.source === 'prueba' ? 'De prueba' : 'Registrada') : 'Sin registrar', icon: MapPin },
-    { path: '/guia', label: 'Guía', detail: 'Antes, durante, después', icon: BookOpen },
-    { path: '/historial', label: 'Historial', detail: `${data.alerts.length} registros`, icon: History },
+  const quick: { path: string; label: string; detail: string; icon: LucideIcon; root?: boolean }[] = [
+    { path: '/contactos', label: 'Contactos', detail: `${contacts.length} de confianza`, icon: Users, root: true },
+    { path: '/ubicacion', label: 'Ubicación', detail: lastLocation ? (lastLocation.source === 'prueba' ? 'De prueba' : 'Registrada') : 'Sin registrar', icon: MapPin, root: true },
+    { path: '/guia', label: 'Guía', detail: 'Antes, durante, después', icon: BookOpen, root: true },
+    { path: '/historial', label: 'Historial', detail: `${data.alerts.length} registros`, icon: History, root: true },
+    { path: '/sismos', label: 'Sismos recientes', detail: 'Últimas 24 horas', icon: Activity },
+    { path: '/simulacro', label: 'Simulacro', detail: 'Practique con cronómetro', icon: Timer },
+    { path: '/estadisticas', label: 'Estadísticas', detail: 'Tiempos y CSV', icon: BarChart3 },
+    { path: '/ficha-medica', label: 'Ficha médica', detail: data.medical ? 'Registrada' : 'Opcional', icon: HeartPulse },
   ];
 
   const sound: { tone: BadgeTone; status: string } = !isSirenSupported()
@@ -55,10 +76,21 @@ export default function HomePage() {
         <h1>Hola, {settings.userName}</h1>
       </section>
 
+      {drill && (
+        <section className={`drill-banner${drill.phase === 'senal' ? ' drill-banner--go' : ''}`} role="status" aria-live="assertive">
+          <Timer size={22} aria-hidden="true" />
+          <div>
+            <strong>{drill.phase === 'senal' ? '¡SISMO! Active la alerta ahora' : 'Simulacro en curso: espere la señal…'}</strong>
+            <small>{drill.phase === 'senal' ? 'Toque SOS y confirme lo más rápido posible.' : 'La señal aparecerá en unos segundos.'}</small>
+          </div>
+          <button className="btn btn--ghost btn--sm" onClick={cancelDrill}>Cancelar</button>
+        </section>
+      )}
+
       <AlertStatusCard alert={activeAlert} onOpen={() => router.push('/alerta', 'forward')} />
 
       <section className="panic-zone" aria-label="Botón de pánico">
-        <PanicButton onPress={onPanic} active={!!activeAlert} />
+        <PanicButton onPress={() => openSos('app')} active={!!activeAlert} />
         <p className="muted small center">
           {activeAlert ? 'Hay una alerta en curso.' : 'Se pedirá confirmación para evitar activaciones accidentales.'}
         </p>
@@ -67,8 +99,12 @@ export default function HomePage() {
       <section>
         <h2 className="section-title">Accesos rápidos</h2>
         <div className="quick-grid">
-          {quick.map(({ path, label, detail, icon: Icon }) => (
-            <button key={path} className="card quick-tile" onClick={() => router.push(path, 'root', 'replace')}>
+          {quick.map(({ path, label, detail, icon: Icon, root }) => (
+            <button
+              key={path}
+              className="card quick-tile"
+              onClick={() => (root ? router.push(path, 'root', 'replace') : router.push(path, 'forward'))}
+            >
               <span className="quick-tile__icon"><Icon size={22} aria-hidden="true" /></span>
               <strong>{label}</strong>
               <small>{detail}</small>

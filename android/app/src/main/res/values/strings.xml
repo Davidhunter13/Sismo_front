@@ -4,4 +4,6 @@
     <string name="title_activity_main">SISMO</string>
     <string name="package_name">co.edu.poli.sismo</string>
     <string name="custom_url_scheme">co.edu.poli.sismo</string>
+    <string name="widget_sos_description">Botón SOS: abre SISMO para activar una alerta</string>
+    <string name="tile_sos_label">SOS SISMO</string>
 </resources>

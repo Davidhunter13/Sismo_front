@@ -9,14 +9,15 @@ import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
 import type { Settings } from '../types';
 
-type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
+type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
 
 const limitations = [
-  'No envía SMS, llamadas, correos ni notificaciones a contactos o autoridades.',
+  'El SMS se abre en la app de mensajes: SISMO no puede confirmar si se envió ni si llegó.',
+  'No contacta automáticamente a las autoridades; el botón «Llamar al 123» abre el marcador.',
   'El estado «Enviada» solo aparece como simulación del modo de demostración.',
   'No detecta ni predice sismos; la alerta la activa siempre la persona usuaria.',
-  'Los datos se guardan únicamente en este navegador (LocalStorage).',
-  'El mapa es esquemático; no hay un servicio de mapas configurado.',
+  'Los datos se guardan únicamente en este dispositivo (LocalStorage).',
+  'El mapa real y los sismos recientes requieren conexión a internet.',
 ];
 
 export default function SettingsPage() {
@@ -40,7 +41,8 @@ export default function SettingsPage() {
 
   const toggles: { key: ToggleKey; label: string; detail: string }[] = [
     { key: 'soundEnabled', label: 'Señal sonora', detail: 'Permite reproducir la sirena durante una alerta.' },
-    { key: 'visualSignalEnabled', label: 'Señal visual intermitente', detail: 'Destello del indicador de alerta.' },
+    { key: 'visualSignalEnabled', label: 'Señal visual intermitente', detail: 'Destello del indicador y linterna SOS.' },
+    { key: 'vibrationEnabled', label: 'Vibración SOS', detail: 'Vibra en patrón SOS durante la alerta.' },
     { key: 'highContrast', label: 'Alto contraste', detail: 'Bordes y textos más marcados.' },
     { key: 'largeText', label: 'Texto grande', detail: 'Aumenta el tamaño de la letra.' },
     { key: 'reduceMotion', label: 'Reducir animaciones', detail: 'Desactiva pulsos y destellos.' },
@@ -100,12 +102,16 @@ export default function SettingsPage() {
       <section className="card">
         <h2 className="card__title"><MapPin size={18} aria-hidden="true" /> Permisos</h2>
         <div className="channel">
-          <div><strong>Ubicación</strong><p className="small muted">Se solicita solo cuando usted pulsa «Solicitar mi ubicación». Puede revocarla desde el navegador o el sistema.</p></div>
+          <div><strong>Ubicación</strong><p className="small muted">En la app Android se pide al abrirla; en el navegador, al pulsar «Solicitar mi ubicación». Puede revocarla desde el sistema.</p></div>
           <StatusBadge tone={perm.tone} label={perm.label} />
         </div>
         <div className="channel">
-          <div><strong>Notificaciones, SMS y llamadas</strong><p className="small muted">El prototipo no los utiliza.</p></div>
-          <StatusBadge tone="neutral" label="No se usan" />
+          <div><strong>Notificaciones (Android)</strong><p className="small muted">Muestran la alerta activa con la pantalla bloqueada y permiten silenciar la sirena.</p></div>
+          <StatusBadge tone="info" label="Al abrir la app" />
+        </div>
+        <div className="channel">
+          <div><strong>SMS y llamadas</strong><p className="small muted">No requieren permiso: SISMO abre la app de mensajes o el marcador y usted confirma.</p></div>
+          <StatusBadge tone="neutral" label="Sin permiso" />
         </div>
       </section>
 

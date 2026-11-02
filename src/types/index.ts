@@ -35,6 +35,24 @@ export interface Contact {
   createdAt: string;
 }
 
+/** Origen de la activación del SOS. */
+export type AlertSource = 'app' | 'acceso_rapido';
+
+/**
+ * Marcas de tiempo (ms desde epoch) de una activación, para las métricas de validación.
+ * Un campo ausente significa que esa señal no se activó o no se alcanzó a medir.
+ */
+export interface AlertMetrics {
+  sosPressedAt?: number;
+  confirmedAt?: number;
+  sirenAt?: number;
+  torchAt?: number;
+  vibrationAt?: number;
+  smsAt?: number;
+  /** Momento en que el simulacro dio la señal de «¡Active la alerta!». */
+  drillSignalAt?: number;
+}
+
 export interface AlertRecord {
   id: string;
   eventType: EventType;
@@ -49,12 +67,35 @@ export interface AlertRecord {
   /** true para registros de ejemplo precargados por el modo de demostración. */
   isSeed: boolean;
   note?: string;
+  metrics?: AlertMetrics;
+  /** true si la alerta se activó durante un simulacro. */
+  isDrill?: boolean;
+  source?: AlertSource;
+  /** Número de veces que se actualizó la ubicación durante la alerta. */
+  locationUpdates?: number;
+}
+
+export interface MedicalInfo {
+  bloodType: string;
+  allergies: string;
+  medications: string;
+  conditions: string;
+  notes: string;
+  /** Consentimiento para mostrarla en la pantalla de alerta (visible para quien tenga el teléfono). */
+  showOnAlert: boolean;
+}
+
+export interface MeetingPoint {
+  label: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Settings {
   userName: string;
   soundEnabled: boolean;
   visualSignalEnabled: boolean;
+  vibrationEnabled: boolean;
   highContrast: boolean;
   largeText: boolean;
   reduceMotion: boolean;
@@ -70,6 +111,9 @@ export interface AppData {
   activeAlertId: string | null;
   lastLocation: LocationSnapshot | null;
   locationPermission: LocationPermission;
+  /** Ficha médica opcional; se guarda solo en este dispositivo y nunca se envía. */
+  medical: MedicalInfo | null;
+  meetingPoint: MeetingPoint | null;
 }
 
 export type ContactInput = Pick<Contact, 'name' | 'relationship' | 'phone'>;

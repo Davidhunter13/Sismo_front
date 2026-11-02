@@ -7,6 +7,7 @@ export const defaultSettings: Settings = {
   userName: 'Usuario demo',
   soundEnabled: true,
   visualSignalEnabled: true,
+  vibrationEnabled: true,
   highContrast: false,
   largeText: false,
   reduceMotion: false,
@@ -23,6 +24,8 @@ export function createEmptyData(): AppData {
     activeAlertId: null,
     lastLocation: null,
     locationPermission: 'sin_solicitar',
+    medical: null,
+    meetingPoint: null,
   };
 }
 
