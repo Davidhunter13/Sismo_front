@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SISMO</string>
+    <string name="title_activity_main">SISMO</string>
+    <string name="package_name">co.edu.poli.sismo</string>
+    <string name="custom_url_scheme">co.edu.poli.sismo</string>
+</resources>

@@ -1,0 +1,74 @@
+/* Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente. */
+
+:root {
+  --navy: #0b2545;
+  --navy-2: #13315c;
+  --navy-soft: #e8eef7;
+  --red: #d62828;
+  --red-dark: #a61e1e;
+  --bg: #f3f5f9;
+  --card: #ffffff;
+  --text: #1b2333;
+  --muted: #5b6578;
+  --border: #e3e7ef;
+
+  --success: #1b7a4b;
+  --success-bg: #e5f4ec;
+  --warning: #8f5300;
+  --warning-bg: #fff3dc;
+  --danger: #b42318;
+  --danger-bg: #fdecec;
+  --info: #1d4e89;
+  --info-bg: #e8f0fa;
+  --neutral: #475467;
+  --neutral-bg: #eef1f5;
+  --demo: #6b3fa0;
+  --demo-bg: #f2ebfb;
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 4px 14px rgba(16, 24, 40, 0.06);
+
+  --ion-font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ion-background-color: var(--bg);
+  --ion-text-color: var(--text);
+
+  --ion-color-primary: #0b2545;
+  --ion-color-primary-rgb: 11, 37, 69;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0a213d;
+  --ion-color-primary-tint: #233b58;
+
+  --ion-color-success: #1b7a4b;
+  --ion-color-success-rgb: 27, 122, 75;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #186b42;
+  --ion-color-success-tint: #32875d;
+
+  --ion-color-warning: #8f5300;
+  --ion-color-warning-rgb: 143, 83, 0;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #7e4900;
+  --ion-color-warning-tint: #9a641a;
+
+  --ion-color-danger: #d62828;
+  --ion-color-danger-rgb: 214, 40, 40;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #bc2323;
+  --ion-color-danger-tint: #da3e3e;
+}
+
+html[data-a11y-contrast] {
+  --text: #000000;
+  --muted: #2b3240;
+  --border: #6b7280;
+  --bg: #ffffff;
+}
+
+html[data-a11y-large-text] {
+  font-size: 112.5%;
+}
