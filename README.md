@@ -62,7 +62,9 @@ Declarados en `android/app/src/main/AndroidManifest.xml`:
 | Permiso | Para qué | Cuándo se pide |
 |---|---|---|
 | Ubicación (precisa y aproximada) | Adjuntar la posición a la alerta | Al abrir la app (solo en Android) |
-| Cámara | Únicamente encender el flash como linterna intermitente; no se capturan imágenes | La primera vez que se toca «Linterna intermitente» |
+| Cámara | Únicamente encender el flash como linterna intermitente; no se capturan imágenes | Al abrir la app, después del de ubicación (solo en Android) |
+
+Con los permisos concedidos, al confirmar el SOS la app Android enciende sola la sirena y la linterna intermitente (si «Señal visual» está activa y «Reducir animaciones» no).
 
 La sirena no requiere permisos.
 
@@ -110,8 +112,8 @@ La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 | Linterna intermitente | Real en la app Android y en Chrome para Android con HTTPS. No disponible en iPhone ni en escritorio |
 | Geolocalización | Real si el usuario concede el permiso (en web requiere HTTPS o localhost) |
 | Coordenadas de prueba | Fijas y **rotuladas** como de prueba; nunca se presentan como la posición del usuario |
-| Mapa | Esquema SVG; no hay servicio de mapas configurado |
-| Envío a contactos (canal digital) | **No implementado**. En el modo de demostración el estado «Enviada/Fallida» es una **simulación rotulada**; no se envía nada |
+| Mapa | Dos pestañas en Ubicación: «Esquema» (SVG, sin internet) y «Mapa real» (Leaflet + OpenStreetMap, requiere conexión y revela a OSM la zona consultada) |
+| Envío a contactos (canal digital) | **SMS**: el botón «Enviar SMS a mis contactos» abre la app de mensajes con los contactos reales y el aviso (tipo de evento + enlace a la ubicación). El usuario confirma el envío allí; SISMO no puede verificarlo, por eso el estado es «SMS abierto» y no «Enviada». En el modo de demostración el estado «Enviada/Fallida» sigue siendo una **simulación rotulada** |
 | Contactos, historial y configuración | Persistencia en LocalStorage (solo en ese navegador o dispositivo) |
 | Estado sin conexión | No implementado |
 

@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonToggle, useIonRouter, useIonToast } from '@ionic/react';
-import { BellOff, CheckCircle2, Eye, Flashlight, FlashlightOff, MessageSquare, Radio, ShieldCheck, Siren, Volume2, VolumeX } from 'lucide-react';
+import { BellOff, CheckCircle2, Eye, Flashlight, FlashlightOff, MessageSquare, Radio, Send, ShieldCheck, Siren, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
@@ -9,6 +9,7 @@ import { DemoBadge, LocalBadge, StatusBadge } from '../components/StatusBadge';
 import { deliveryBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
+import { buildAlertMessage, openSmsComposer } from '../services/smsService';
 import { isTorchApiAvailable, isTorchOn, startTorchBlink, stopTorch } from '../services/torchService';
 import { eventTypeLabel, formatDuration, formatTime } from '../utils/format';
 
@@ -16,13 +17,16 @@ const deliveryText = {
   pendiente: 'Simulando el envío a sus contactos…',
   enviada: 'Entrega SIMULADA a los contactos ficticios. Ningún mensaje real fue enviado.',
   fallida: 'Fallo SIMULADO: no hay contactos configurados para recibir la alerta.',
-  no_disponible: 'El envío de mensajes no está implementado en este prototipo. Nadie ha sido notificado.',
+  no_disponible: 'Toque «Enviar SMS» para avisar a sus contactos. Hasta entonces nadie ha sido notificado.',
+  sms_abierto: 'Se abrió la app de mensajes con el aviso listo. SISMO no puede confirmar si lo envió: verifíquelo allí.',
 } as const;
 
 export default function AlertPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
-  const { data, activeAlert, endAlert } = useAppState();
+  const { data, activeAlert, endAlert, markSmsOpened } = useAppState();
+  // Los contactos de demostración son ficticios: no se les envía SMS.
+  const smsContacts = data.contacts.filter((c) => !c.isSeed);
   const [flash, setFlash] = useState(data.settings.visualSignalEnabled && !data.settings.reduceMotion);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [, tick] = useState(0);
@@ -36,6 +40,12 @@ export default function AlertPage() {
     const t = window.setInterval(() => tick((n) => n + 1), 1000);
     return () => window.clearInterval(t);
   }, []);
+
+  const sendSms = () => {
+    if (!activeAlert) return;
+    markSmsOpened();
+    openSmsComposer(smsContacts, buildAlertMessage(data.settings.userName, activeAlert.eventType, activeAlert.location));
+  };
 
   const toggleSound = async () => {
     if (playing) stopSiren();
@@ -118,6 +128,13 @@ export default function AlertPage() {
             {activeAlert.simulatedDelivery && <DemoBadge label="Simulación" />}
           </span>
         </div>
+        <button className="btn btn--primary btn--block" onClick={sendSms} disabled={smsContacts.length === 0}>
+          <Send size={18} aria-hidden="true" />
+          {activeAlert.digitalStatus === 'sms_abierto' ? 'Abrir SMS de nuevo' : `Enviar SMS a mis contactos (${smsContacts.length})`}
+        </button>
+        {smsContacts.length === 0 && (
+          <p className="small muted">Agregue contactos reales en la sección Contactos para poder enviarles el SMS.</p>
+        )}
         <p className="callout callout--warning small">
           <strong>Activada localmente ≠ mensaje entregado.</strong> Solo un canal con estado «Enviada» real confirmaría que un
           destinatario recibió el aviso. Este prototipo no contacta servicios de emergencia.

@@ -21,6 +21,18 @@ export function isTorchOn(): boolean {
   return timer !== null;
 }
 
+/** Pide el permiso de cámara por adelantado (abre y cierra la cámara de inmediato, sin usar imágenes). */
+export async function requestCameraPermission(): Promise<boolean> {
+  if (!isTorchApiAvailable() || timer !== null) return timer !== null;
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    s.getTracks().forEach((t) => t.stop());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function setTorch(track: MediaStreamTrack, on: boolean): Promise<void> {
   return track.applyConstraints({ advanced: [{ torch: on } as MediaTrackConstraintSet] });
 }

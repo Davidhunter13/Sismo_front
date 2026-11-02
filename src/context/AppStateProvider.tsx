@@ -109,6 +109,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const markSmsOpened = useCallback(() => {
+    setData((d) => ({
+      ...d,
+      alerts: d.alerts.map((a) =>
+        a.id === d.activeAlertId ? { ...a, digitalStatus: 'sms_abierto', simulatedDelivery: false } : a,
+      ),
+    }));
+  }, []);
+
   const setLocation = useCallback((snapshot: LocationSnapshot | null, permission?: LocationPermission) => {
     setData((d) => ({ ...d, lastLocation: snapshot, locationPermission: permission ?? d.locationPermission }));
   }, []);
@@ -148,6 +157,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     deleteContact,
     activateAlert,
     endAlert,
+    markSmsOpened,
     setLocation,
     setLocationPermission,
     setDemoMode,

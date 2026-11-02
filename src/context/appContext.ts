@@ -11,6 +11,8 @@ export interface AppStateValue {
   deleteContact: (id: string) => void;
   activateAlert: (eventType: EventType) => AlertRecord;
   endAlert: () => void;
+  /** Registra que se abrió la app de SMS para la alerta activa (reemplaza cualquier simulación). */
+  markSmsOpened: () => void;
   setLocation: (snapshot: LocationSnapshot | null, permission?: LocationPermission) => void;
   setLocationPermission: (permission: LocationPermission) => void;
   setDemoMode: (enabled: boolean) => void;

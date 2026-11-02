@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { Capacitor } from '@capacitor/core';
 import { useIonRouter } from '@ionic/react';
 import { BookOpen, History, MapPin, MessageSquare, Radio, Users, Volume2, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -11,6 +12,7 @@ import type { BadgeTone } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
 import { isSirenSupported, startSiren } from '../services/sirenService';
+import { startTorchBlink } from '../services/torchService';
 import type { EventType } from '../types';
 import { formatLongDate } from '../utils/format';
 
@@ -27,9 +29,11 @@ export default function HomePage() {
     router.push('/alerta', 'forward');
   };
 
-  // La sirena arranca dentro del toque de confirmación: los navegadores bloquean el audio sin gesto del usuario.
+  // Sirena y linterna arrancan dentro del toque de confirmación: los navegadores bloquean audio y cámara sin gesto del usuario.
+  // La linterna solo se enciende sola en la app nativa (en escritorio encendería la cámara web sin tener flash).
   const onConfirmPress = () => {
     if (settings.soundEnabled) void startSiren();
+    if (Capacitor.isNativePlatform() && settings.visualSignalEnabled && !settings.reduceMotion) void startTorchBlink();
   };
 
   const quick: { path: string; label: string; detail: string; icon: LucideIcon }[] = [
@@ -82,9 +86,9 @@ export default function HomePage() {
           <ServiceIndicator
             icon={MessageSquare}
             name="Canal digital"
-            detail={settings.demoMode ? 'Entrega simulada; no se envían mensajes' : 'Envío a contactos aún no implementado'}
-            tone={settings.demoMode ? 'demo' : 'neutral'}
-            status={settings.demoMode ? 'Simulado' : 'No implementado'}
+            detail={settings.demoMode ? 'Entrega simulada; no se envían mensajes' : 'SMS a contactos desde la app de mensajes'}
+            tone={settings.demoMode ? 'demo' : 'info'}
+            status={settings.demoMode ? 'Simulado' : 'SMS'}
           />
         </ul>
       </section>

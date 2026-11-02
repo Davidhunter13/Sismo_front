@@ -5,10 +5,11 @@ export type AlertLifecycle = 'activa' | 'finalizada';
 
 /**
  * Estado del canal digital (mensaje a contactos).
- * El prototipo NO envía mensajes reales: 'enviada' y 'fallida' solo existen
- * como simulación del modo de demostración o como datos de ejemplo.
+ * 'sms_abierto': se abrió la app de SMS con el mensaje listo; el envío lo confirma el usuario allí
+ * y SISMO no puede verificarlo. 'enviada' y 'fallida' solo existen como simulación del modo de
+ * demostración o como datos de ejemplo.
  */
-export type DeliveryStatus = 'pendiente' | 'enviada' | 'fallida' | 'no_disponible';
+export type DeliveryStatus = 'pendiente' | 'enviada' | 'fallida' | 'no_disponible' | 'sms_abierto';
 
 export type EventType = 'sismo' | 'emergencia_general' | 'prueba';
 

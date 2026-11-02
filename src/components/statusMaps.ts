@@ -7,6 +7,7 @@ export const deliveryBadge: Record<DeliveryStatus, { tone: BadgeTone; label: str
   enviada: { tone: 'success', label: 'Enviada' },
   fallida: { tone: 'danger', label: 'Fallida' },
   no_disponible: { tone: 'neutral', label: 'Sin canal digital' },
+  sms_abierto: { tone: 'info', label: 'SMS abierto' },
 };
 
 export const permissionBadge: Record<LocationPermission, { tone: BadgeTone; label: string }> = {

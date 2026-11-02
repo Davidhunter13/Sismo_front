@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { useIonToast } from '@ionic/react';
-import { Crosshair, ExternalLink, FlaskConical, Info, Loader2, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { IonLabel, IonSegment, IonSegmentButton, useIonToast } from '@ionic/react';
+import { Crosshair, ExternalLink, FlaskConical, Info, Loader2, MapPinOff, Trash2 } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { LocationMap } from '../components/LocationMap';
 import { LocationStatusCard } from '../components/LocationStatusCard';
@@ -9,10 +9,16 @@ import { useAppState } from '../context/appContext';
 import { testLocation } from '../services/demoData';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
 
+// Leaflet solo se descarga cuando se abre la pestaña «Mapa real».
+const RealMap = lazy(() => import('../components/RealMap'));
+
+type MapTab = 'esquema' | 'real';
+
 export default function LocationPage() {
   const [presentToast] = useIonToast();
   const { data, setLocation, setLocationPermission } = useAppState();
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<MapTab>('esquema');
   const { lastLocation, locationPermission } = data;
 
   useEffect(() => {
@@ -43,14 +49,29 @@ export default function LocationPage() {
     <AppLayout title="Ubicación" backTo="/inicio">
       <LocationStatusCard snapshot={lastLocation} permission={locationPermission} />
 
+      <IonSegment value={tab} onIonChange={(e) => setTab(e.detail.value as MapTab)} className="segment">
+        <IonSegmentButton value="esquema"><IonLabel>Esquema</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="real"><IonLabel>Mapa real</IonLabel></IonSegmentButton>
+      </IonSegment>
+
       <section className="card card--flush">
-        <LocationMap snapshot={lastLocation} />
+        {tab === 'esquema' ? (
+          <LocationMap snapshot={lastLocation} />
+        ) : lastLocation ? (
+          <Suspense fallback={<div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> Cargando mapa…</div>}>
+            <RealMap snapshot={lastLocation} />
+          </Suspense>
+        ) : (
+          <div className="real-map__placeholder">
+            <MapPinOff size={22} aria-hidden="true" /> Solicite su ubicación para verla en el mapa.
+          </div>
+        )}
       </section>
 
       <div className="stack">
         <button className="btn btn--primary btn--block" onClick={request} disabled={loading}>
           {loading ? <Loader2 size={18} className="spin" aria-hidden="true" /> : <Crosshair size={18} aria-hidden="true" />}
-          {loading ? 'Solicitando ubicación…' : 'Solicitar mi ubicación'}
+          {loading ? 'Afinando ubicación (hasta 10 s)…' : 'Solicitar mi ubicación'}
         </button>
         <button className="btn btn--outline btn--block" onClick={useTest}>
           <FlaskConical size={18} aria-hidden="true" /> Usar coordenadas de prueba
@@ -74,8 +95,8 @@ export default function LocationPage() {
         <ul className="bullets">
           <li>La precisión depende del GPS, la red y el entorno; en interiores puede variar decenas o cientos de metros.</li>
           <li>El navegador solo permite la ubicación en sitios seguros (HTTPS o localhost) y con su autorización.</li>
-          <li>La ubicación se guarda solo en este dispositivo y se adjunta a la alerta local; no se envía a terceros.</li>
-          <li>No hay un servicio de mapas configurado: el gráfico superior es un esquema, no un mapa real.</li>
+          <li>La ubicación se guarda solo en este dispositivo y se adjunta a la alerta local.</li>
+          <li>La pestaña «Esquema» es un dibujo y funciona sin internet. «Mapa real» descarga el mapa de OpenStreetMap: requiere conexión y revela a ese servicio la zona aproximada que se está viendo.</li>
         </ul>
       </section>
     </AppLayout>
