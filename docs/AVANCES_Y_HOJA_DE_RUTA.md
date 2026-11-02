@@ -25,7 +25,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica, lectura en voz alta de la guía y mochila de emergencia |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 48 pruebas e2e + 39 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 50 pruebas e2e + 39 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -87,7 +87,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 ### 2.7 Supervivencia en un sismo
 
 - **Modo atrapado:** para quien queda bajo escombros. Apaga las señales continuas, baja el brillo y deja apagar la pantalla. Cada 3 minutos emite una ráfaga corta: tres pitidos de silbato y un ciclo de linterna SOS (Android) o vibración (navegador). En Android lo ejecuta el servicio nativo con un WakeLock parcial, así que sigue con la pantalla apagada. **Al salir del modo se retoman las señales normales** según la configuración.
-- **Silbato de rescate:** opción de sonido en Configuración («Sirena» o «Silbato»). Tres pitidos de ~3,1 kHz (señal internacional de auxilio): se oye mejor entre escombros y gasta menos batería que la sirena.
+- **Silbato de rescate:** opción de sonido en Configuración («Sirena» o «Silbato»). Tres pitidos de ~3,1 kHz (señal internacional de auxilio): se oye mejor entre escombros y gasta menos batería que la sirena. Cada opción tiene un botón **«Escuchar»** con una muestra (3 s de sirena o un ciclo de silbato) que se detiene sola o con «Detener»; no está disponible durante una alerta activa.
 - **Batería en el SMS:** el aviso incluye «Batería: X %» para que los contactos sepan cuánto tiempo queda para comunicarse.
 - **Detección de caídas («¿Está bien?»):** con la app abierta, el acelerómetro detecta caída libre seguida de impacto, o un impacto muy fuerte. Muestra una cuenta regresiva de 30 s con «Estoy bien» y «Pedir ayuda ahora»; si nadie responde, activa la alerta (origen `deteccion_automatica`). **Desactivada por defecto** por posibles falsas alarmas.
 - **Ubicación automática al dar SOS:** se toma al activar la alerta aunque no hubiera una guardada; si el permiso no se había pedido, se pide en ese momento. Solo deja de intentarlo si el permiso fue denegado.
@@ -170,8 +170,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
 | Pruebas unitarias (Vitest) | **39 de 39** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **48 de 48** superadas |
-| Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
+| Pruebas e2e (Playwright, móvil y escritorio) | **50 de 50** superadas |
+| Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |

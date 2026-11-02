@@ -108,6 +108,33 @@ export function stopSiren(): void {
   gain = null;
 }
 
+/** Duración de la muestra en Configuración: unos segundos de sirena o un ciclo completo de silbato. */
+export const PREVIEW_MS: Record<AlarmSound, number> = { sirena: 3000, silbato: WHISTLE_CYCLE_MS };
+let previewTimer: number | null = null;
+
+/**
+ * Reproduce una muestra del sonido para elegirlo en Configuración y lo detiene sola.
+ * No debe usarse con una alerta activa (compartiría el mismo reproductor).
+ */
+export async function previewSound(sound: AlarmSound, onEnd?: () => void): Promise<boolean> {
+  stopPreview();
+  const ok = await startSiren(sound);
+  if (!ok) return false;
+  previewTimer = window.setTimeout(() => {
+    previewTimer = null;
+    stopSiren();
+    onEnd?.();
+  }, PREVIEW_MS[sound]);
+  return true;
+}
+
+export function stopPreview(): void {
+  if (previewTimer === null) return;
+  window.clearTimeout(previewTimer);
+  previewTimer = null;
+  stopSiren();
+}
+
 /** Un solo ciclo de tres pitidos (ráfaga del modo atrapado en el navegador). */
 export async function playWhistleBurst(volume = 0.15): Promise<void> {
   if (!isSirenSupported() || isNative()) return;

@@ -203,6 +203,21 @@ test('navegación: desde una página secundaria la casita vuelve al inicio y no 
   }
 });
 
+test('configuración: se puede escuchar cada sonido antes de elegirlo', async ({ page }) => {
+  await onboard(page, false);
+  await goTo(page, '/configuracion', 'Configuración');
+  const v = view(page);
+  await v.getByRole('button', { name: 'Escuchar Sirena' }).click();
+  const stop = v.getByRole('button', { name: 'Detener muestra de Sirena' });
+  await expect(stop).toBeVisible();
+  // La muestra de sirena dura 3 s y se detiene sola.
+  await expect(v.getByRole('button', { name: 'Escuchar Sirena' })).toBeVisible({ timeout: 6000 });
+  // Detener manualmente la muestra del silbato.
+  await v.getByRole('button', { name: 'Escuchar Silbato' }).click();
+  await v.getByRole('button', { name: 'Detener muestra de Silbato' }).click();
+  await expect(v.getByRole('button', { name: 'Escuchar Silbato' })).toBeVisible();
+});
+
 test('inicio: «Avisar que estoy bien» requiere contactos reales', async ({ page }) => {
   await onboard(page); // modo demo: solo contactos ficticios
   await expect(view(page).getByRole('button', { name: 'Avisar que estoy bien' })).toBeDisabled();

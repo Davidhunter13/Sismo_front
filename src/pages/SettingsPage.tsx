@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonInput, IonLabel, IonSegment, IonSegmentButton, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
-import { Activity, AlertTriangle, Eye, FlaskConical, MapPin, RotateCcw, Trash2, User, Volume2 } from 'lucide-react';
+import { Activity, AlertTriangle, Eye, FlaskConical, MapPin, Play, RotateCcw, Square, Trash2, User, Volume2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
@@ -8,6 +8,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
 import { FALL_COUNTDOWN_S, isMotionSupported } from '../services/fallDetectionService';
+import { isSirenSupported, previewSound, stopPreview } from '../services/sirenService';
 import type { AlarmSound, Settings } from '../types';
 
 type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
@@ -21,15 +22,37 @@ const limitations = [
   'El mapa real y los sismos recientes requieren conexión a internet.',
 ];
 
+const SOUND_OPTIONS: { value: AlarmSound; label: string }[] = [
+  { value: 'sirena', label: 'Sirena' },
+  { value: 'silbato', label: 'Silbato' },
+];
+
 export default function SettingsPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
-  const { data, updateSettings, setDemoMode, resetDemoData, resetAll } = useAppState();
+  const { data, activeAlert, updateSettings, setDemoMode, resetDemoData, resetAll } = useAppState();
   const { settings } = data;
   const [name, setName] = useState(settings.userName);
   const [dialog, setDialog] = useState<'demo' | 'all' | null>(null);
+  const [previewing, setPreviewing] = useState<AlarmSound | null>(null);
 
   useEffect(() => setName(settings.userName), [settings.userName]);
+  // Al salir de Configuración se corta cualquier muestra en curso.
+  useEffect(() => stopPreview, []);
+
+  const togglePreview = async (sound: AlarmSound) => {
+    if (previewing === sound) {
+      stopPreview();
+      setPreviewing(null);
+      return;
+    }
+    setPreviewing(sound);
+    const ok = await previewSound(sound, () => setPreviewing((p) => (p === sound ? null : p)));
+    if (!ok) {
+      setPreviewing(null);
+      toast('Este dispositivo o navegador no puede reproducir el sonido.', 'warning');
+    }
+  };
 
   const nameError = name.trim().length < 2 ? 'Mínimo 2 caracteres.' : name.trim().length > 30 ? 'Máximo 30 caracteres.' : '';
   const toast = (message: string, color = 'success') => presentToast({ message, duration: 2200, color, position: 'top' });
@@ -83,6 +106,25 @@ export default function SettingsPage() {
             <IonSegmentButton value="sirena"><IonLabel>Sirena</IonLabel></IonSegmentButton>
             <IonSegmentButton value="silbato"><IonLabel>Silbato</IonLabel></IonSegmentButton>
           </IonSegment>
+          <div className="btn-pair">
+            {SOUND_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                className={`btn ${previewing === value ? 'btn--dark' : 'btn--ghost'}`}
+                onClick={() => void togglePreview(value)}
+                disabled={!!activeAlert || !isSirenSupported()}
+                aria-label={previewing === value ? `Detener muestra de ${label}` : `Escuchar ${label}`}
+              >
+                {previewing === value ? <Square size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+                {previewing === value ? 'Detener' : `Escuchar ${label.toLowerCase()}`}
+              </button>
+            ))}
+          </div>
+          <p className="small muted">
+            {activeAlert
+              ? 'Las muestras no están disponibles mientras hay una alerta activa.'
+              : 'La muestra dura unos segundos y suena al volumen de alarma del teléfono.'}
+          </p>
         </div>
       </section>
 
