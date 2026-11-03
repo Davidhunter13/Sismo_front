@@ -15,6 +15,7 @@ import medical from './ns/medical';
 import quakes from './ns/quakes';
 import services from './ns/services';
 import settings from './ns/settings';
+import setup from './ns/setup';
 import stats from './ns/stats';
 import survey from './ns/survey';
 import welcome from './ns/welcome';
@@ -37,6 +38,7 @@ export const messages = {
   quakes,
   services,
   settings,
+  setup,
   stats,
   survey,
   welcome,

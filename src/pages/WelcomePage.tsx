@@ -19,8 +19,13 @@ export default function WelcomePage() {
   const { common: tc, welcome: t } = useT();
   const [loadDemo, setLoadDemo] = useState(true);
 
+  // Sin modo de demostración, el registro (nombre, ubicación, punto de encuentro y contacto) es obligatorio.
   const start = () => {
-    if (loadDemo && !data.settings.demoMode) setDemoMode(true);
+    if (!loadDemo) {
+      router.push('/registro', 'forward', 'push');
+      return;
+    }
+    if (!data.settings.demoMode) setDemoMode(true);
     updateSettings({ onboarded: true });
     router.push('/inicio', 'root', 'replace');
   };

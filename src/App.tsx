@@ -20,6 +20,7 @@ import PostQuakePage from './pages/PostQuakePage';
 import SurveyPage from './pages/SurveyPage';
 import QuakesPage from './pages/QuakesPage';
 import SettingsPage from './pages/SettingsPage';
+import SetupPage from './pages/SetupPage';
 import DrillPage from './pages/DrillPage';
 import StatsPage from './pages/StatsPage';
 import { requestLocationPermissionOnNative } from './services/locationService';
@@ -66,6 +67,7 @@ function Routes() {
       <FallDetector />
       <IonRouterOutlet>
         <Route exact path="/bienvenida" component={WelcomePage} />
+        <Route exact path="/registro" component={SetupPage} />
         <Route exact path="/inicio" component={HomePage} />
         <Route exact path="/alerta" component={AlertPage} />
         <Route exact path="/ubicacion" component={LocationPage} />

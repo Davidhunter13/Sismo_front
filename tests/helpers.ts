@@ -9,12 +9,20 @@ export async function goTo(page: Page, path: string, heading: string | RegExp) {
   await expect(view(page).locator('.app-header__subtitle')).toHaveText(heading);
 }
 
-/** Bienvenida → Comenzar (con o sin modo de demostración). */
+/**
+ * Con demo: Bienvenida → Comenzar. Sin demo: app ya registrada pero sin datos (como si el usuario hubiera
+ * borrado contactos y puntos después del registro), para probar los estados vacíos sin pasar por el asistente
+ * obligatorio, que tiene sus propias pruebas.
+ */
 export async function onboard(page: Page, demo = true) {
   await page.goto('/');
   await expect(page).toHaveURL(/\/bienvenida$/);
-  if (!demo) await view(page).locator('ion-toggle').click();
-  await view(page).getByRole('button', { name: 'Comenzar' }).click();
+  if (demo) {
+    await view(page).getByRole('button', { name: 'Comenzar' }).click();
+  } else {
+    await page.evaluate(() => localStorage.setItem('sismo:v1:data', JSON.stringify({ version: 1, settings: { onboarded: true } })));
+    await page.goto('/inicio');
+  }
   await expect(page).toHaveURL(/\/inicio$/);
   await expect(view(page).getByRole('heading', { level: 1 })).toContainText('Hola');
 }

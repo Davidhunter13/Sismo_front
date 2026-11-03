@@ -182,6 +182,16 @@ p { margin: 0; line-height: 1.5; }
 .welcome__features li { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.93rem; }
 .welcome__features li span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: var(--navy-soft); color: var(--navy); flex-shrink: 0; }
 .welcome__foot { text-align: center; color: var(--muted); font-size: 0.78rem; }
+/* Asistente de registro obligatorio (/registro) */
+.setup h1 { margin: 0; font-size: 1.6rem; }
+.setup__progress { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; padding: 0; }
+.setup__progress li { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--muted); font-size: 0.72rem; }
+.setup__progress li > span, .setup__progress li > svg { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid currentColor; font-weight: 700; }
+.setup__progress li.is-done { color: var(--success); }
+.setup__progress li.is-current { color: var(--brand); }
+.setup__progress li.is-current > span { background: var(--brand); color: #fff; border-color: var(--brand); }
+.setup__nav { display: flex; justify-content: space-between; gap: 12px; }
+.setup__nav .btn { flex: 1; }
 
 .toggle-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
 .toggle-row > span { display: flex; flex-direction: column; gap: 2px; }
