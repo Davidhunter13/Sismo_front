@@ -97,3 +97,31 @@ test('registro: el contacto se puede traer de la agenda (nombre y teléfono prec
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await expect(v.getByText('1 contacto agregado.')).toBeVisible();
 });
+
+test('registro: el contacto agregado se puede editar o eliminar si hubo un error', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('sismo:v1:data', JSON.stringify({
+    version: 1,
+    settings: { userName: 'Ana' },
+    lastLocation: { latitude: 4.6, longitude: -74, accuracy: 10, timestamp: new Date().toISOString(), source: 'dispositivo' },
+    meetingPoints: [{ id: 'a', label: 'Parque', latitude: 4.6, longitude: -74 }],
+    contacts: [{ id: 'c1', name: 'Luisa', relationship: 'Familiar', phone: '320 000 0000', email: 'luisa@example.com', isSeed: false, createdAt: '' }],
+  })));
+  await page.goto('/registro');
+  const v = view(page);
+  for (let i = 0; i < 3; i++) await v.getByRole('button', { name: 'Siguiente' }).click();
+
+  // Editar: corrige el teléfono.
+  await v.getByRole('button', { name: 'Editar Luisa' }).click();
+  const modal = page.locator('ion-modal');
+  await modal.locator('ion-input[label="Teléfono"] input').fill('320 349 8531');
+  await modal.getByRole('button', { name: 'Guardar cambios' }).click();
+  await expect(v.getByText('320 349 8531 · luisa@example.com')).toBeVisible();
+  expect((await readStorage(page)).contacts).toHaveLength(1);
+
+  // Eliminar: pide confirmación y el paso vuelve a quedar incompleto.
+  await v.getByRole('button', { name: 'Eliminar Luisa' }).click();
+  await page.locator('ion-alert').getByRole('button', { name: 'Eliminar' }).click();
+  await expect(v.getByText('1 contacto agregado.')).toHaveCount(0);
+  await expect(v.getByRole('button', { name: 'Finalizar registro' })).toBeDisabled();
+});

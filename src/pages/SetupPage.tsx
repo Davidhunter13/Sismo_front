@@ -1,7 +1,8 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonContent, IonInput, IonPage, useIonRouter, useIonToast } from '@ionic/react';
-import { ArrowLeft, ArrowRight, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Search, Siren, UserPlus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Pencil, Search, Siren, Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
@@ -10,7 +11,7 @@ import { requestDeviceLocation } from '../services/locationService';
 import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
 import { requestSosDialog } from '../services/sosRequestService';
 import { defaultSettings } from '../services/storageService';
-import type { ContactInput } from '../types';
+import type { Contact, ContactInput } from '../types';
 import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
 import { goToRoot } from '../utils/navigation';
 
@@ -23,7 +24,7 @@ const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
  */
 export default function SetupPage() {
   const router = useIonRouter();
-  const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, addContact } = useAppState();
+  const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, addContact, updateContact, deleteContact } = useAppState();
   const { setup: t, settings: ts, location: tl, contacts: tc } = useT();
   const [presentToast] = useIonToast();
   const [imported, setImported] = useState<ContactInput | null>(null);
@@ -38,6 +39,8 @@ export default function SetupPage() {
   const [searching, setSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState('');
   const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Contact | null>(null);
+  const [toDelete, setToDelete] = useState<Contact | null>(null);
 
   const { lastLocation, meetingPoints } = data;
   const deviceLocation = lastLocation?.source === 'dispositivo' ? lastLocation : null;
@@ -101,11 +104,19 @@ export default function SetupPage() {
   };
 
   const saveContact = (input: ContactInput) => {
-    addContact(input);
+    if (editing) updateContact(editing.id, input);
+    else addContact(input);
     setFormOpen(false);
   };
 
   const openNewContact = () => {
+    setEditing(null);
+    setImported(null);
+    setFormOpen(true);
+  };
+
+  const openEditContact = (c: Contact) => {
+    setEditing(c);
     setImported(null);
     setFormOpen(true);
   };
@@ -267,8 +278,22 @@ export default function SetupPage() {
                 {realContacts.length > 0 && (
                   <>
                     <p className="small" role="status"><CheckCircle2 size={16} aria-hidden="true" /> {t.contactCount(realContacts.length)}</p>
-                    <ul className="small">
-                      {realContacts.map((c) => <li key={c.id}>{c.name} · {c.phone}</li>)}
+                    {/* Editar o eliminar si se equivocó (misma lista y estilo que los puntos de encuentro). */}
+                    <ul className="meeting-list">
+                      {realContacts.map((c) => (
+                        <li key={c.id}>
+                          <span>
+                            {c.name}
+                            <small>{c.phone}{c.email ? ` · ${c.email}` : ''}</small>
+                          </span>
+                          <button className="btn btn--ghost btn--sm" onClick={() => openEditContact(c)} aria-label={tc.card.edit(c.name)}>
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                          <button className="btn btn--ghost btn--sm" onClick={() => setToDelete(c)} aria-label={tc.card.remove(c.name)}>
+                            <Trash2 size={16} aria-hidden="true" />
+                          </button>
+                        </li>
+                      ))}
                     </ul>
                   </>
                 )}
@@ -286,7 +311,16 @@ export default function SetupPage() {
           </div>
         </main>
       </IonContent>
-      <ContactFormModal isOpen={formOpen} contact={null} initial={imported} onSave={saveContact} onClose={() => setFormOpen(false)} />
+      <ContactFormModal isOpen={formOpen} contact={editing} initial={imported} onSave={saveContact} onClose={() => setFormOpen(false)} />
+      <ConfirmationDialog
+        isOpen={!!toDelete}
+        title={tc.deleteTitle}
+        message={toDelete ? tc.deleteMessage(toDelete.name) : ''}
+        confirmText={tc.deleteConfirm}
+        destructive
+        onConfirm={() => toDelete && deleteContact(toDelete.id)}
+        onClose={() => setToDelete(null)}
+      />
     </IonPage>
   );
 }
