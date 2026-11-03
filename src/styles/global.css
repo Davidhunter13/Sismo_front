@@ -188,8 +188,8 @@ p { margin: 0; line-height: 1.5; }
 .setup__progress li { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--muted); font-size: 0.72rem; }
 .setup__progress li > span, .setup__progress li > svg { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid currentColor; font-weight: 700; }
 .setup__progress li.is-done { color: var(--success); }
-.setup__progress li.is-current { color: var(--brand); }
-.setup__progress li.is-current > span { background: var(--brand); color: #fff; border-color: var(--brand); }
+.setup__progress li.is-current { color: var(--navy); font-weight: 700; }
+.setup__progress li.is-current > span { background: var(--navy); color: var(--card); border-color: var(--navy); }
 .setup__nav { display: flex; justify-content: space-between; gap: 12px; }
 .setup__nav .btn { flex: 1; }
 
@@ -579,3 +579,15 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 .route-map { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
 .route-map__canvas { height: 260px; background: var(--surface-2); z-index: 0; }
 .route-map__line { stroke: #1d6fd8; stroke-opacity: 0.9; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+/* Selector del punto de encuentro de la brújula y la ruta (cuando hay varios) */
+.meeting-chooser { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 10px; }
+.meeting-chooser > small { width: 100%; }
+.chip { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.chip small { color: var(--muted); }
+.chip--active { background: var(--navy); border-color: var(--navy); color: var(--card); }
+.chip--active small { color: inherit; opacity: 0.85; }
+.meeting-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.meeting-list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
+.meeting-list li > span { flex: 1; min-width: 0; }
+.meeting-list li small { display: block; color: var(--muted); }

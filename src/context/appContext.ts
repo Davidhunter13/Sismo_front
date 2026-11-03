@@ -23,7 +23,9 @@ export interface AppStateValue {
   startDrill: () => void;
   cancelDrill: () => void;
   setMedical: (medical: MedicalInfo | null) => void;
-  setMeetingPoint: (point: MeetingPoint | null) => void;
+  /** Agrega un punto de encuentro (máximo MAX_MEETING_POINTS; si se supera, sale el más antiguo). */
+  addMeetingPoint: (point: Omit<MeetingPoint, 'id'>) => MeetingPoint;
+  removeMeetingPoint: (id: string) => void;
   addSusResponse: (response: SusResponse) => void;
   setKit: (kit: EmergencyKit | null) => void;
   setPostQuakeDone: (done: number[], alertId?: string) => void;

@@ -100,7 +100,7 @@ export default function HomePage() {
     {
       path: '/ubicacion?ver=brujula',
       label: all.features.compass.tile,
-      detail: data.meetingPoint ? data.meetingPoint.label : all.features.compass.tileNoPoint,
+      detail: data.meetingPoints.length ? data.meetingPoints.map((p) => p.label).join(' · ') : all.features.compass.tileNoPoint,
       icon: Navigation,
     },
     { path: '/sismos', label: t.tiles.quakes, detail: t.tiles.quakesDetail, icon: Activity },

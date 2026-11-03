@@ -137,6 +137,7 @@ export interface MedicalInfo {
 }
 
 export interface MeetingPoint {
+  id: string;
   label: string;
   latitude: number;
   longitude: number;
@@ -170,7 +171,8 @@ export interface AppData {
   locationPermission: LocationPermission;
   /** Ficha médica opcional; se guarda solo en este dispositivo y nunca se envía. */
   medical: MedicalInfo | null;
-  meetingPoint: MeetingPoint | null;
+  /** Puntos de encuentro acordados (puede haber varios: casa, trabajo, colegio…). */
+  meetingPoints: MeetingPoint[];
   susResponses: SusResponse[];
   kit: EmergencyKit | null;
   /** Lista «Después del sismo» de práctica, usada solo mientras no se ha activado ninguna alerta real. */

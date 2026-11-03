@@ -14,6 +14,8 @@ import { testLocation } from '../services/demoData';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
 import { formatCoord } from '../utils/format';
+import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
+import { useMeetingTarget } from '../components/useMeetingTarget';
 
 // Leaflet solo se descarga cuando se abre la pestaña «Mapa real».
 const RealMap = lazy(() => import('../components/RealMap'));
@@ -22,14 +24,17 @@ type MapTab = 'esquema' | 'real';
 
 export default function LocationPage() {
   const [presentToast] = useIonToast();
-  const { data, setLocation, setLocationPermission, setMeetingPoint } = useAppState();
+  const { data, setLocation, setLocationPermission, addMeetingPoint, removeMeetingPoint } = useAppState();
   const { features: tf, location: t } = useT();
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<MapTab>('esquema');
-  const { lastLocation, locationPermission, meetingPoint } = data;
-  const [label, setLabel] = useState(meetingPoint?.label ?? t.meeting.defaultLabel);
+  const { lastLocation, locationPermission, meetingPoints } = data;
+  const [label, setLabel] = useState(t.meeting.defaultLabel);
   const [picking, setPicking] = useState(false);
   const labelError = label.trim().length < 2 ? t.meeting.min : '';
+  const full = meetingPoints.length >= MAX_MEETING_POINTS;
+  // Brújula y ruta: hacia el punto más cercano a la ubicación actual (se puede elegir otro).
+  const meeting = useMeetingTarget(lastLocation);
 
   useEffect(() => {
     checkLocationPermission().then((p) => {
@@ -59,8 +64,11 @@ export default function LocationPage() {
   const scrollToMap = () =>
     window.setTimeout(() => document.getElementById('mapa')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
 
+  // Cada punto guardado se suma a la lista; el nombre vuelve al de por defecto para el siguiente.
   const saveMeeting = (latitude: number, longitude: number, name = label.trim()) => {
-    setMeetingPoint({ label: name, latitude, longitude });
+    if (full) return;
+    addMeetingPoint({ label: name, latitude, longitude });
+    setLabel(t.meeting.defaultLabel);
     setPicking(false);
     presentToast({ message: t.meeting.saved, duration: 2200, color: 'success', position: 'top' });
   };
@@ -99,7 +107,6 @@ export default function LocationPage() {
   // Si el usuario no cambió el nombre por defecto, se usa la dirección encontrada como nombre del punto.
   const chooseAddress = (r: AddressResult) => {
     const name = label.trim() && label.trim() !== t.meeting.defaultLabel ? label.trim() : r.shortLabel;
-    setLabel(name);
     saveMeeting(r.latitude, r.longitude, name);
     setResults([]);
     setAddress('');
@@ -134,7 +141,7 @@ export default function LocationPage() {
           <LocationMap snapshot={lastLocation} />
         ) : lastLocation ? (
           <Suspense fallback={<div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> {t.loadingMap}</div>}>
-            <RealMap snapshot={lastLocation} meetingPoint={meetingPoint} onPick={picking ? pickOnMap : undefined} />
+            <RealMap snapshot={lastLocation} meetingPoints={meetingPoints} onPick={picking ? pickOnMap : undefined} />
           </Suspense>
         ) : (
           <div className="real-map__placeholder">
@@ -167,11 +174,27 @@ export default function LocationPage() {
 
       <section className="card stack">
         <h2 className="card__title"><Flag size={18} aria-hidden="true" /> {t.meeting.title}</h2>
-        <p className="small muted">
-          {meetingPoint
-            ? t.meeting.summary(meetingPoint.label, `${formatCoord(meetingPoint.latitude)}, ${formatCoord(meetingPoint.longitude)}`)
-            : t.meeting.empty}
-        </p>
+        <p className="small muted">{meetingPoints.length ? t.meeting.manyHint : t.meeting.empty}</p>
+        {meetingPoints.length > 0 && (
+          <>
+            <strong className="small">{t.meeting.listTitle(meetingPoints.length, MAX_MEETING_POINTS)}</strong>
+            <ul className="meeting-list">
+              {meetingPoints.map((p) => (
+                <li key={p.id}>
+                  <MapPin size={16} aria-hidden="true" />
+                  <span>
+                    {p.label}
+                    <small>{formatCoord(p.latitude)}, {formatCoord(p.longitude)}</small>
+                  </span>
+                  <button className="btn btn--ghost btn--sm" onClick={() => removeMeetingPoint(p.id)} aria-label={t.meeting.removeOne(p.label)}>
+                    <Trash2 size={16} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {full && <p className="callout callout--warning small" role="note">{t.meeting.full(MAX_MEETING_POINTS)}</p>}
         <IonInput
           className={labelError ? 'ion-invalid ion-touched' : ''}
           label={t.meeting.nameLabel}
@@ -185,10 +208,10 @@ export default function LocationPage() {
         />
         {picking && <p className="callout callout--info small">{t.meeting.pickHint}</p>}
         <div className="btn-pair">
-          <button className="btn btn--outline" onClick={useCurrentAsMeeting} disabled={!!labelError || !lastLocation || lastLocation.source !== 'dispositivo'}>
+          <button className="btn btn--outline" onClick={useCurrentAsMeeting} disabled={full || !!labelError || !lastLocation || lastLocation.source !== 'dispositivo'}>
             <Crosshair size={16} aria-hidden="true" /> {t.meeting.current}
           </button>
-          <button className={`btn ${picking ? 'btn--dark' : 'btn--outline'}`} onClick={togglePicking} disabled={!!labelError || !lastLocation}>
+          <button className={`btn ${picking ? 'btn--dark' : 'btn--outline'}`} onClick={togglePicking} disabled={full || !!labelError || !lastLocation}>
             <MapPinned size={16} aria-hidden="true" /> {picking ? t.meeting.cancel : t.meeting.pick}
           </button>
         </div>
@@ -236,29 +259,25 @@ export default function LocationPage() {
           </div>
         )}
         <p className="small muted">{t.meeting.addressPrivacy}</p>
-        {meetingPoint && (
-          <button className="btn btn--ghost btn--block" onClick={() => setMeetingPoint(null)}>
-            <Trash2 size={16} aria-hidden="true" /> {t.meeting.remove}
-          </button>
-        )}
       </section>
 
       {/* Siempre visible: sin punto de encuentro, la tarjeta indica cómo activarla. */}
       {/* Sin punto de encuentro la tarjeta se marca en amarillo con un aviso. */}
-      <section className={`card${meetingPoint ? '' : ' meeting-missing'}`} id="brujula">
+      <section className={`card${meeting.point ? '' : ' meeting-missing'}`} id="brujula">
         <h2 className="card__title"><Navigation size={18} aria-hidden="true" /> {tf.compass.title}</h2>
-        {!meetingPoint && (
+        {!meeting.point && (
           <p className="callout callout--warning callout--row small" role="alert">
             <AlertTriangle size={18} aria-hidden="true" /> <span>{tf.compass.missingAlert}</span>
           </p>
         )}
-        <MeetingCompass meetingPoint={meetingPoint} fallback={lastLocation} />
+        {meeting.chooser}
+        <MeetingCompass meetingPoint={meeting.point} fallback={lastLocation} />
       </section>
 
-      {meetingPoint && (
+      {meeting.point && (
         <section className="card" id="ruta">
           <h2 className="card__title"><Route size={18} aria-hidden="true" /> {tf.route.title}</h2>
-          <MeetingRoute meetingPoint={meetingPoint} from={lastLocation} />
+          <MeetingRoute meetingPoint={meeting.point} from={lastLocation} />
         </section>
       )}
 

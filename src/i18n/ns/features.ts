@@ -22,6 +22,8 @@ const es = {
     miniSetUp: 'Configure un punto de encuentro para que la flecha le indique el camino.',
     miniNeedLocation: 'Solicite su ubicación para ver la distancia.',
     tileNoPoint: 'Al punto de encuentro',
+    chooseLabel: 'Guiar hacia',
+    nearest: 'más cercano',
   },
   route: {
     title: 'Cómo llegar',
@@ -124,6 +126,8 @@ const en: typeof es = {
     miniSetUp: 'Set up a meeting point so the arrow can show you the way.',
     miniNeedLocation: 'Request your location to see the distance.',
     tileNoPoint: 'To the meeting point',
+    chooseLabel: 'Guide me to',
+    nearest: 'nearest',
   },
   route: {
     title: 'How to get there',

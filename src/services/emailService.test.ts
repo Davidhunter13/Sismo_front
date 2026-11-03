@@ -27,7 +27,7 @@ describe('emailRecipients', () => {
 
 describe('buildAlertEmail', () => {
   it('arma asunto, destinatarios, cuerpo y ubicación', () => {
-    const req = buildAlertEmail(alert, 'Ana', [contact({})], null, null, 40);
+    const req = buildAlertEmail(alert, 'Ana', [contact({})], [], null, 40);
     expect(req.subject).toBe('ALERTA SISMO: Ana necesita ayuda');
     expect(req.recipients).toEqual([{ name: 'Luisa', email: 'luisa@example.com' }]);
     expect(req.body).toContain('ALERTA SISMO: Ana activó una alerta (Sismo).');
@@ -38,7 +38,7 @@ describe('buildAlertEmail', () => {
 });
 
 describe('sendAlertEmail', () => {
-  const req = () => buildAlertEmail(alert, 'Ana', [contact({})], null, null, null);
+  const req = () => buildAlertEmail(alert, 'Ana', [contact({})], [], null, null);
 
   it('sin destinatarios no intenta enviar', async () => {
     expect(await sendAlertEmail({ ...req(), recipients: [] })).toBe('sin_destinatarios');

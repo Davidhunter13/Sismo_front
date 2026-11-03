@@ -31,13 +31,13 @@ export function buildAlertMessage(
   userName: string,
   eventType: EventType,
   location: LocationSnapshot | null,
-  meetingPoint: MeetingPoint | null = null,
+  meetingPoints: MeetingPoint[] = [],
   medical: MedicalInfo | null = null,
   batteryLevel: number | null = null,
 ): string {
   const t = getT().services.sms;
   const who = userName.trim() || t.defaultWho;
-  const lines = [t.alertHeader(who, eventTypeLabel[eventType]), locationLine(location), ...meetingLines(meetingPoint)];
+  const lines = [t.alertHeader(who, eventTypeLabel[eventType]), locationLine(location), ...meetingLines(meetingPoints)];
   const med = medicalSummary(medical);
   if (med) lines.push(t.medical(med));
   // Les dice a los contactos cuánto tiempo queda para comunicarse.
@@ -55,15 +55,16 @@ function locationLine(location: LocationSnapshot | null): string {
   return location.source === 'prueba' ? t.testLocation(link) : t.location(precision, link);
 }
 
-function meetingLines(meetingPoint: MeetingPoint | null): string[] {
-  if (!meetingPoint) return [];
-  return [getT().services.sms.meetingPoint(meetingPoint.label, mapsLink(meetingPoint.latitude, meetingPoint.longitude))];
+/** Una línea por punto de encuentro, cada una con su enlace a Google Maps. */
+function meetingLines(meetingPoints: MeetingPoint[]): string[] {
+  const t = getT().services.sms;
+  return meetingPoints.map((p) => t.meetingPoint(p.label, mapsLink(p.latitude, p.longitude)));
 }
 
-/** Datos opcionales del aviso «Estoy bien»: dónde está la persona, el punto de encuentro y la batería. */
+/** Datos opcionales del aviso «Estoy bien»: dónde está la persona, los puntos de encuentro y la batería. */
 export interface SafeDetails {
   location?: LocationSnapshot | null;
-  meetingPoint?: MeetingPoint | null;
+  meetingPoints?: MeetingPoint[];
   batteryLevel?: number | null;
 }
 
@@ -76,9 +77,9 @@ export function buildSafeMessage(userName: string, eventType?: EventType, at: Da
   const who = userName.trim() || t.defaultSafeWho;
   const hour = at.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
   const lines = [eventType ? t.safeAfterAlert(who, eventTypeLabel[eventType], hour) : t.safeNow(who, hour)];
-  // Mensaje completo: dónde está, el punto de encuentro y la batería (si se conocen).
+  // Mensaje completo: dónde está, los puntos de encuentro y la batería (si se conocen).
   if (details.location !== undefined) lines.push(locationLine(details.location));
-  lines.push(...meetingLines(details.meetingPoint ?? null));
+  lines.push(...meetingLines(details.meetingPoints ?? []));
   if (details.batteryLevel != null) lines.push(t.battery(details.batteryLevel));
   return lines.join('\n');
 }

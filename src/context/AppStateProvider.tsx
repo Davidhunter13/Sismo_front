@@ -9,6 +9,7 @@ import { clearData, createEmptyData, loadData, newId, saveData } from '../servic
 import { demoAlerts, demoContacts } from '../services/demoData';
 import { requestDeviceLocation } from '../services/locationService';
 import { takeTrace } from '../services/metricsService';
+import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
 import { keepScreenOn, showOverLockScreen } from '../services/screenService';
 import { stopAlertSignals } from '../services/signalsService';
 import { AppStateContext, type AppStateValue, type DrillState } from './appContext';
@@ -214,8 +215,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setData((d) => ({ ...d, medical }));
   }, []);
 
-  const setMeetingPoint = useCallback((meetingPoint: MeetingPoint | null) => {
-    setData((d) => ({ ...d, meetingPoint }));
+  const addMeetingPoint = useCallback((input: Omit<MeetingPoint, 'id'>) => {
+    const point: MeetingPoint = { ...input, id: newId() };
+    setData((d) => ({ ...d, meetingPoints: [...d.meetingPoints, point].slice(-MAX_MEETING_POINTS) }));
+    return point;
+  }, []);
+
+  const removeMeetingPoint = useCallback((id: string) => {
+    setData((d) => ({ ...d, meetingPoints: d.meetingPoints.filter((p) => p.id !== id) }));
   }, []);
 
   const addSusResponse = useCallback((response: SusResponse) => {
@@ -283,7 +290,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     startDrill,
     cancelDrill,
     setMedical,
-    setMeetingPoint,
+    addMeetingPoint,
+    removeMeetingPoint,
     addSusResponse,
     setKit,
     setPostQuakeDone,

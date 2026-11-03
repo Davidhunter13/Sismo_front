@@ -25,6 +25,7 @@ import { refreshNativeSignals, startAlertSignals } from '../services/signalsServ
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
 import { buildAlertMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
 import { useNotifySafe } from '../components/useNotifySafe';
+import { useMeetingTarget } from '../components/useMeetingTarget';
 import type { Contact } from '../types';
 import { isTorchApiAvailable, isTorchOn, startTorchBlink, stopTorch } from '../services/torchService';
 import { isVibrating, isVibrationSupported, startVibration, stopVibration } from '../services/vibrationService';
@@ -38,6 +39,8 @@ export default function AlertPage() {
   const tf = useT().features;
   const ta = useT().alert;
   const { data, activeAlert, endAlert, markSmsOpened } = useAppState();
+  // Brújula de la alerta: hacia el punto de encuentro más cercano a donde se activó (o la última ubicación).
+  const meeting = useMeetingTarget(activeAlert?.location ?? data.lastLocation);
   // Los contactos de demostración son ficticios: no se les envía SMS.
   const smsContacts = data.contacts.filter((c) => !c.isSeed);
   const [flash, setFlash] = useState(data.settings.visualSignalEnabled && !data.settings.reduceMotion);
@@ -62,7 +65,7 @@ export default function AlertPage() {
   const alertMessage = async () => {
     if (!activeAlert) return '';
     const battery = await getBatteryLevel();
-    return buildAlertMessage(data.settings.userName, activeAlert.eventType, activeAlert.location, data.meetingPoint, data.medical, battery);
+    return buildAlertMessage(data.settings.userName, activeAlert.eventType, activeAlert.location, data.meetingPoints, data.medical, battery);
   };
 
   const sendSms = async () => {
@@ -317,10 +320,11 @@ export default function AlertPage() {
         </section>
       )}
 
-      {data.meetingPoint && (
+      {meeting.point && (
         <section className="card">
           <h2 className="card__title"><Navigation size={18} aria-hidden="true" /> {tf.compass.title}</h2>
-          <MeetingCompass meetingPoint={data.meetingPoint} fallback={activeAlert.location} />
+          {meeting.chooser}
+          <MeetingCompass meetingPoint={meeting.point} fallback={activeAlert.location} />
         </section>
       )}
 

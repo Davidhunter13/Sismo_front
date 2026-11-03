@@ -1,5 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import type { AppData, Settings } from '../types';
+import type { AppData, MeetingPoint, Settings } from '../types';
 
 const STORAGE_KEY = 'sismo:v1:data';
 
@@ -30,7 +30,7 @@ export function createEmptyData(): AppData {
     lastLocation: null,
     locationPermission: 'sin_solicitar',
     medical: null,
-    meetingPoint: null,
+    meetingPoints: [],
     susResponses: [],
     kit: null,
     postQuakeDone: [],
@@ -45,10 +45,13 @@ export function loadData(): AppData {
     const parsed = JSON.parse(raw) as Partial<AppData>;
     if (parsed.version !== 1) return createEmptyData();
     const empty = createEmptyData();
+    // Versiones anteriores guardaban un solo punto de encuentro (`meetingPoint`): se convierte en lista.
+    const { meetingPoint: legacyPoint, ...rest } = parsed as Partial<AppData> & { meetingPoint?: Omit<MeetingPoint, 'id'> | null };
     return {
       ...empty,
-      ...parsed,
+      ...rest,
       settings: { ...empty.settings, ...parsed.settings },
+      meetingPoints: Array.isArray(rest.meetingPoints) ? rest.meetingPoints : legacyPoint ? [{ ...legacyPoint, id: newId() }] : [],
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
       alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
       susResponses: Array.isArray(parsed.susResponses) ? parsed.susResponses : [],

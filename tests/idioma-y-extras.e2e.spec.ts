@@ -142,9 +142,9 @@ test('punto de encuentro por dirección: busca, elige y lo guarda', async ({ pag
   await v.locator('ion-input', { hasText: 'O busque una dirección' }).locator('input').fill('Parque Simón Bolívar');
   await v.getByRole('button', { name: 'Buscar', exact: true }).click();
   await v.getByRole('button', { name: /Parque Simón Bolívar, Bogotá, Colombia/ }).click();
-  await expect.poll(async () => (await readStorage(page)).meetingPoint).toEqual({
-    label: 'Parque Simón Bolívar', latitude: 4.658, longitude: -74.093,
-  });
+  await expect.poll(async () => (await readStorage(page)).meetingPoints).toEqual([
+    expect.objectContaining({ label: 'Parque Simón Bolívar', latitude: 4.658, longitude: -74.093 }),
+  ]);
   await expect(v.locator('#brujula')).not.toContainText('Para usar la brújula');
 });
 

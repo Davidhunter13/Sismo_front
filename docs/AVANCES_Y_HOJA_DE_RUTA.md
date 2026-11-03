@@ -19,7 +19,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Vibración | No existía | Vibración en patrón SOS |
 | Pantalla | Se bloqueaba sola | Permanece encendida durante la alerta |
 | Llamada de emergencia | No existía | Botón «Llamar al 123» |
-| Canal digital | Solo simulación | SMS a contactos con ubicación y punto de encuentro + «Estoy bien» (SMS o WhatsApp) con ubicación actual, punto de encuentro y batería |
+| Canal digital | Solo simulación | SMS a contactos con ubicación y puntos de encuentro + «Estoy bien» (SMS o WhatsApp) con ubicación actual, puntos de encuentro y batería |
 | Ubicación | Una lectura al tocar un botón | Afinado de GPS (hasta 10 s) y actualización cada 2 min durante la alerta |
 | Mapa | Esquema SVG | Pestañas «Esquema» y «Mapa real» (OpenStreetMap) con punto de encuentro |
 | Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica con QR, lectura en voz alta, mochila de emergencia y lista «Después del sismo» |
@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 90 pruebas e2e + 90 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 100 pruebas e2e + 95 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -50,7 +50,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 ### 2.2 Activación sin abrir la app (Android)
 
 - **Acceso rápido «SOS SISMO»** en el panel de ajustes rápidos (`SosTileService.java`).
-- **Widget SOS** para la pantalla de inicio (`SosWidgetProvider.java`).
+- **Widget SOS** para la pantalla de inicio (`SosWidgetProvider.java`): el **logo circular de SISMO** (el mismo ícono de la app) con anillo rojo y una etiqueta roja **«SOS»** encima. El logo tiene tamaño fijo para que siempre se vea redondo (antes era un óvalo rojo que se estiraba con la celda). En Android 12+ el selector de widgets muestra esa misma vista previa.
 - Ambos abren SISMO con el diálogo de SOS listo. La confirmación se mantiene para evitar activaciones accidentales (por ejemplo, en el bolsillo).
 - Cada alerta registra su origen (`app` o `acceso_rapido`) para comparar tiempos.
 
@@ -58,7 +58,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Llamar al 123:** abre el marcador con el número listo.
 - **SMS de alerta:** abre la app de mensajes con los contactos reales y el aviso: tipo de evento, ubicación (con precisión), punto de encuentro y resumen de la ficha médica (si «Compartir» está activo). Estado honesto «SMS abierto», porque SISMO no puede verificar el envío.
-- **«Estoy bien»:** al finalizar la alerta (y desde Inicio) se pregunta por dónde avisar: **por SMS** a todos los contactos o **por WhatsApp** a cada contacto (enlace oficial wa.me). El mensaje va completo: enlace de Google Maps a la **ubicación actual** (con precisión), enlace al **punto de encuentro** y **batería**. Luego se abre la lista «Después del sismo».
+- **«Estoy bien»:** al finalizar la alerta (y desde Inicio) se pregunta por dónde avisar: **por SMS** a todos los contactos o **por WhatsApp** a cada contacto (enlace oficial wa.me). El mensaje va completo: enlace de Google Maps a la **ubicación actual** (con precisión), enlace a **cada punto de encuentro** y **batería**. Luego se abre la lista «Después del sismo».
 - **Correo de alerta (servidor pendiente de conectar):** al activar el SOS aparece «¿Enviar correo a sus contactos?» con cuenta regresiva de **20 s**: «Sí, enviar ahora» o el silencio lo envían; «No enviar» lo cancela (luego se puede reintentar). No se pregunta en simulacros ni si ningún contacto real tiene correo. La app **no envía correos por sí misma ni guarda credenciales**: arma la solicitud (asunto, destinatarios, cuerpo con ubicación, punto de encuentro, ficha médica y batería) y la envía por POST a `VITE_ALERT_EMAIL_URL` (`.env`; ejemplo en `.env.example`), con tiempo límite y dos reintentos con espera exponencial. Mientras no esté configurado, el estado dice «No se envió: falta conectar el servidor de correo». El contrato JSON para el servidor está documentado en `src/services/emailService.ts`.
 - **Correo obligatorio en los contactos:** nuevo campo «Correo electrónico» validado en el formulario. Los contactos guardados antes muestran «Falta el correo» hasta editarlos.
 - **WhatsApp por contacto:** en la alerta, un botón por contacto abre WhatsApp con el mismo aviso (WhatsApp no admite varios destinatarios en un enlace y requiere internet). El número se normaliza al formato de WhatsApp.
@@ -69,6 +69,10 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - Afinado del GPS: escucha hasta 10 s y conserva la lectura más precisa (para antes si llega a ±25 m). Si en ese tiempo no llega ninguna lectura de alta precisión (computadores sin GPS), pide una ubicación aproximada por WiFi/red, que responde rápido.
 - **Durante la alerta** se actualiza al activarla y cada 2 minutos si hay permiso. Se guarda en el dispositivo y el SMS usa la más reciente. Se cuentan las actualizaciones por alerta.
 - **Punto de encuentro:** se guarda desde la ubicación actual, tocando el mapa real («Elegir en el mapa» sube automáticamente hasta el mapa) o **buscando una dirección**: fuente principal **Esri ArcGIS World Geocoding** (gratuito sin llave para búsquedas), que entiende la nomenclatura colombiana y tiene números de casa (p. ej. «Carrera 20 # 39-52» → punto exacto en La Soledad) y algunos lugares por nombre; en paralelo **Photon** (OpenStreetMap) como respaldo. Cada resultado indica si es «Dirección exacta» o «Aproximada». Los resultados exactos más cercanos al usuario van primero. Se descartaron Nominatim (no encuentra direcciones colombianas) y Overpass (bloquea consultas). **Licencia:** Esri permite búsquedas anónimas sin almacenar resultados; guardar el punto de encuentro es un almacenamiento, así que para producción hay que revisar sus términos o usar una cuenta ArcGIS Location Platform (tiene cupo gratuito).
+- **Varios puntos de encuentro (hasta 5):** casa, trabajo, colegio… Se agregan uno tras otro (ubicación actual, mapa o dirección) y se ven en una lista con botón para borrar cada uno. **Todos van en los mensajes** (SMS, WhatsApp, «Estoy bien» y correo), cada uno con su enlace. La **brújula, la ruta y la mini brújula guían al más cercano** a la ubicación actual (o a donde se activó la alerta); con dos o más aparece «Guiar hacia» para elegir otro, con la distancia a cada uno. El tope de 5 mantiene el SMS corto. Los datos guardados con un solo punto se migran solos a la lista (`storageService.loadData`). Archivos: `utils/meetingPoints.ts`, `components/useMeetingTarget.tsx`.
+- **Registro obligatorio sin modo de demostración** (`/registro`): si en la bienvenida se apaga el modo de demostración, «Comenzar» abre un asistente de 4 pasos: **nombre**, **ubicación actual** (real del dispositivo; las coordenadas de prueba no cuentan), **punto de encuentro** (uno o varios) y **al menos un contacto real**. «Siguiente» se habilita solo con el paso completo y la app no queda registrada hasta «Finalizar registro». El botón **SOS sigue disponible** durante el registro (en una emergencia no debe haber bloqueos). Con el modo de demostración se entra directo, como antes.
+- **Ubicación actualizada sola cada 5 minutos** con la app abierta y visible, y al volver a la app si la última tiene más de 5 minutos. No usa ubicación en segundo plano (no pide «ubicación todo el tiempo» ni gasta batería con la pantalla apagada), solo actúa si el permiso ya está concedido y no reemplaza las coordenadas de prueba. Durante una alerta sigue la actualización propia cada 2 minutos. Archivo: `components/useLocationAutoRefresh.ts`.
+- **Archivos de entorno:** `.env.development` (`npm run dev`) y `.env.production` (`npm run build`, web y APK), locales y fuera de git; la plantilla compartida es `.env.example`. Las variables `VITE_` quedan dentro de la app: nunca deben llevar claves.
 
 ### 2.5 Información
 
@@ -136,6 +140,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | La flecha de las brújulas apuntaba 45° desviada (p. ej. al Este con rumbo NE) | El ícono de flecha viene inclinado 45° de fábrica | Se compensa la inclinación (`ICON_TILT`); verificado con capturas |
 | «Estoy bien» por SMS abría WhatsApp y decía que el número no estaba registrado | En algunos teléfonos el enlace SMS lo atiende WhatsApp, que no entiende ese formato (número junto al texto, varios destinatarios) | «Estoy bien» (Inicio y al finalizar la alerta) ahora pregunta el canal: «Por SMS» o «WhatsApp: <contacto>» con el enlace oficial wa.me (`useNotifySafe`). Además el SMS agrega +57 a celulares sin indicativo |
 | En el PC, Waze abría sin punto de salida | El enlace de la app solo lleva el destino y la web de Waze no conoce la ubicación | En el navegador se usa el mapa web de Waze con salida y destino |
+| En modo oscuro el paso actual del registro se leía mal (azul sobre azul) | El azul de marca (`--brand`) no cambia en oscuro | El paso actual y el selector de puntos usan `--navy`, que se aclara en oscuro |
 | Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
 | El «¿Está bien?» no se vio porque la pantalla estaba apagada | El aviso no encendía la pantalla | Al detectar una caída la app enciende la pantalla y se muestra sobre la de bloqueo (Android, `wakeScreen` + `setShowWhenLocked`) |
@@ -219,13 +224,13 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **90 de 90** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **90 de 90** superadas |
-| Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
-| Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
+| Pruebas unitarias (Vitest) | **95 de 95** superadas |
+| Pruebas e2e (Playwright, móvil y escritorio) | **100 de 100** superadas |
+| Cubierto por pruebas e2e | Registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
+| Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |
-| Sin pruebas automáticas | Punto de encuentro, actualización periódica de la ubicación, funciones nativas de Android |
+| Sin pruebas automáticas | Funciones nativas de Android |
 
 ---
 

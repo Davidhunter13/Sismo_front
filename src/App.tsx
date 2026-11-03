@@ -14,6 +14,7 @@ import HistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import LocationPage from './pages/LocationPage';
 import { FallDetector } from './components/FallDetector';
+import { useLocationAutoRefresh } from './components/useLocationAutoRefresh';
 import KitPage from './pages/KitPage';
 import MedicalPage from './pages/MedicalPage';
 import PostQuakePage from './pages/PostQuakePage';
@@ -35,6 +36,7 @@ function Routes() {
   const router = useIonRouter();
   const { data, setLocationPermission } = useAppState();
   const onboarded = data.settings.onboarded;
+  useLocationAutoRefresh();
 
   // En Android se piden los permisos al abrir la app (ubicación y luego notificaciones, para mostrar la
   // alerta activa con la pantalla bloqueada), uno tras otro porque el sistema solo muestra un diálogo a la vez.

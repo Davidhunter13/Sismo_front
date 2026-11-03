@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { MeetingCompass } from '../components/MeetingCompass';
 import { MeetingRoute } from '../components/MeetingRoute';
+import { useMeetingTarget } from '../components/useMeetingTarget';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { formatDateTime } from '../utils/format';
@@ -27,6 +28,9 @@ export default function PostQuakePage() {
   const realAlerts = data.alerts.filter((a) => !a.isSeed && !a.isDrill);
   const alert = (requestedId ? data.alerts.find((a) => a.id === requestedId) : undefined) ?? realAlerts[0] ?? null;
   const done = new Set(alert ? alert.postQuakeDone ?? [] : data.postQuakeDone);
+  // Brújula y ruta hacia el punto de encuentro más cercano (se puede elegir otro).
+  const from = alert?.location ?? data.lastLocation;
+  const meeting = useMeetingTarget(from);
 
   const save = (next: number[]) => setPostQuakeDone(next, alert?.id);
 
@@ -49,14 +53,15 @@ export default function PostQuakePage() {
       </section>
 
       {/* Punto de encuentro: tras «Estoy a salvo» la persona ve a dónde ir y la brújula para llegar. */}
-      <section className={`card stack${data.meetingPoint ? '' : ' meeting-missing'}`}>
+      <section className={`card stack${meeting.point ? '' : ' meeting-missing'}`}>
         <h2 className="card__title"><Navigation size={18} aria-hidden="true" /> {t.meetingTitle}</h2>
-        {data.meetingPoint ? (
+        {meeting.point ? (
           <>
-            <p className="small">{t.meetingHint(data.meetingPoint.label)}</p>
-            <MeetingCompass meetingPoint={data.meetingPoint} fallback={alert?.location ?? data.lastLocation} />
+            <p className="small">{t.meetingHint(meeting.point.label)}</p>
+            {meeting.chooser}
+            <MeetingCompass meetingPoint={meeting.point} fallback={from} />
             <h3 className="card__title"><Route size={16} aria-hidden="true" /> {tr.title}</h3>
-            <MeetingRoute meetingPoint={data.meetingPoint} from={alert?.location ?? data.lastLocation} />
+            <MeetingRoute meetingPoint={meeting.point} from={from} />
           </>
         ) : (
           <>

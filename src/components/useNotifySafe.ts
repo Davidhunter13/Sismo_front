@@ -29,7 +29,7 @@ export function useNotifySafe() {
     const compose = async () =>
       buildSafeMessage(data.settings.userName, eventType, new Date(), {
         location,
-        meetingPoint: data.meetingPoint,
+        meetingPoints: data.meetingPoints,
         batteryLevel: await getBatteryLevel(),
       });
     let action: ((message: string) => void) | null = null;

@@ -40,11 +40,11 @@ export function AlertEmailCard({ alert }: { alert: AlertRecord }) {
     setRemaining(null);
     setSending(true);
     const battery = await getBatteryLevel();
-    const request = buildAlertEmail(alert, data.settings.userName, recipients, data.meetingPoint, data.medical, battery);
+    const request = buildAlertEmail(alert, data.settings.userName, recipients, data.meetingPoints, data.medical, battery);
     const status = await sendAlertEmail(request);
     setSending(false);
     setEmailStatus(alert.id, status);
-  }, [alert, data.settings.userName, data.meetingPoint, data.medical, recipients, setEmailStatus]);
+  }, [alert, data.settings.userName, data.meetingPoints, data.medical, recipients, setEmailStatus]);
 
   // Primera vez que se ve la alerta: sin destinatarios se registra sin preguntar; si hay, empieza la cuenta.
   useEffect(() => {

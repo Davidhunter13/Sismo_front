@@ -22,14 +22,14 @@ describe('buildAlertMessage', () => {
   });
 
   it('agrega punto de encuentro, ficha médica y batería', () => {
-    const msg = buildAlertMessage('Ana', 'sismo', real, { label: 'Parque', latitude: 4.6, longitude: -74 }, medical, 23);
+    const msg = buildAlertMessage('Ana', 'sismo', real, [{ id: 'm1', label: 'Parque', latitude: 4.6, longitude: -74 }], medical, 23);
     expect(msg).toContain('Punto de encuentro: Parque https://maps.google.com/?q=4.60000,-74.00000');
     expect(msg).toContain('Info médica: Sangre O+. Alergias: Penicilina');
     expect(msg).toContain('Batería: 23 %');
   });
 
   it('no incluye la ficha médica si el usuario desactivó «Compartir»', () => {
-    const msg = buildAlertMessage('Ana', 'sismo', real, null, { ...medical, showOnAlert: false });
+    const msg = buildAlertMessage('Ana', 'sismo', real, [], { ...medical, showOnAlert: false });
     expect(msg).not.toContain('Info médica');
   });
 
@@ -77,7 +77,7 @@ describe('buildSafeMessage completo', () => {
   it('incluye ubicación actual, punto de encuentro y batería', () => {
     const msg = buildSafeMessage('Ana', 'sismo', new Date(), {
       location: real,
-      meetingPoint: { label: 'Parque', latitude: 4.6, longitude: -74 },
+      meetingPoints: [{ id: 'm1', label: 'Parque', latitude: 4.6, longitude: -74 }],
       batteryLevel: 40,
     });
     const lines = msg.split('\n');
@@ -89,6 +89,16 @@ describe('buildSafeMessage completo', () => {
   it('sin ubicación lo indica; sin datos extra queda solo la primera línea', () => {
     expect(buildSafeMessage('Ana', undefined, new Date(), { location: null })).toContain('Ubicación no disponible.');
     expect(buildSafeMessage('Ana').split('\n')).toHaveLength(1);
+  });
+  it('varios puntos de encuentro: una línea con enlace por cada uno', () => {
+    const msg = buildSafeMessage('Ana', 'sismo', new Date(), {
+      meetingPoints: [
+        { id: 'a', label: 'Casa', latitude: 4.6, longitude: -74 },
+        { id: 'b', label: 'Trabajo', latitude: 4.7, longitude: -74.05 },
+      ],
+    });
+    expect(msg).toContain('Punto de encuentro: Casa https://maps.google.com/?q=4.60000,-74.00000');
+    expect(msg).toContain('Punto de encuentro: Trabajo https://maps.google.com/?q=4.70000,-74.05000');
   });
 });
 
@@ -113,7 +123,7 @@ describe('en inglés', () => {
   afterEach(() => setLang('es'));
 
   it('SMS de alerta: encabezado SISMO ALERT, ubicación, ficha médica, batería y dial 123', () => {
-    const msg = buildAlertMessage('Ana', 'sismo', real, { label: 'Park', latitude: 4.6, longitude: -74 }, medical, 23);
+    const msg = buildAlertMessage('Ana', 'sismo', real, [{ id: 'm1', label: 'Park', latitude: 4.6, longitude: -74 }], medical, 23);
     expect(msg).toContain('SISMO ALERT: Ana triggered an alert (Earthquake).');
     expect(msg).toContain('Location (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
     expect(msg).toContain('Meeting point: Park https://maps.google.com/?q=4.60000,-74.00000');
@@ -130,7 +140,7 @@ describe('en inglés', () => {
   });
 
   it('«Estoy bien» completo en inglés', () => {
-    const msg = buildSafeMessage('Ana', undefined, new Date(), { location: real, meetingPoint: { label: 'Park', latitude: 4.6, longitude: -74 }, batteryLevel: 40 });
+    const msg = buildSafeMessage('Ana', undefined, new Date(), { location: real, meetingPoints: [{ id: 'm1', label: 'Park', latitude: 4.6, longitude: -74 }], batteryLevel: 40 });
     expect(msg).toContain('Location (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
     expect(msg).toContain('Meeting point: Park https://maps.google.com/?q=4.60000,-74.00000');
     expect(msg).toContain('Battery: 40%');

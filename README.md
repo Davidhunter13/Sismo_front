@@ -74,7 +74,7 @@ La linterna usa `CameraManager.setTorchMode`, que **no requiere permiso de cáma
 | `AlertService.java` | Servicio en primer plano: sirena o silbato (AudioTrack, uso «alarma»), linterna en código SOS, vibración SOS y **modo atrapado** (ráfagas cada 3 min con WakeLock). Sigue con la pantalla bloqueada. Notificación con «Silenciar sonido» |
 | `SismoNativePlugin.java` | Puente con la app web: señales, modo atrapado, brillo, pantalla encendida, batería, voz (TextToSpeech), selector de contactos, permiso de notificaciones, accesos SOS y exportar CSV |
 | `SosTileService.java` | Acceso rápido «SOS SISMO» en el panel de ajustes rápidos |
-| `SosWidgetProvider.java` | Widget SOS para la pantalla de inicio |
+| `SosWidgetProvider.java` | Widget SOS para la pantalla de inicio: logo circular de SISMO con etiqueta roja «SOS» encima (`res/layout/widget_sos.xml`) |
 
 El widget y el acceso rápido **abren SISMO con el diálogo de SOS listo**; la alerta se confirma en la app para evitar activaciones accidentales.
 
@@ -120,7 +120,7 @@ La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 2. Al confirmar se activan según Configuración: **sirena o silbato de rescate** (en Configuración se puede escuchar una muestra de cada uno antes de elegir), **linterna en código SOS (··· ––– ···)** (solo Android), **vibración SOS** y el destello de la tarjeta. La **pantalla se mantiene encendida** y la **ubicación se toma automáticamente** (aunque no hubiera una guardada; si el permiso no se había pedido, se pide) y se actualiza cada 2 minutos.
 3. En la vista de alerta: **Llamar al 123**, **Enviar SMS a mis contactos** (ubicación, punto de encuentro, ficha médica y **nivel de batería**), apagar/reactivar cada señal, **modo atrapado** y la **ficha médica** (salvo que el usuario haya desactivado «Compartir»).
 4. **Modo atrapado:** apaga las señales continuas, baja el brillo y deja apagar la pantalla; cada 3 minutos suenan tres pitidos de silbato y destella la linterna SOS. Al salir del modo se retoman las señales normales.
-5. «Estoy a salvo · Finalizar alerta» detiene todas las señales, guarda la alerta y ofrece avisar **«Estoy bien»** por SMS o por WhatsApp a cada contacto; el mensaje incluye el enlace a la ubicación actual, el del punto de encuentro y la batería. Si era un simulacro, abre la **encuesta SUS**.
+5. «Estoy a salvo · Finalizar alerta» detiene todas las señales, guarda la alerta y ofrece avisar **«Estoy bien»** por SMS o por WhatsApp a cada contacto; el mensaje incluye el enlace a la ubicación actual, el de cada punto de encuentro y la batería. Si era un simulacro, abre la **encuesta SUS**.
 
 Desde Inicio también se puede **avisar que está bien** por SMS sin activar una alerta.
 
@@ -128,8 +128,8 @@ Desde Inicio también se puede **avisar que está bien** por SMS sin activar una
 
 Al activar el SOS la app pregunta «¿Enviar correo a sus contactos?» y, si no hay respuesta en 20 s, lo envía. El correo lo envía **un servidor propio** (aún por conectar):
 
-1. Copie `.env.example` como `.env` (no se sube a git).
-2. Ponga en `VITE_ALERT_EMAIL_URL` la URL del servidor. La app le hace un POST JSON con asunto, destinatarios, cuerpo y ubicación (contrato en `src/services/emailService.ts`).
+1. Use `.env.development` (lo lee `npm run dev`) y `.env.production` (lo leen `npm run build` y el APK). Ambos son locales y no se suben a git; si no existen, cópielos de `.env.example`.
+2. Ponga en `VITE_ALERT_EMAIL_URL` la URL del servidor (en producción, HTTPS). Las variables `VITE_` quedan dentro de la app: nunca ponga claves allí. La app le hace un POST JSON con asunto, destinatarios, cuerpo y ubicación (contrato en `src/services/emailService.ts`).
 3. Vuelva a compilar (`npm run build` / `npm run android`).
 
 Sin URL configurada, la alerta muestra «No se envió: falta conectar el servidor de correo». El correo es obligatorio al crear un contacto (los contactos guardados antes muestran «Falta el correo»). No se pregunta en simulacros ni si ningún contacto real tiene correo.
@@ -144,7 +144,7 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 
 ## Vistas y rutas
 
-`/bienvenida` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila` · `/despues-del-sismo`
+`/bienvenida` · `/registro` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila` · `/despues-del-sismo`
 
 ## Qué es real y qué es simulado
 
@@ -157,7 +157,9 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 | Simulacro y estadísticas | Reales; métricas guardadas en el dispositivo y exportables a CSV (sin datos personales) |
 | Sismos recientes | Catálogo público del USGS (M ≥ 2,5); requiere internet. La ubicación no se envía: se filtra en el dispositivo |
 | Ficha médica | Guardada en el dispositivo. «Compartir en la alerta y en el SMS» viene **activado por defecto**: se muestra en la pantalla de alerta y se incluye en el SMS. El usuario puede desactivarlo |
-| Punto de encuentro | Guardado en el dispositivo e incluido en el SMS de alerta |
+| Puntos de encuentro | Hasta 5 (casa, trabajo, colegio…), guardados en el dispositivo y todos incluidos en los mensajes; la brújula y la ruta guían al más cercano (se puede elegir otro) |
+| Registro obligatorio | Sin modo de demostración, asistente de 4 pasos: nombre, ubicación actual, punto de encuentro y un contacto real. El SOS sigue disponible mientras tanto |
+| Ubicación automática | Se actualiza cada 5 minutos con la app abierta (no en segundo plano) |
 | Modo atrapado | Real en Android (servicio nativo, sigue con la pantalla apagada). En el navegador solo mientras la pestaña esté visible (silbato y vibración) |
 | Detección de caídas | Real con la app abierta (acelerómetro). Desactivada por defecto: puede dar falsas alarmas |
 | Encuesta SUS | Real; respuestas anónimas en el dispositivo, exportables a CSV |

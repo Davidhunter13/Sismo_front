@@ -56,7 +56,7 @@ export function buildAlertEmail(
   alert: AlertRecord,
   userName: string,
   recipients: Contact[],
-  meetingPoint: MeetingPoint | null,
+  meetingPoints: MeetingPoint[],
   medical: MedicalInfo | null,
   batteryLevel: number | null,
 ): AlertEmailRequest {
@@ -69,7 +69,7 @@ export function buildAlertEmail(
     sender: { name: userName.trim() },
     recipients: recipients.map((c) => ({ name: c.name, email: (c.email ?? '').trim() })),
     subject: t.subject(userName.trim() || t.defaultWho),
-    body: buildAlertMessage(userName, alert.eventType, alert.location, meetingPoint, medical, batteryLevel),
+    body: buildAlertMessage(userName, alert.eventType, alert.location, meetingPoints, medical, batteryLevel),
     location: alert.location
       ? { latitude: alert.location.latitude, longitude: alert.location.longitude, accuracy: alert.location.accuracy }
       : null,

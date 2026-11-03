@@ -10,6 +10,7 @@ import { requestDeviceLocation } from '../services/locationService';
 import { requestSosDialog } from '../services/sosRequestService';
 import { defaultSettings } from '../services/storageService';
 import type { ContactInput } from '../types';
+import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
 import { goToRoot } from '../utils/navigation';
 
 const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
@@ -21,27 +22,27 @@ const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
  */
 export default function SetupPage() {
   const router = useIonRouter();
-  const { data, updateSettings, setLocation, setLocationPermission, setMeetingPoint, addContact } = useAppState();
+  const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, addContact } = useAppState();
   const { setup: t, settings: ts, location: tl } = useT();
   const [step, setStep] = useState(0);
   // El nombre por defecto («Usuario demo») no cuenta: la persona debe escribir el suyo.
   const [name, setName] = useState(data.settings.userName === defaultSettings.userName ? '' : data.settings.userName);
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
-  const [label, setLabel] = useState(data.meetingPoint?.label ?? tl.meeting.defaultLabel);
+  const [label, setLabel] = useState(tl.meeting.defaultLabel);
   const [address, setAddress] = useState('');
   const [results, setResults] = useState<AddressResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchMessage, setSearchMessage] = useState('');
   const [formOpen, setFormOpen] = useState(false);
 
-  const { lastLocation, meetingPoint } = data;
+  const { lastLocation, meetingPoints } = data;
   const deviceLocation = lastLocation?.source === 'dispositivo' ? lastLocation : null;
   const realContacts = data.contacts.filter((c) => !c.isSeed);
   const nameError = name.trim().length < 2 ? ts.profile.min : name.trim().length > 30 ? ts.profile.max : '';
   const labelError = label.trim().length < 2 ? tl.meeting.min : '';
 
-  const done = [!nameError, !!deviceLocation, !!meetingPoint, realContacts.length > 0];
+  const done = [!nameError, !!deviceLocation, meetingPoints.length > 0, realContacts.length > 0];
   const key = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
@@ -66,8 +67,12 @@ export default function SetupPage() {
     setLocationMessage(result.snapshot ? t.locationOk : `${result.message} ${t.locationMissing}`);
   };
 
-  const saveMeeting = (latitude: number, longitude: number, pointLabel = label.trim()) =>
-    setMeetingPoint({ label: pointLabel, latitude, longitude });
+  // Se pueden guardar varios; el nombre vuelve al de por defecto para el siguiente.
+  const saveMeeting = (latitude: number, longitude: number, pointLabel = label.trim()) => {
+    if (meetingPoints.length >= MAX_MEETING_POINTS) return;
+    addMeetingPoint({ label: pointLabel, latitude, longitude });
+    setLabel(tl.meeting.defaultLabel);
+  };
 
   const search = async () => {
     setSearching(true);
@@ -87,7 +92,6 @@ export default function SetupPage() {
   // Igual que en Ubicación: si no se cambió el nombre por defecto, se usa la dirección encontrada.
   const chooseAddress = (r: AddressResult) => {
     const pointLabel = label.trim() && label.trim() !== tl.meeting.defaultLabel ? label.trim() : r.shortLabel;
-    setLabel(pointLabel);
     saveMeeting(r.latitude, r.longitude, pointLabel);
     setResults([]);
     setAddress('');
@@ -220,9 +224,9 @@ export default function SetupPage() {
                     ))}
                   </ul>
                 )}
-                {meetingPoint && (
+                {meetingPoints.length > 0 && (
                   <p className="small" role="status">
-                    <CheckCircle2 size={16} aria-hidden="true" /> {t.meetingSaved(meetingPoint.label)}
+                    <CheckCircle2 size={16} aria-hidden="true" /> {t.meetingSaved(meetingPoints.map((p) => p.label).join(' · '))}
                   </p>
                 )}
               </>

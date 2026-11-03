@@ -16,12 +16,12 @@ const LOW_ACCURACY_M = 100;
 
 interface RealMapProps {
   snapshot: LocationSnapshot;
-  meetingPoint?: MeetingPoint | null;
+  meetingPoints?: MeetingPoint[];
   /** Si se indica, tocar el mapa elige un punto (p. ej. el punto de encuentro). */
   onPick?: (latitude: number, longitude: number) => void;
 }
 
-export default function RealMap({ snapshot, meetingPoint, onPick }: RealMapProps) {
+export default function RealMap({ snapshot, meetingPoints = [], onPick }: RealMapProps) {
   const t = useT().components.map;
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -84,27 +84,29 @@ export default function RealMap({ snapshot, meetingPoint, onPick }: RealMapProps
     };
   }, [snapshot.latitude, snapshot.longitude, snapshot.accuracy, isTest]);
 
-  // Punto de encuentro en una capa aparte: cambiarlo no reconstruye el mapa.
-  const mpLat = meetingPoint?.latitude;
-  const mpLng = meetingPoint?.longitude;
-  const mpText = t.meetingPoint(meetingPoint?.label ?? '');
+  // Puntos de encuentro en una capa aparte: cambiarlos no reconstruye el mapa.
+  // La clave (coordenadas y nombres) evita redibujar si la lista es otra instancia con los mismos datos.
+  const points: [number, number, string][] = meetingPoints.map((p) => [p.latitude, p.longitude, t.meetingPoint(p.label)]);
+  const pointsKey = JSON.stringify(points);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || mpLat == null || mpLng == null) return;
-    // Leaflet interpreta los textos como HTML: el nombre lo escribe el usuario, así que va como nodo de texto.
-    const tooltip = document.createElement('span');
-    tooltip.textContent = mpText;
-    const marker = L.circleMarker([mpLat, mpLng], { radius: 9, className: 'real-map__meeting' })
-      .bindTooltip(tooltip)
-      .addTo(map);
-    // Si el punto de encuentro queda fuera de la vista (p. ej. elegido por dirección), se encuadran ambos.
-    if (!map.getBounds().contains([mpLat, mpLng])) {
-      map.fitBounds(L.latLngBounds([[snapshot.latitude, snapshot.longitude], [mpLat, mpLng]]), { padding: [40, 40], maxZoom: 17 });
+    const list = JSON.parse(pointsKey) as [number, number, string][];
+    if (!map || list.length === 0) return;
+    const markers = list.map(([lat, lng, text]) => {
+      // Leaflet interpreta los textos como HTML: el nombre lo escribe el usuario, así que va como nodo de texto.
+      const tooltip = document.createElement('span');
+      tooltip.textContent = text;
+      return L.circleMarker([lat, lng], { radius: 9, className: 'real-map__meeting' }).bindTooltip(tooltip).addTo(map);
+    });
+    // Si algún punto queda fuera de la vista (p. ej. elegido por dirección), se encuadran todos con la ubicación.
+    if (list.some(([lat, lng]) => !map.getBounds().contains([lat, lng]))) {
+      const bounds = L.latLngBounds([[snapshot.latitude, snapshot.longitude], ...list.map(([lat, lng]) => [lat, lng] as [number, number])]);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 });
     }
     return () => {
-      marker.remove();
+      markers.forEach((m) => m.remove());
     };
-  }, [mpLat, mpLng, mpText, snapshot.latitude, snapshot.longitude, snapshot.accuracy, isTest]);
+  }, [pointsKey, snapshot.latitude, snapshot.longitude, snapshot.accuracy, isTest]);
 
   return (
     <figure className="real-map" aria-label={t.realLabel}>

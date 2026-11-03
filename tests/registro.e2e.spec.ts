@@ -60,7 +60,7 @@ test('registro obligatorio: los 4 pasos bloquean «Siguiente» hasta completarse
   const data = await readStorage(page);
   expect(data.settings).toMatchObject({ onboarded: true, userName: 'Ana', demoMode: false });
   expect(data.lastLocation).toMatchObject({ source: 'dispositivo', latitude: 4.65 });
-  expect(data.meetingPoint).toMatchObject({ latitude: 4.65, longitude: -74.1 });
+  expect(data.meetingPoints).toEqual([expect.objectContaining({ latitude: 4.65, longitude: -74.1 })]);
   expect(data.contacts).toHaveLength(1);
 });
 

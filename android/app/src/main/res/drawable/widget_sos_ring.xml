@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Anillo rojo alrededor del logo del widget: lo distingue del ícono normal de la app. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
     <solid android:color="#D62828" />
-    <stroke android:width="3dp" android:color="#FFFFFF" />
 </shape>

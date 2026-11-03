@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 import { useAppState } from '../context/appContext';
 import { bearingDeg, normalize, watchHeading } from '../services/compassService';
 import { distanceKm } from '../services/quakeService';
+import { nearestMeetingPoint } from '../utils/meetingPoints';
 
 /**
  * Giro de la aguja de las brújulas pequeñas (Inicio y encabezado), en vivo con el magnetómetro.
- * Con punto de encuentro y una ubicación guardada apunta hacia él; si no, al norte.
+ * Con puntos de encuentro y una ubicación guardada apunta al más cercano; si no, al norte.
  * No enciende el GPS: usa la última ubicación guardada (ahorro de batería).
  */
 export function useCompassNeedle() {
@@ -14,8 +15,8 @@ export function useCompassNeedle() {
   const [heading, setHeading] = useState<number | null>(null);
   useEffect(() => watchHeading(setHeading), []);
 
-  const point = data.meetingPoint;
   const here = data.lastLocation;
+  const point = nearestMeetingPoint(data.meetingPoints, here);
   const target = point && here ? bearingDeg(here.latitude, here.longitude, point.latitude, point.longitude) : 0;
   return {
     /** Grados a rotar la aguja (relativos al teléfono si hay sensor; si no, respecto al norte). */

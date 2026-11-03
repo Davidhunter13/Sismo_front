@@ -1,19 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget SOS: botón circular rojo. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente. -->
+<!-- Widget SOS: etiqueta roja «SOS» arriba y el logo circular de SISMO debajo. Todo el widget es el botón.
+     El logo tiene tamaño fijo para que siempre sea un círculo aunque la celda del escritorio sea rectangular. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_sos_button"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="6dp">
+    android:contentDescription="@string/widget_sos_description"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="2dp">
 
     <TextView
-        android:id="@+id/widget_sos_button"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/widget_sos_bg"
-        android:contentDescription="@string/widget_sos_description"
-        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/widget_sos_badge"
+        android:importantForAccessibility="no"
+        android:paddingStart="12dp"
+        android:paddingTop="1dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="1dp"
         android:text="SOS"
         android:textColor="#FFFFFF"
-        android:textSize="22sp"
+        android:textSize="13sp"
         android:textStyle="bold" />
-</FrameLayout>
+
+    <ImageView
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="3dp"
+        android:background="@drawable/widget_sos_ring"
+        android:importantForAccessibility="no"
+        android:padding="3dp"
+        android:scaleType="fitCenter"
+        android:src="@mipmap/ic_launcher_round" />
+</LinearLayout>
