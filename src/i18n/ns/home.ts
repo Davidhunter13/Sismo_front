@@ -4,6 +4,12 @@
 const es = {
   title: 'Panel principal',
   hello: (name: string) => `Hola, ${name}`,
+  missing: {
+    title: 'Faltan datos para avisar a sus contactos',
+    items: { name: 'su nombre', location: 'su ubicación', meeting: 'un punto de encuentro', contact: 'un contacto real' },
+    list: (items: string[]) => `Falta: ${items.join(', ')}.`,
+    cta: 'Completar registro',
+  },
   drill: {
     go: '¡SISMO! Active la alerta ahora',
     goHint: 'Toque SOS y confirme lo más rápido posible.',
@@ -72,6 +78,12 @@ const es = {
 const en: typeof es = {
   title: 'Dashboard',
   hello: (name: string) => `Hello, ${name}`,
+  missing: {
+    title: 'Some data is missing to notify your contacts',
+    items: { name: 'your name', location: 'your location', meeting: 'a meeting point', contact: 'a real contact' },
+    list: (items) => `Missing: ${items.join(', ')}.`,
+    cta: 'Complete sign-up',
+  },
   drill: {
     go: 'EARTHQUAKE! Activate the alert now',
     goHint: 'Tap SOS and confirm as fast as you can.',

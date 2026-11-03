@@ -24,9 +24,9 @@ const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
  */
 export default function SetupPage() {
   const router = useIonRouter();
-  const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, addContact, updateContact, deleteContact } = useAppState();
+  const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, removeMeetingPoint, addContact, updateContact, deleteContact } = useAppState();
   const { setup: t, settings: ts, location: tl, contacts: tc } = useT();
-  const [presentToast] = useIonToast();
+  const [presentToast, dismissToast] = useIonToast();
   const [imported, setImported] = useState<ContactInput | null>(null);
   const [step, setStep] = useState(0);
   // El nombre por defecto («Usuario demo») no cuenta: la persona debe escribir el suyo.
@@ -54,7 +54,10 @@ export default function SetupPage() {
 
   const next = () => {
     if (!done[step]) return;
-    if (key === 'name') updateSettings({ userName: name.trim() });
+    if (key === 'name') {
+      updateSettings({ userName: name.trim() });
+      toast(ts.profile.saved);
+    }
     if (!isLast) {
       setStep(step + 1);
       return;
@@ -71,6 +74,7 @@ export default function SetupPage() {
     if (result.snapshot) setLocation(result.snapshot, result.permission);
     else setLocationPermission(result.permission);
     setLocationMessage(result.snapshot ? t.locationOk : `${result.message} ${t.locationMissing}`);
+    toast(result.snapshot ? t.locationOk : result.message, result.snapshot ? 'success' : 'warning');
   };
 
   // Se pueden guardar varios; el nombre vuelve al de por defecto para el siguiente.
@@ -78,6 +82,7 @@ export default function SetupPage() {
     if (meetingPoints.length >= MAX_MEETING_POINTS) return;
     addMeetingPoint({ label: pointLabel, latitude, longitude });
     setLabel(tl.meeting.defaultLabel);
+    toast(tl.meeting.saved);
   };
 
   const search = async () => {
@@ -106,8 +111,16 @@ export default function SetupPage() {
   const saveContact = (input: ContactInput) => {
     if (editing) updateContact(editing.id, input);
     else addContact(input);
+    toast(editing ? tc.updated : tc.added);
     setFormOpen(false);
   };
+
+  // Confirmación visible de cada acción (arriba, como en el resto de la app). Se cierra el mensaje anterior:
+  // con uno abierto, Ionic no muestra el siguiente (p. ej. «Nombre actualizado» y enseguida la ubicación).
+  const toast = (message: string, color = 'success') =>
+    void dismissToast()
+      .catch(() => undefined)
+      .then(() => presentToast({ message, duration: 2200, color, position: 'top' }));
 
   const openNewContact = () => {
     setEditing(null);
@@ -256,9 +269,24 @@ export default function SetupPage() {
                   </ul>
                 )}
                 {meetingPoints.length > 0 && (
-                  <p className="small" role="status">
-                    <CheckCircle2 size={16} aria-hidden="true" /> {t.meetingSaved(meetingPoints.map((p) => p.label).join(' · '))}
-                  </p>
+                  <>
+                    <p className="small" role="status">
+                      <CheckCircle2 size={16} aria-hidden="true" /> {t.meetingSaved(meetingPoints.map((p) => p.label).join(' · '))}
+                    </p>
+                    {/* Varios puntos (hasta MAX_MEETING_POINTS), con opción de borrar si hubo un error. */}
+                    <strong className="small">{tl.meeting.listTitle(meetingPoints.length, MAX_MEETING_POINTS)}</strong>
+                    <ul className="meeting-list">
+                      {meetingPoints.map((p) => (
+                        <li key={p.id}>
+                          <MapPin size={16} aria-hidden="true" />
+                          <span>{p.label}</span>
+                          <button className="btn btn--ghost btn--sm" onClick={() => removeMeetingPoint(p.id)} aria-label={tl.meeting.removeOne(p.label)}>
+                            <Trash2 size={16} aria-hidden="true" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
               </>
             )}
@@ -318,7 +346,11 @@ export default function SetupPage() {
         message={toDelete ? tc.deleteMessage(toDelete.name) : ''}
         confirmText={tc.deleteConfirm}
         destructive
-        onConfirm={() => toDelete && deleteContact(toDelete.id)}
+        onConfirm={() => {
+          if (!toDelete) return;
+          deleteContact(toDelete.id);
+          toast(tc.deleted, 'medium');
+        }}
         onClose={() => setToDelete(null)}
       />
     </IonPage>

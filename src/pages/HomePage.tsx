@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useIonRouter } from '@ionic/react';
 import {
-  Activity, Backpack, BarChart3, BookOpen, CheckCircle2, ClipboardList, HeartPulse, History, MapPin, MessageSquare, Navigation, Radio, Timer,
+  Activity, AlertTriangle, Backpack, BarChart3, BookOpen, CheckCircle2, ClipboardList, HeartPulse, History, MapPin, MessageSquare, Navigation, Radio, Timer,
   Users,
   Volume2, Wifi, WifiOff, type LucideIcon,
 } from 'lucide-react';
@@ -28,6 +28,7 @@ import { onSosDialogRequest } from '../services/sosRequestService';
 import type { AlertSource, EventType } from '../types';
 import { eventTypeLabel, formatLongDate } from '../utils/format';
 import { goToRoot } from '../utils/navigation';
+import { setupGaps } from '../utils/setupGaps';
 
 export default function HomePage() {
   const router = useIonRouter();
@@ -100,14 +101,17 @@ export default function HomePage() {
       ? reminder.daysSinceLast === null ? rt.personalNever : rt.personalDue(reminder.daysSinceLast)
       : null;
 
-  const quick: { path: string; label: string; detail: string; icon: LucideIcon; root?: boolean; warn?: boolean }[] = [
-    { path: '/contactos', label: t.tiles.contacts, detail: t.tiles.contactsDetail(contacts.length), icon: Users, root: true },
+  // Tarjetas con borde rojo cuando falta un dato necesario (ver setupGaps).
+  const gaps = setupGaps(data);
+  const quick: { path: string; label: string; detail: string; icon: LucideIcon; root?: boolean; warn?: boolean; missing?: boolean }[] = [
+    { path: '/contactos', label: t.tiles.contacts, detail: t.tiles.contactsDetail(contacts.length), icon: Users, root: true, missing: gaps.includes('contact') },
     {
       path: '/ubicacion',
       label: t.tiles.location,
       detail: lastLocation ? (lastLocation.source === 'prueba' ? t.tiles.locationTest : t.tiles.locationSaved) : t.tiles.locationNone,
       icon: MapPin,
       root: true,
+      missing: gaps.includes('location'),
     },
     { path: '/guia', label: t.tiles.guide, detail: t.tiles.guideDetail, icon: BookOpen, root: true },
     { path: '/historial', label: t.tiles.history, detail: t.tiles.historyDetail(data.alerts.length), icon: History, root: true },
@@ -117,6 +121,7 @@ export default function HomePage() {
       label: all.features.compass.tile,
       detail: data.meetingPoints.length ? data.meetingPoints.map((p) => p.label).join(' · ') : all.features.compass.tileNoPoint,
       icon: Navigation,
+      missing: gaps.includes('meeting'),
     },
     { path: '/sismos', label: t.tiles.quakes, detail: t.tiles.quakesDetail, icon: Activity },
     { path: '/simulacro', label: t.tiles.drill, detail: t.tiles.drillDetail, icon: Timer },
@@ -144,6 +149,17 @@ export default function HomePage() {
       </section>
 
       <NetworkBanner />
+
+      {/* Datos necesarios que faltan (p. ej. se dio SOS durante el registro): aviso rojo y acceso al registro. */}
+      {gaps.length > 0 && !activeAlert && (
+        <section className="card card--missing stack" role="alert">
+          <h2 className="card__title"><AlertTriangle size={18} aria-hidden="true" /> {t.missing.title}</h2>
+          <p className="small">{t.missing.list(gaps.map((g) => t.missing.items[g]))}</p>
+          <button className="btn btn--danger btn--block" onClick={() => router.push('/registro', 'forward')}>
+            {t.missing.cta}
+          </button>
+        </section>
+      )}
 
       {drill && (
         <section className={`drill-banner${drill.phase === 'senal' ? ' drill-banner--go' : ''}`} role="status" aria-live="assertive">
@@ -188,10 +204,10 @@ export default function HomePage() {
       <section>
         <h2 className="section-title">{t.quickTitle}</h2>
         <div className="quick-grid">
-          {quick.map(({ path, label, detail, icon: Icon, root, warn }) => (
+          {quick.map(({ path, label, detail, icon: Icon, root, warn, missing }) => (
             <button
               key={path}
-              className={`card quick-tile${warn ? ' quick-tile--warn' : ''}`}
+              className={`card quick-tile${missing ? ' quick-tile--missing' : warn ? ' quick-tile--warn' : ''}`}
               onClick={() => (root ? goToRoot(router, path) : router.push(path, 'forward'))}
             >
               <span className="quick-tile__icon"><Icon size={22} aria-hidden="true" /></span>

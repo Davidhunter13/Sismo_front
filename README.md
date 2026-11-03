@@ -142,6 +142,12 @@ Sin URL configurada, la alerta muestra «No se envió: falta conectar el servido
 
 Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación → sirena/linterna/vibración/SMS) para la página de Estadísticas.
 
+## Identidad visual
+
+**Logo:** cuadrado redondeado (círculo en el ícono redondo) azul marino `#0B2545` con una onda sísmica blanca (el temblor y la señal de vida) y un punto rojo `#D62828` (la alerta, «estoy aquí»). Se usa en la bienvenida (`SismoLogo.tsx`), el ícono de Android y los widgets.
+
+**Paleta principal:** azul SISMO `#0B2545` (marca), rojo `#D62828` (solo SOS, alerta y datos faltantes), verde `#1B7A4B` (listo), amarillo `#8F5300` (revisar), morado `#6B3FA0` (modo de demostración), fondo `#F3F5F9` y tarjetas `#FFFFFF`. En modo oscuro: fondo `#0E141C`, tarjetas `#18212D` y textos aclarados (p. ej. azul `#9CC0F0`). La tabla completa de tokens, claro y oscuro, está en [AVANCES §2.13](docs/AVANCES_Y_HOJA_DE_RUTA.md).
+
 ## Vistas y rutas
 
 `/bienvenida` · `/registro` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila` · `/despues-del-sismo`

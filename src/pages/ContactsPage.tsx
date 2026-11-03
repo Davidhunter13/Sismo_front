@@ -7,6 +7,7 @@ import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactCard } from '../components/ContactCard';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
+import { setupGaps } from '../utils/setupGaps';
 import { useT } from '../i18n/useT';
 import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
 import type { Contact, ContactInput } from '../types';
@@ -72,7 +73,7 @@ export default function ContactsPage() {
       </div>
 
       {data.contacts.length === 0 ? (
-        <section className="card empty-state">
+        <section className={`card empty-state${setupGaps(data).includes('contact') ? ' card--missing' : ''}`}>
           <Users size={44} aria-hidden="true" />
           <h2>{t.emptyTitle}</h2>
           <p className="muted">{t.emptyText}</p>

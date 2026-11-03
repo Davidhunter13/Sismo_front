@@ -10,6 +10,7 @@ import { MeetingCompass } from '../components/MeetingCompass';
 import { MeetingRoute } from '../components/MeetingRoute';
 import { useT } from '../i18n/useT';
 import { useAppState } from '../context/appContext';
+import { setupGaps } from '../utils/setupGaps';
 import { testLocation } from '../services/demoData';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
@@ -33,6 +34,7 @@ export default function LocationPage() {
   const [picking, setPicking] = useState(false);
   const labelError = label.trim().length < 2 ? t.meeting.min : '';
   const full = meetingPoints.length >= MAX_MEETING_POINTS;
+  const gaps = setupGaps(data);
   // Brújula y ruta: hacia el punto más cercano a la ubicación actual (se puede elegir otro).
   const meeting = useMeetingTarget(lastLocation);
 
@@ -150,7 +152,8 @@ export default function LocationPage() {
         )}
       </section>
 
-      <div className="stack">
+      {/* Borde rojo si falta la ubicación real del dispositivo. */}
+      <div className={`stack${gaps.includes('location') ? ' card card--missing' : ''}`}>
         <button className="btn btn--primary btn--block" onClick={request} disabled={loading}>
           {loading ? <Loader2 size={18} className="spin" aria-hidden="true" /> : <Crosshair size={18} aria-hidden="true" />}
           {loading ? t.refining : t.request}
@@ -172,7 +175,8 @@ export default function LocationPage() {
         )}
       </div>
 
-      <section className="card stack">
+      {/* Borde rojo si falta un dato necesario (p. ej. se dio SOS durante el registro). */}
+      <section className={`card stack${gaps.includes('meeting') ? ' card--missing' : ''}`}>
         <h2 className="card__title"><Flag size={18} aria-hidden="true" /> {t.meeting.title}</h2>
         <p className="small muted">{meetingPoints.length ? t.meeting.manyHint : t.meeting.empty}</p>
         {meetingPoints.length > 0 && (

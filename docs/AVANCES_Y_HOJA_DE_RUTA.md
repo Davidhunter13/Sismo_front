@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 110 pruebas e2e + 98 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 114 pruebas e2e + 98 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -74,6 +74,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Ubicación actualizada sola cada 5 minutos** con la app abierta y visible, y al volver a la app si la última tiene más de 5 minutos. No usa ubicación en segundo plano (no pide «ubicación todo el tiempo» ni gasta batería con la pantalla apagada), solo actúa si el permiso ya está concedido y no reemplaza las coordenadas de prueba. Durante una alerta sigue la actualización propia cada 2 minutos. Archivo: `components/useLocationAutoRefresh.ts`.
 - **Ahorro de batería automático en la alerta:** durante una alerta real (no en simulacros) se revisa la batería cada minuto; al llegar al umbral de **Configuración → Ahorro de batería en la alerta** (Nunca, 10, 15, **20 % por defecto** o 30 %) pasa sola al **modo ahorro** (el modo atrapado: ráfagas cada pocos minutos). Muestra el aviso «Batería al N %: se activó el modo ahorro» con **«Volver a la señal continua»** y **«Avisar a mis contactos»** (SMS o WhatsApp con el nivel de batería, la última ubicación y los puntos de encuentro; hay que confirmar el envío). Se activa **una sola vez por alerta**: si la persona vuelve a la señal continua, no se reactiva, aunque salga de la pantalla o la app se reinicie (se recuerda el id de la alerta). Si el teléfono no informa la batería (iPhone, Firefox), no hace nada. Archivos: `AlertPage.tsx`, `components/useContactChannel.ts` (selector de canal compartido con «Estoy bien»), `smsService.buildLowBatteryMessage`.
 - **Registro: contacto desde la agenda, editar y eliminar.** En el paso 4 del registro está el botón **«De la agenda»** (como en Contactos): precarga nombre y teléfono y la persona completa relación y correo; solo aparece donde el teléfono lo permite. Cada contacto agregado tiene botones para **editarlo** o **eliminarlo** (con confirmación) por si hubo un error; si se elimina el único, el paso vuelve a quedar incompleto.
+- **Datos necesarios que faltan, en rojo:** si se usa la app sin terminar el registro (por ejemplo, se dio «SOS · Emergencia ahora» durante el registro) o se borraron datos después, Inicio muestra el aviso rojo **«Faltan datos para avisar a sus contactos»** con la lista (su nombre, su ubicación, un punto de encuentro, un contacto real) y el botón **«Completar registro»**. Además se marcan con **borde rojo** los accesos de Contactos, Ubicación y Brújula, la tarjeta de Perfil en Configuración, la lista vacía de Contactos, y en Ubicación el punto de encuentro y la zona de «Solicitar mi ubicación». No se marca en el modo de demostración. Archivo: `utils/setupGaps.ts`.
+- **Registro con confirmaciones y varios puntos:** cada acción del registro muestra un mensaje arriba (nombre actualizado, ubicación obtenida o el motivo si falla, punto de encuentro guardado, contacto agregado, actualizado o eliminado). Antes de mostrar uno nuevo se cierra el anterior, porque con uno abierto Ionic no muestra el siguiente. En el paso 3 se pueden guardar **varios puntos de encuentro** (hasta 5) y se ven en una lista con botón para borrar cada uno.
 - **Archivos de entorno:** `.env.development` (`npm run dev`) y `.env.production` (`npm run build`, web y APK), locales y fuera de git; la plantilla compartida es `.env.example`. Las variables `VITE_` quedan dentro de la app: nunca deben llevar claves.
 
 ### 2.5 Información
@@ -174,6 +176,35 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 ---
 
+### 2.13 Identidad visual: logo y paleta de colores
+
+**Logo.** Un cuadrado de esquinas redondeadas (un círculo en el ícono redondo de Android) en **azul marino SISMO `#0B2545`** con:
+- una **onda sísmica blanca**: la línea de un sismógrafo (tramo plano, picos de subida y bajada y vuelta a la calma). Representa el temblor y, a la vez, la señal de vida;
+- un **punto rojo `#D62828`** arriba a la derecha. Representa la alerta, el botón de pánico y el «estoy aquí».
+
+Dónde se usa: bienvenida (`components/SismoLogo.tsx`, SVG), ícono de la app Android (normal y redondo) y widgets. El widget 1×1 lleva el logo redondo con un anillo rojo y una etiqueta roja «SOS» encima; el 2×2, el logo y el nombre arriba y un botón SOS rojo grande. El azul transmite calma y confianza; el rojo se reserva para la emergencia, para que el SOS sea lo primero que se ve.
+
+**Paleta de colores** (variables CSS en `src/styles/theme.css`; los nombres son los tokens que usa el código):
+
+| Token | Uso | Claro | Oscuro |
+|---|---|---|---|
+| `--brand` | Azul de marca: encabezado, botón principal, logo | `#0B2545` | `#0B2545` (no cambia) |
+| `--navy` | Azul de textos y elementos activos (se aclara en oscuro para leerse) | `#0B2545` | `#9CC0F0` |
+| `--red` / `--red-dark` | Botón SOS, etiqueta SOS, alerta activa | `#D62828` / `#A61E1E` | iguales |
+| `--bg` | Fondo de la app | `#F3F5F9` | `#0E141C` |
+| `--card` | Tarjetas | `#FFFFFF` | `#18212D` |
+| `--text` / `--muted` | Texto principal / secundario | `#1B2333` / `#5B6578` | `#E8EDF4` / `#A9B4C4` |
+| `--border` | Bordes de tarjetas y campos | `#E3E7EF` | `#2F3C4E` |
+| `--success` (+ `-bg`) | Correcto, guardado, pasos completos | `#1B7A4B` / `#E5F4EC` | `#5FCF96` / `#14301F` |
+| `--warning` (+ `-bg`) | Atención: sin punto de encuentro (borde amarillo), mochila por revisar | `#8F5300` / `#FFF3DC` | `#F2B55C` / `#33260F` |
+| `--danger` (+ `-bg`) | Error y **datos necesarios que faltan** (borde rojo) | `#B42318` / `#FDECEC` | `#FF8A80` / `#3A1716` |
+| `--info` (+ `-bg`) | Avisos informativos | `#1D4E89` / `#E8F0FA` | `#9CC0F0` / `#172A42` |
+| `--demo` (+ `-bg`) | Todo lo del modo de demostración (morado, para no confundirlo con datos reales) | `#6B3FA0` / `#F2EBFB` | `#C7A6F2` / `#2B2140` |
+| — | Widget «armado» (tras el primer toque) | rojo `#FF1F1F` con borde amarillo `#FFD60A` | igual |
+| — | Fondo del widget 2×2 | azul SISMO al 90 % (`#E60B2545`) | igual |
+
+Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarillo** para «revisar»; el **verde** para «listo»; el **morado** para la demostración. En oscuro los colores de texto se aclaran (`--navy`, `--danger`, etc.) para mantener el contraste, y la opción **Alto contraste** de Configuración marca más bordes y textos en ambos temas.
+
 ## 3. Decisiones de diseño
 
 | Decisión | Motivo |
@@ -230,8 +261,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
 | Pruebas unitarias (Vitest) | **98 de 98** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **110 de 110** superadas |
-| Cubierto por pruebas e2e | Ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
+| Pruebas e2e (Playwright, móvil y escritorio) | **114 de 114** superadas |
+| Cubierto por pruebas e2e | Datos faltantes en rojo (aviso en Inicio y bordes), confirmaciones y borrar puntos en el registro, editar y eliminar contactos en el registro, ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |

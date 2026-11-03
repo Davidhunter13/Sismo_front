@@ -9,6 +9,7 @@ import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { StatusBadge } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
+import { setupGaps } from '../utils/setupGaps';
 import { FALL_COUNTDOWN_S, isMotionSupported } from '../services/fallDetectionService';
 import { isSirenSupported, previewSound, stopPreview } from '../services/sirenService';
 import { LANGS, type Lang } from '../i18n';
@@ -69,7 +70,8 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title={t.title} backTo="/inicio" showSettings={false}>
-      <section className="card">
+      {/* Borde rojo si falta el nombre (p. ej. se dio SOS durante el registro). */}
+      <section className={`card${setupGaps(data).includes('name') ? ' card--missing' : ''}`}>
         <h2 className="card__title"><User size={18} aria-hidden="true" /> {t.profile.title}</h2>
         <IonInput
           className={nameError ? 'ion-invalid ion-touched' : ''}
