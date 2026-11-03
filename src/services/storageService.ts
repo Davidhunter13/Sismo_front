@@ -13,6 +13,7 @@ export const defaultSettings: Settings = {
   language: typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es',
   theme: 'sistema',
   fallDetection: false,
+  lowBatterySaver: 20,
   highContrast: false,
   largeText: false,
   reduceMotion: false,

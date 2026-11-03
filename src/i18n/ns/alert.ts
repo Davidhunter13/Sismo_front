@@ -25,6 +25,12 @@ const es = {
     viaWhatsapp: (name: string) => `WhatsApp: ${name}`,
     cancel: 'Ahora no',
   },
+  lowBattery: {
+    notice: (level: number) => `Batería al ${level} %: se activó el modo ahorro para que las señales duren más.`,
+    resume: 'Volver a la señal continua',
+    notify: 'Avisar a mis contactos',
+    sheetHeader: '¿Por dónde avisa que tiene poca batería?',
+  },
   empty: {
     title: 'Alerta',
     heading: 'No hay una alerta activa',
@@ -176,6 +182,12 @@ const en: typeof es = {
     viaSms: (n: number) => `By SMS (${n} contact(s))`,
     viaWhatsapp: (name: string) => `WhatsApp: ${name}`,
     cancel: 'Not now',
+  },
+  lowBattery: {
+    notice: (level) => `Battery at ${level}%: saving mode was turned on so the signals last longer.`,
+    resume: 'Back to the continuous signal',
+    notify: 'Notify my contacts',
+    sheetHeader: 'How do you want to tell them your battery is low?',
   },
   empty: {
     title: 'Alert',

@@ -11,7 +11,8 @@
     <!-- Widget: estado normal y «armado» (después del primer toque). -->
     <string name="widget_sos_label">SOS</string>
     <string name="widget_sos_label_armed">¿SOS?</string>
-    <string name="widget_sos_confirm_small">Toque\notra vez</string>
+    <!-- Corto y en dos líneas: en el círculo de 52 dp «Toque otra vez» se partía y se cortaba. -->
+    <string name="widget_sos_confirm_small">OTRA\nVEZ</string>
     <string name="widget_sos_big">SOS</string>
     <string name="widget_sos_confirm_big">¿ACTIVAR?</string>
     <string name="widget_sos_status_idle">Toque 2 veces para pedir ayuda</string>

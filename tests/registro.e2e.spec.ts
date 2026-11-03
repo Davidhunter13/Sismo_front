@@ -70,3 +70,30 @@ test('registro: sin terminar no queda registrado y el SOS sigue disponible', asy
   await expect(page).toHaveURL(/\/inicio$/);
   await expect(page.locator('ion-alert')).toBeVisible();
 });
+
+test('registro: el contacto se puede traer de la agenda (nombre y teléfono precargados)', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'contacts', {
+      value: { select: async () => [{ name: ['Luisa Agenda'], tel: ['320 349 8531'] }] },
+      configurable: true,
+    });
+  });
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('sismo:v1:data', JSON.stringify({
+    version: 1,
+    settings: { userName: 'Ana' },
+    lastLocation: { latitude: 4.6, longitude: -74, accuracy: 10, timestamp: new Date().toISOString(), source: 'dispositivo' },
+    meetingPoints: [{ id: 'a', label: 'Parque', latitude: 4.6, longitude: -74 }],
+  })));
+  await page.goto('/registro');
+  const v = view(page);
+  for (let i = 0; i < 3; i++) await v.getByRole('button', { name: 'Siguiente' }).click();
+  await v.getByRole('button', { name: 'De la agenda' }).click();
+  const modal = page.locator('ion-modal');
+  await expect(modal.locator('ion-input[label="Nombre"] input')).toHaveValue('Luisa Agenda');
+  await expect(modal.locator('ion-input[label="Teléfono"] input')).toHaveValue('320 349 8531');
+  await modal.locator('ion-input[label="Correo electrónico"] input').fill('luisa@example.com');
+  await modal.getByRole('radio', { name: 'Familiar' }).click();
+  await modal.getByRole('button', { name: 'Agregar contacto' }).click();
+  await expect(v.getByText('1 contacto agregado.')).toBeVisible();
+});

@@ -1,12 +1,13 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonContent, IonInput, IonPage, useIonRouter } from '@ionic/react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Crosshair, Loader2, MapPin, Search, Siren, UserPlus } from 'lucide-react';
+import { IonContent, IonInput, IonPage, useIonRouter, useIonToast } from '@ionic/react';
+import { ArrowLeft, ArrowRight, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Search, Siren, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
 import { requestDeviceLocation } from '../services/locationService';
+import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
 import { requestSosDialog } from '../services/sosRequestService';
 import { defaultSettings } from '../services/storageService';
 import type { ContactInput } from '../types';
@@ -23,7 +24,9 @@ const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
 export default function SetupPage() {
   const router = useIonRouter();
   const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, addContact } = useAppState();
-  const { setup: t, settings: ts, location: tl } = useT();
+  const { setup: t, settings: ts, location: tl, contacts: tc } = useT();
+  const [presentToast] = useIonToast();
+  const [imported, setImported] = useState<ContactInput | null>(null);
   const [step, setStep] = useState(0);
   // El nombre por defecto («Usuario demo») no cuenta: la persona debe escribir el suyo.
   const [name, setName] = useState(data.settings.userName === defaultSettings.userName ? '' : data.settings.userName);
@@ -100,6 +103,23 @@ export default function SetupPage() {
   const saveContact = (input: ContactInput) => {
     addContact(input);
     setFormOpen(false);
+  };
+
+  const openNewContact = () => {
+    setImported(null);
+    setFormOpen(true);
+  };
+
+  // Importar de la agenda: precarga nombre y teléfono; la persona completa relación y correo y confirma.
+  const importContact = async () => {
+    try {
+      const picked = await pickContact();
+      if (!picked) return;
+      setImported({ name: picked.name, relationship: '', phone: picked.phone, email: '' });
+      setFormOpen(true);
+    } catch {
+      void presentToast({ message: tc.agendaError, duration: 2200, color: 'warning', position: 'top' });
+    }
   };
 
   // Emergencia durante el registro: misma ruta que el widget de Android (Inicio con el diálogo de SOS).
@@ -235,7 +255,13 @@ export default function SetupPage() {
             {key === 'contact' && (
               <>
                 <p className="small muted">{t.contactHint}</p>
-                <button className="btn btn--primary btn--block" onClick={() => setFormOpen(true)}>
+                {/* Como en Contactos: traerlo de la agenda precarga nombre y teléfono (solo donde el teléfono lo permite). */}
+                {isContactPickerSupported() && (
+                  <button className="btn btn--outline btn--block" onClick={importContact}>
+                    <BookUser size={18} aria-hidden="true" /> {tc.fromAgenda}
+                  </button>
+                )}
+                <button className="btn btn--primary btn--block" onClick={openNewContact}>
                   <UserPlus size={18} aria-hidden="true" /> {t.contactAdd}
                 </button>
                 {realContacts.length > 0 && (
@@ -260,7 +286,7 @@ export default function SetupPage() {
           </div>
         </main>
       </IonContent>
-      <ContactFormModal isOpen={formOpen} contact={null} onSave={saveContact} onClose={() => setFormOpen(false)} />
+      <ContactFormModal isOpen={formOpen} contact={null} initial={imported} onSave={saveContact} onClose={() => setFormOpen(false)} />
     </IonPage>
   );
 }

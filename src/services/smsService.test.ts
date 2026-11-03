@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setLang } from '../i18n';
 import type { Contact, LocationSnapshot, MedicalInfo } from '../types';
-import { buildAlertMessage, buildSafeMessage, buildSmsUrl, buildWhatsappUrl, medicalSummary, normalizePhone, whatsappNumber } from './smsService';
+import { buildAlertMessage, buildLowBatteryMessage, buildSafeMessage, buildSmsUrl, buildWhatsappUrl, medicalSummary, normalizePhone, whatsappNumber } from './smsService';
 
 const real: LocationSnapshot = { latitude: 4.65, longitude: -74.1, accuracy: 12.4, timestamp: '2026-11-01T10:00:00Z', source: 'dispositivo' };
 const medical: MedicalInfo = { bloodType: 'O+', allergies: 'Penicilina', medications: '', conditions: '', notes: '', showOnAlert: true };
@@ -144,5 +144,15 @@ describe('en inglés', () => {
     expect(msg).toContain('Location (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
     expect(msg).toContain('Meeting point: Park https://maps.google.com/?q=4.60000,-74.00000');
     expect(msg).toContain('Battery: 40%');
+  });
+});
+
+describe('buildLowBatteryMessage', () => {
+  it('nivel, última ubicación, puntos de encuentro y línea 123', () => {
+    const msg = buildLowBatteryMessage('Ana', 18, real, [{ id: 'a', label: 'Casa', latitude: 4.6, longitude: -74 }]);
+    expect(msg).toContain('SISMO: Ana sigue en emergencia y su batería está al 18 %.');
+    expect(msg).toContain('Ubicación (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
+    expect(msg).toContain('Punto de encuentro: Casa https://maps.google.com/?q=4.60000,-74.00000');
+    expect(msg).toContain('línea 123');
   });
 });

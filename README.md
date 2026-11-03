@@ -158,8 +158,9 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 | Sismos recientes | Catálogo público del USGS (M ≥ 2,5); requiere internet. La ubicación no se envía: se filtra en el dispositivo |
 | Ficha médica | Guardada en el dispositivo. «Compartir en la alerta y en el SMS» viene **activado por defecto**: se muestra en la pantalla de alerta y se incluye en el SMS. El usuario puede desactivarlo |
 | Puntos de encuentro | Hasta 5 (casa, trabajo, colegio…), guardados en el dispositivo y todos incluidos en los mensajes; la brújula y la ruta guían al más cercano (se puede elegir otro) |
-| Registro obligatorio | Sin modo de demostración, asistente de 4 pasos: nombre, ubicación actual, punto de encuentro y un contacto real. El SOS sigue disponible mientras tanto |
+| Registro obligatorio | Sin modo de demostración, asistente de 4 pasos: nombre, ubicación actual, punto de encuentro y un contacto real (escrito o traído de la agenda). El SOS sigue disponible mientras tanto |
 | Ubicación automática | Se actualiza cada 5 minutos con la app abierta (no en segundo plano) |
+| Ahorro de batería automático | Durante la alerta, al llegar al umbral de Configuración (20 % por defecto) pasa sola al modo ahorro, lo avisa y ofrece avisar a los contactos; una sola vez por alerta |
 | Modo atrapado | Real en Android (servicio nativo, sigue con la pantalla apagada). En el navegador solo mientras la pestaña esté visible (silbato y vibración) |
 | Detección de caídas | Real con la app abierta (acelerómetro). Desactivada por defecto: puede dar falsas alarmas |
 | Encuesta SUS | Real; respuestas anónimas en el dispositivo, exportables a CSV |

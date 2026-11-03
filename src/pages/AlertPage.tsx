@@ -23,8 +23,9 @@ import { keepScreenOn } from '../services/screenService';
 import { isTrapped, startTrapped, stopTrapped, TRAPPED_INTERVAL_MS } from '../services/trappedService';
 import { refreshNativeSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
-import { buildAlertMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
+import { buildAlertMessage, buildLowBatteryMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
 import { useNotifySafe } from '../components/useNotifySafe';
+import { useContactChannel } from '../components/useContactChannel';
 import { useMeetingTarget } from '../components/useMeetingTarget';
 import type { Contact } from '../types';
 import { isTorchApiAvailable, isTorchOn, startTorchBlink, stopTorch } from '../services/torchService';
@@ -32,10 +33,35 @@ import { isVibrating, isVibrationSupported, startVibration, stopVibration } from
 import { eventTypeLabel, formatDuration, formatTime } from '../utils/format';
 import { goToRoot } from '../utils/navigation';
 
+/** Cada cuánto se revisa la batería durante una alerta (ahorro automático). */
+const BATTERY_CHECK_MS = 60_000;
+/**
+ * Alerta en la que ya se activó el ahorro automático: no se repite aunque se salga de esta vista o la app se
+ * reinicie. Se guarda aparte (solo el id de la alerta), sin tocar los datos de la alerta.
+ */
+const AUTO_SAVER_KEY = 'sismo:v1:ahorro-automatico';
+const autoSaverDone = {
+  has: (id: string) => {
+    try {
+      return localStorage.getItem(AUTO_SAVER_KEY) === id;
+    } catch {
+      return false;
+    }
+  },
+  add: (id: string) => {
+    try {
+      localStorage.setItem(AUTO_SAVER_KEY, id);
+    } catch {
+      // Sin almacenamiento: solo se pierde el recuerdo tras reiniciar la app.
+    }
+  },
+};
+
 export default function AlertPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
   const notifySafe = useNotifySafe();
+  const chooseChannel = useContactChannel();
   const tf = useT().features;
   const ta = useT().alert;
   const { data, activeAlert, endAlert, markSmsOpened } = useAppState();
@@ -52,6 +78,36 @@ export default function AlertPage() {
   const torchOn = isTorchOn();
   const vibrating = isVibrating();
   const trapped = isTrapped();
+
+  // Ahorro automático: con la batería en el umbral de Configuración pasa sola al modo ahorro (una sola vez por
+  // alerta: si la persona vuelve a la señal continua, se respeta). No aplica en simulacros.
+  const [lowBattery, setLowBattery] = useState<number | null>(null);
+  const threshold = data.settings.lowBatterySaver;
+  const alertId = activeAlert && !activeAlert.isDrill ? activeAlert.id : null;
+  useEffect(() => {
+    if (!alertId || threshold <= 0) return;
+    const check = async () => {
+      if (autoSaverDone.has(alertId) || isTrapped()) return;
+      const level = await getBatteryLevel();
+      if (level == null || level > threshold || autoSaverDone.has(alertId)) return;
+      autoSaverDone.add(alertId);
+      setFlash(false);
+      await startTrapped();
+      setLowBattery(level);
+      tick((n) => n + 1);
+    };
+    void check();
+    const t = window.setInterval(() => void check(), BATTERY_CHECK_MS);
+    return () => window.clearInterval(t);
+  }, [alertId, threshold]);
+
+  const notifyLowBattery = () => {
+    if (!activeAlert || lowBattery == null) return;
+    const location = activeAlert.location ?? data.lastLocation;
+    chooseChannel(ta.lowBattery.sheetHeader, async () =>
+      buildLowBatteryMessage(data.settings.userName, (await getBatteryLevel()) ?? lowBattery, location, data.meetingPoints),
+    );
+  };
 
   // Reloj para la duración; también refresca el estado real de las señales (en Android se pueden
   // apagar desde la notificación).
@@ -235,6 +291,19 @@ export default function AlertPage() {
 
       <section className={`card trapped-card${trapped ? ' trapped-card--on' : ''}`}>
         <h2 className="card__title"><BatteryLow size={18} aria-hidden="true" /> {ta.trapped.title}</h2>
+        {lowBattery != null && (
+          <div className="callout callout--warning stack" role="alert">
+            <p className="small"><strong>{ta.lowBattery.notice(lowBattery)}</strong></p>
+            <div className="btn-pair">
+              {trapped && (
+                <button className="btn btn--outline" onClick={toggleTrapped}>{ta.lowBattery.resume}</button>
+              )}
+              {smsContacts.length > 0 && (
+                <button className="btn btn--primary" onClick={notifyLowBattery}>{ta.lowBattery.notify}</button>
+              )}
+            </div>
+          </div>
+        )}
         <p className="small">
           {trapped
             ? ta.trapped.on(TRAPPED_INTERVAL_MS / 60_000, isNative())

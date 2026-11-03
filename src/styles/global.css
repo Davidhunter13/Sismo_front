@@ -598,3 +598,6 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 .chip-field__options { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip-field--invalid { border-color: var(--danger); }
 .chip-field__error { display: block; margin-top: 6px; color: var(--danger); font-size: 0.75rem; }
+
+/* Segmento con varias opciones cortas (p. ej. umbral de batería): sin el ancho mínimo de Ionic, caben todas. */
+.segment--compact ion-segment-button { min-width: 0; --padding-start: 4px; --padding-end: 4px; }

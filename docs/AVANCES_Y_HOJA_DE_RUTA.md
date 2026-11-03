@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 100 pruebas e2e + 97 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 108 pruebas e2e + 98 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -72,6 +72,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Varios puntos de encuentro (hasta 5):** casa, trabajo, colegio… Se agregan uno tras otro (ubicación actual, mapa o dirección) y se ven en una lista con botón para borrar cada uno. **Todos van en los mensajes** (SMS, WhatsApp, «Estoy bien» y correo), cada uno con su enlace. La **brújula, la ruta y la mini brújula guían al más cercano** a la ubicación actual (o a donde se activó la alerta); con dos o más aparece «Guiar hacia» para elegir otro, con la distancia a cada uno. El tope de 5 mantiene el SMS corto. Los datos guardados con un solo punto se migran solos a la lista (`storageService.loadData`). Archivos: `utils/meetingPoints.ts`, `components/useMeetingTarget.tsx`.
 - **Registro obligatorio sin modo de demostración** (`/registro`): si en la bienvenida se apaga el modo de demostración, «Comenzar» abre un asistente de 4 pasos: **nombre**, **ubicación actual** (real del dispositivo; las coordenadas de prueba no cuentan), **punto de encuentro** (uno o varios) y **al menos un contacto real**. «Siguiente» se habilita solo con el paso completo y la app no queda registrada hasta «Finalizar registro». El botón **SOS sigue disponible** durante el registro (en una emergencia no debe haber bloqueos). Con el modo de demostración se entra directo, como antes.
 - **Ubicación actualizada sola cada 5 minutos** con la app abierta y visible, y al volver a la app si la última tiene más de 5 minutos. No usa ubicación en segundo plano (no pide «ubicación todo el tiempo» ni gasta batería con la pantalla apagada), solo actúa si el permiso ya está concedido y no reemplaza las coordenadas de prueba. Durante una alerta sigue la actualización propia cada 2 minutos. Archivo: `components/useLocationAutoRefresh.ts`.
+- **Ahorro de batería automático en la alerta:** durante una alerta real (no en simulacros) se revisa la batería cada minuto; al llegar al umbral de **Configuración → Ahorro de batería en la alerta** (Nunca, 10, 15, **20 % por defecto** o 30 %) pasa sola al **modo ahorro** (el modo atrapado: ráfagas cada pocos minutos). Muestra el aviso «Batería al N %: se activó el modo ahorro» con **«Volver a la señal continua»** y **«Avisar a mis contactos»** (SMS o WhatsApp con el nivel de batería, la última ubicación y los puntos de encuentro; hay que confirmar el envío). Se activa **una sola vez por alerta**: si la persona vuelve a la señal continua, no se reactiva, aunque salga de la pantalla o la app se reinicie (se recuerda el id de la alerta). Si el teléfono no informa la batería (iPhone, Firefox), no hace nada. Archivos: `AlertPage.tsx`, `components/useContactChannel.ts` (selector de canal compartido con «Estoy bien»), `smsService.buildLowBatteryMessage`.- **Registro: contacto desde la agenda.** En el paso 4 del registro está el botón **«De la agenda»** (como en Contactos): precarga nombre y teléfono y la persona completa relación y correo. Solo aparece donde el teléfono lo permite.
 - **Archivos de entorno:** `.env.development` (`npm run dev`) y `.env.production` (`npm run build`, web y APK), locales y fuera de git; la plantilla compartida es `.env.example`. Las variables `VITE_` quedan dentro de la app: nunca deben llevar claves.
 
 ### 2.5 Información
@@ -142,6 +143,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | En el PC, Waze abría sin punto de salida | El enlace de la app solo lleva el destino y la web de Waze no conoce la ubicación | En el navegador se usa el mapa web de Waze con salida y destino |
 | En modo oscuro el paso actual del registro se leía mal (azul sobre azul) | El azul de marca (`--brand`) no cambia en oscuro | El paso actual y el selector de puntos usan `--navy`, que se aclara en oscuro |
 | En el PC, al tocar «Relación» al crear un contacto no aparecían las opciones (en el celular sí) | La lista flotante de Ionic dentro del modal no se mostraba en algunos navegadores de PC (simulador de celular o navegador integrado del editor) | Las 6 opciones se muestran como botones dentro del formulario (`ContactFormModal`): no dependen de ventanas flotantes y se eligen con un toque |
+| En el widget 1×1 «Toque otra vez» se partía en líneas y se cortaba | No cabía en el círculo de 52 dp | Texto corto en dos líneas («OTRA / VEZ», «TAP / AGAIN») con tamaño automático |
+| En la vista de escritorio las opciones del umbral de batería se cortaban | Ionic da un ancho mínimo a cada opción del selector | Clase `segment--compact` sin ancho mínimo |
 | Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
 | El «¿Está bien?» no se vio porque la pantalla estaba apagada | El aviso no encendía la pantalla | Al detectar una caída la app enciende la pantalla y se muestra sobre la de bloqueo (Android, `wakeScreen` + `setShowWhenLocked`) |
@@ -225,9 +228,9 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **97 de 97** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **100 de 100** superadas |
-| Cubierto por pruebas e2e | Registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
+| Pruebas unitarias (Vitest) | **98 de 98** superadas |
+| Pruebas e2e (Playwright, móvil y escritorio) | **108 de 108** superadas |
+| Cubierto por pruebas e2e | Ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |

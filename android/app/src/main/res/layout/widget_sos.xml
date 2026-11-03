@@ -47,11 +47,17 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/widget_sos_circle_armed"
+            android:autoSizeMaxTextSize="13sp"
+            android:autoSizeMinTextSize="8sp"
+            android:autoSizeTextType="uniform"
             android:gravity="center"
             android:importantForAccessibility="no"
+            android:includeFontPadding="false"
+            android:maxLines="2"
+            android:padding="6dp"
             android:text="@string/widget_sos_confirm_small"
             android:textColor="#FFFFFF"
-            android:textSize="10sp"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:visibility="gone" />
     </FrameLayout>

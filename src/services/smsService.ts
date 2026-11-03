@@ -85,6 +85,21 @@ export function buildSafeMessage(userName: string, eventType?: EventType, at: Da
 }
 
 /**
+ * Aviso de batería baja durante una alerta (cuando el teléfono pasa solo al modo ahorro): nivel, última
+ * ubicación conocida y puntos de encuentro, por si la persona se queda sin comunicación.
+ */
+export function buildLowBatteryMessage(
+  userName: string,
+  level: number,
+  location: LocationSnapshot | null,
+  meetingPoints: MeetingPoint[] = [],
+): string {
+  const t = getT().services.sms;
+  const who = userName.trim() || t.defaultWho;
+  return [t.lowBattery(who, level), locationLine(location), ...meetingLines(meetingPoints), t.callToAction].join('\n');
+}
+
+/**
  * Número en el formato que exige WhatsApp (wa.me): código de país y solo dígitos, sin «+».
  * Si se guardó un celular colombiano sin indicativo (10 dígitos que empiezan por 3), se antepone 57;
  * por eso «3203498531» y «+57 320 349 8531» abren el mismo chat.

@@ -155,6 +155,8 @@ export interface Settings {
   theme: ThemePref;
   /** Detección de caída o impacto fuerte con el acelerómetro (desactivada por defecto por falsos positivos). */
   fallDetection: boolean;
+  /** Batería (%) con la que una alerta pasa sola al modo ahorro (ráfagas). 0 = desactivado. */
+  lowBatterySaver: number;
   highContrast: boolean;
   largeText: boolean;
   reduceMotion: boolean;

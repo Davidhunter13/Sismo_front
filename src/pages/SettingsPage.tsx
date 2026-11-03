@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonInput, IonLabel, IonSegment, IonSegmentButton, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
 import {
-  Activity, AlertTriangle, Eye, FlaskConical, Languages, MapPin, Palette, Play, RotateCcw, Square, Trash2, User, Volume2,
+  Activity, AlertTriangle, BatteryLow, Eye, FlaskConical, Languages, MapPin, Palette, Play, RotateCcw, Square, Trash2, User, Volume2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
@@ -18,6 +18,9 @@ import type { AlarmSound, Settings, ThemePref } from '../types';
 type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
 
 const TOGGLE_KEYS: ToggleKey[] = ['soundEnabled', 'visualSignalEnabled', 'vibrationEnabled', 'highContrast', 'largeText', 'reduceMotion'];
+
+/** Umbrales del ahorro automático de batería (0 = nunca). 20 % es el aviso de batería baja de Android. */
+const LOW_BATTERY_OPTIONS = [0, 10, 15, 20, 30];
 
 export default function SettingsPage() {
   const router = useIonRouter();
@@ -148,6 +151,24 @@ export default function SettingsPage() {
           />
         </div>
         {!isMotionSupported() && <p className="small muted">{t.fall.unsupported}</p>}
+      </section>
+
+      <section className="card stack">
+        <h2 className="card__title"><BatteryLow size={18} aria-hidden="true" /> {t.battery.title}</h2>
+        <strong className="small">{t.battery.label}</strong>
+        <IonSegment
+          value={String(settings.lowBatterySaver)}
+          onIonChange={(e) => updateSettings({ lowBatterySaver: Number(e.detail.value) })}
+          className="segment segment--compact"
+          aria-label={t.battery.label}
+        >
+          {LOW_BATTERY_OPTIONS.map((v) => (
+            <IonSegmentButton key={v} value={String(v)}>
+              <IonLabel>{v === 0 ? t.battery.off : `${v} %`}</IonLabel>
+            </IonSegmentButton>
+          ))}
+        </IonSegment>
+        <p className="small muted">{t.battery.detail}</p>
       </section>
 
       <section className="card card--demo">

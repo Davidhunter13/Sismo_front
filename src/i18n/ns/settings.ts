@@ -40,6 +40,12 @@ const es = {
       `Con la app abierta, si el acelerómetro detecta una caída o un impacto fuerte, pregunta durante ${s} s y, si no responde, activa la alerta. Puede dar falsas alarmas (por ejemplo, si se le cae el teléfono).`,
     unsupported: 'Este dispositivo o navegador no ofrece el acelerómetro.',
   },
+  battery: {
+    title: 'Ahorro de batería en la alerta',
+    label: 'Pasar solo al modo ahorro con batería al',
+    detail: 'Durante una alerta, al llegar a ese porcentaje las señales pasan a ráfagas cada pocos minutos para durar más, y se ofrece avisar a sus contactos. Puede volver a la señal continua cuando quiera.',
+    off: 'Nunca',
+  },
   demo: {
     title: 'Modo de demostración',
     on: 'Activado',
@@ -118,6 +124,12 @@ const en: typeof es = {
     detail: (s: number) =>
       `While the app is open, if the accelerometer detects a fall or a strong impact, it asks for ${s} s and, if you don’t answer, activates the alert. It may give false alarms (for example, if you drop your phone).`,
     unsupported: 'This device or browser does not provide an accelerometer.',
+  },
+  battery: {
+    title: 'Battery saving during an alert',
+    label: 'Switch to saving mode automatically at',
+    detail: 'During an alert, when the battery reaches that level the signals switch to bursts every few minutes to last longer, and you are offered to notify your contacts. You can go back to the continuous signal at any time.',
+    off: 'Never',
   },
   demo: {
     title: 'Demo mode',

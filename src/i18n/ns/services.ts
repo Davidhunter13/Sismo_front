@@ -12,6 +12,8 @@ const es = {
     meetingPoint: (label: string, link: string) => `Punto de encuentro: ${label} ${link}`,
     medical: (summary: string) => `Info médica: ${summary}`,
     battery: (level: number) => `Batería: ${level} %`,
+    lowBattery: (who: string, level: number) =>
+      `SISMO: ${who} sigue en emergencia y su batería está al ${level} %. Puede quedarse sin comunicación; su teléfono pasó a modo ahorro.`,
     callToAction: 'Si puede, comuníquese o llame a la línea 123.',
     safeAfterAlert: (who: string, event: string, hour: string) => `SISMO: ${who} está a salvo. La alerta (${event}) finalizó a las ${hour}.`,
     safeNow: (who: string, hour: string) => `SISMO: ${who} está bien. Aviso enviado a las ${hour}.`,
@@ -113,6 +115,8 @@ const en: typeof es = {
     meetingPoint: (label, link) => `Meeting point: ${label} ${link}`,
     medical: (summary) => `Medical info: ${summary}`,
     battery: (level) => `Battery: ${level}%`,
+    lowBattery: (who, level) =>
+      `SISMO: ${who} is still in an emergency and their battery is at ${level}%. They may lose contact; their phone switched to saving mode.`,
     callToAction: 'If you can, get in touch or dial 123.',
     safeAfterAlert: (who, event, hour) => `SISMO: ${who} is safe. The alert (${event}) ended at ${hour}.`,
     safeNow: (who, hour) => `SISMO: ${who} is OK. Notice sent at ${hour}.`,
