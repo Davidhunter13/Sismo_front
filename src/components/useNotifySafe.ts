@@ -3,7 +3,8 @@ import { useIonActionSheet } from '@ionic/react';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { buildSafeMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
-import type { EventType } from '../types';
+import { getBatteryLevel } from '../services/batteryService';
+import type { EventType, LocationSnapshot } from '../types';
 
 /**
  * Aviso «Estoy bien»: pregunta el canal en lugar de depender de que el enlace SMS lo atienda la app correcta.
@@ -20,21 +21,31 @@ export function useNotifySafe() {
   // Los contactos de demostración son ficticios: no se les envía nada.
   const contacts = data.contacts.filter((c) => !c.isSeed);
 
-  return (eventType?: EventType, onDone?: () => void) => {
-    const message = buildSafeMessage(data.settings.userName, eventType);
-    let action: (() => void) | null = null;
+  /**
+   * @param location ubicación a enviar (p. ej. la de la alerta); por defecto la última guardada.
+   */
+  return (eventType?: EventType, onDone?: () => void, location: LocationSnapshot | null = data.lastLocation) => {
+    // El mensaje lleva la ubicación, el punto de encuentro y la batería (se lee al elegir el canal).
+    const compose = async () =>
+      buildSafeMessage(data.settings.userName, eventType, new Date(), {
+        location,
+        meetingPoint: data.meetingPoint,
+        batteryLevel: await getBatteryLevel(),
+      });
+    let action: ((message: string) => void) | null = null;
     void present({
       header: t.sheetHeader,
       cssClass: 'sismo-sheet',
       buttons: [
-        { text: t.viaSms(contacts.length), handler: () => { action = () => openSmsComposer(contacts, message); } },
-        ...contacts.map((c) => ({ text: t.viaWhatsapp(c.name), handler: () => { action = () => openWhatsapp(c, message); } })),
+        { text: t.viaSms(contacts.length), handler: () => { action = (m) => openSmsComposer(contacts, m); } },
+        ...contacts.map((c) => ({ text: t.viaWhatsapp(c.name), handler: () => { action = (m) => openWhatsapp(c, m); } })),
         { text: t.cancel, role: 'cancel' },
       ],
       // La app externa se abre al terminar de cerrar el menú (si navegara antes, Ionic dejaría la vista oculta).
       onDidDismiss: () => {
         onDone?.();
-        action?.();
+        const send = action;
+        if (send) void compose().then(send);
       },
     });
   };

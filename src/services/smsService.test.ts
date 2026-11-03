@@ -73,6 +73,25 @@ describe('whatsappNumber y buildWhatsappUrl', () => {
   });
 });
 
+describe('buildSafeMessage completo', () => {
+  it('incluye ubicación actual, punto de encuentro y batería', () => {
+    const msg = buildSafeMessage('Ana', 'sismo', new Date(), {
+      location: real,
+      meetingPoint: { label: 'Parque', latitude: 4.6, longitude: -74 },
+      batteryLevel: 40,
+    });
+    const lines = msg.split('\n');
+    expect(lines[0]).toMatch(/^SISMO: Ana está a salvo\./);
+    expect(lines[1]).toBe('Ubicación (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
+    expect(lines[2]).toBe('Punto de encuentro: Parque https://maps.google.com/?q=4.60000,-74.00000');
+    expect(lines[3]).toBe('Batería: 40 %');
+  });
+  it('sin ubicación lo indica; sin datos extra queda solo la primera línea', () => {
+    expect(buildSafeMessage('Ana', undefined, new Date(), { location: null })).toContain('Ubicación no disponible.');
+    expect(buildSafeMessage('Ana').split('\n')).toHaveLength(1);
+  });
+});
+
 describe('normalizePhone (SMS)', () => {
   it('agrega +57 a celulares colombianos sin indicativo; respeta el resto', () => {
     expect(normalizePhone('320 349 8531')).toBe('+573203498531');
@@ -108,5 +127,12 @@ describe('en inglés', () => {
   it('«Estoy bien» con y sin tipo de evento', () => {
     expect(buildSafeMessage('Ana', 'sismo')).toMatch(/^SISMO: Ana is safe\. The alert \(Earthquake\) ended at .+\.$/);
     expect(buildSafeMessage('')).toMatch(/^SISMO: Your contact is OK\. Notice sent at .+\.$/);
+  });
+
+  it('«Estoy bien» completo en inglés', () => {
+    const msg = buildSafeMessage('Ana', undefined, new Date(), { location: real, meetingPoint: { label: 'Park', latitude: 4.6, longitude: -74 }, batteryLevel: 40 });
+    expect(msg).toContain('Location (±12 m): https://maps.google.com/?q=4.65000,-74.10000');
+    expect(msg).toContain('Meeting point: Park https://maps.google.com/?q=4.60000,-74.00000');
+    expect(msg).toContain('Battery: 40%');
   });
 });

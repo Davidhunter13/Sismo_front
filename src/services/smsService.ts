@@ -37,17 +37,7 @@ export function buildAlertMessage(
 ): string {
   const t = getT().services.sms;
   const who = userName.trim() || t.defaultWho;
-  const lines = [t.alertHeader(who, eventTypeLabel[eventType])];
-  if (location) {
-    const precision = location.accuracy != null ? ` (±${Math.round(location.accuracy)} m)` : '';
-    const link = mapsLink(location.latitude, location.longitude);
-    lines.push(location.source === 'prueba' ? t.testLocation(link) : t.location(precision, link));
-  } else {
-    lines.push(t.noLocation);
-  }
-  if (meetingPoint) {
-    lines.push(t.meetingPoint(meetingPoint.label, mapsLink(meetingPoint.latitude, meetingPoint.longitude)));
-  }
+  const lines = [t.alertHeader(who, eventTypeLabel[eventType]), locationLine(location), ...meetingLines(meetingPoint)];
   const med = medicalSummary(medical);
   if (med) lines.push(t.medical(med));
   // Les dice a los contactos cuánto tiempo queda para comunicarse.
@@ -56,15 +46,41 @@ export function buildAlertMessage(
   return lines.join('\n');
 }
 
+/** Línea con la ubicación (enlace a Google Maps y precisión), compartida por el aviso de alerta y «Estoy bien». */
+function locationLine(location: LocationSnapshot | null): string {
+  const t = getT().services.sms;
+  if (!location) return t.noLocation;
+  const precision = location.accuracy != null ? ` (±${Math.round(location.accuracy)} m)` : '';
+  const link = mapsLink(location.latitude, location.longitude);
+  return location.source === 'prueba' ? t.testLocation(link) : t.location(precision, link);
+}
+
+function meetingLines(meetingPoint: MeetingPoint | null): string[] {
+  if (!meetingPoint) return [];
+  return [getT().services.sms.meetingPoint(meetingPoint.label, mapsLink(meetingPoint.latitude, meetingPoint.longitude))];
+}
+
+/** Datos opcionales del aviso «Estoy bien»: dónde está la persona, el punto de encuentro y la batería. */
+export interface SafeDetails {
+  location?: LocationSnapshot | null;
+  meetingPoint?: MeetingPoint | null;
+  batteryLevel?: number | null;
+}
+
 /**
  * Aviso de que la persona está a salvo: al finalizar una alerta (con `eventType`) o en cualquier momento
  * desde el panel principal, por ejemplo después de un temblor (sin `eventType`).
  */
-export function buildSafeMessage(userName: string, eventType?: EventType, at: Date = new Date()): string {
+export function buildSafeMessage(userName: string, eventType?: EventType, at: Date = new Date(), details: SafeDetails = {}): string {
   const t = getT().services.sms;
   const who = userName.trim() || t.defaultSafeWho;
   const hour = at.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
-  return eventType ? t.safeAfterAlert(who, eventTypeLabel[eventType], hour) : t.safeNow(who, hour);
+  const lines = [eventType ? t.safeAfterAlert(who, eventTypeLabel[eventType], hour) : t.safeNow(who, hour)];
+  // Mensaje completo: dónde está, el punto de encuentro y la batería (si se conocen).
+  if (details.location !== undefined) lines.push(locationLine(details.location));
+  lines.push(...meetingLines(details.meetingPoint ?? null));
+  if (details.batteryLevel != null) lines.push(t.battery(details.batteryLevel));
+  return lines.join('\n');
 }
 
 /**

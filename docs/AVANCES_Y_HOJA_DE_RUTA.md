@@ -19,7 +19,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Vibración | No existía | Vibración en patrón SOS |
 | Pantalla | Se bloqueaba sola | Permanece encendida durante la alerta |
 | Llamada de emergencia | No existía | Botón «Llamar al 123» |
-| Canal digital | Solo simulación | SMS a contactos con ubicación y punto de encuentro + SMS «Estoy bien» al finalizar |
+| Canal digital | Solo simulación | SMS a contactos con ubicación y punto de encuentro + «Estoy bien» (SMS o WhatsApp) con ubicación actual, punto de encuentro y batería |
 | Ubicación | Una lectura al tocar un botón | Afinado de GPS (hasta 10 s) y actualización cada 2 min durante la alerta |
 | Mapa | Esquema SVG | Pestañas «Esquema» y «Mapa real» (OpenStreetMap) con punto de encuentro |
 | Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica con QR, lectura en voz alta, mochila de emergencia y lista «Después del sismo» |
@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 90 pruebas e2e + 87 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 90 pruebas e2e + 90 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -58,7 +58,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Llamar al 123:** abre el marcador con el número listo.
 - **SMS de alerta:** abre la app de mensajes con los contactos reales y el aviso: tipo de evento, ubicación (con precisión), punto de encuentro y resumen de la ficha médica (si «Compartir» está activo). Estado honesto «SMS abierto», porque SISMO no puede verificar el envío.
-- **«Estoy bien»:** al finalizar la alerta (y desde Inicio) se pregunta por dónde avisar: **por SMS** a todos los contactos o **por WhatsApp** a cada contacto (enlace oficial wa.me). Luego se abre la lista «Después del sismo».
+- **«Estoy bien»:** al finalizar la alerta (y desde Inicio) se pregunta por dónde avisar: **por SMS** a todos los contactos o **por WhatsApp** a cada contacto (enlace oficial wa.me). El mensaje va completo: enlace de Google Maps a la **ubicación actual** (con precisión), enlace al **punto de encuentro** y **batería**. Luego se abre la lista «Después del sismo».
 - **Correo de alerta (servidor pendiente de conectar):** al activar el SOS aparece «¿Enviar correo a sus contactos?» con cuenta regresiva de **20 s**: «Sí, enviar ahora» o el silencio lo envían; «No enviar» lo cancela (luego se puede reintentar). No se pregunta en simulacros ni si ningún contacto real tiene correo. La app **no envía correos por sí misma ni guarda credenciales**: arma la solicitud (asunto, destinatarios, cuerpo con ubicación, punto de encuentro, ficha médica y batería) y la envía por POST a `VITE_ALERT_EMAIL_URL` (`.env`; ejemplo en `.env.example`), con tiempo límite y dos reintentos con espera exponencial. Mientras no esté configurado, el estado dice «No se envió: falta conectar el servidor de correo». El contrato JSON para el servidor está documentado en `src/services/emailService.ts`.
 - **Correo obligatorio en los contactos:** nuevo campo «Correo electrónico» validado en el formulario. Los contactos guardados antes muestran «Falta el correo» hasta editarlos.
 - **WhatsApp por contacto:** en la alerta, un botón por contacto abre WhatsApp con el mismo aviso (WhatsApp no admite varios destinatarios en un enlace y requiere internet). El número se normaliza al formato de WhatsApp.
@@ -219,7 +219,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **87 de 87** superadas |
+| Pruebas unitarias (Vitest) | **90 de 90** superadas |
 | Pruebas e2e (Playwright, móvil y escritorio) | **90 de 90** superadas |
 | Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |

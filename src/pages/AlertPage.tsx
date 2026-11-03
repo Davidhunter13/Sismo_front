@@ -126,7 +126,7 @@ export default function AlertPage() {
 
   const finish = () => {
     if (!activeAlert) return;
-    const { eventType, isDrill, id } = activeAlert;
+    const { eventType, isDrill, id, location } = activeAlert;
     setFlash(false);
     endAlert();
     presentToast({ message: ta.toast.finished, duration: 2500, color: 'success', position: 'top' });
@@ -140,7 +140,7 @@ export default function AlertPage() {
       return;
     }
     // Cierre del ciclo de comunicación: elegir por dónde avisar «Estoy bien» (SMS o WhatsApp por contacto).
-    notifySafe(eventType, () => goAfterAlert(id));
+    notifySafe(eventType, () => goAfterAlert(id), location ?? data.lastLocation);
   };
 
   if (!activeAlert) {
