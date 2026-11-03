@@ -2,6 +2,7 @@
 import { IonInput, IonModal, IonSelect, IonSelectOption } from '@ionic/react';
 import { Save, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { useT } from '../i18n/useT';
 import type { Contact, ContactInput } from '../types';
 import { RELATIONSHIPS, validateContact } from '../utils/contactValidation';
 
@@ -15,15 +16,17 @@ interface ContactFormModalProps {
   onClose: () => void;
 }
 
-const empty: ContactInput = { name: '', relationship: '', phone: '' };
+const empty: ContactInput = { name: '', relationship: '', phone: '', email: '' };
 
 export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: ContactFormModalProps) {
+  const tc = useT().contacts;
+  const t = tc.form;
   const [form, setForm] = useState<ContactInput>(empty);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone } : initial ?? empty);
+      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone, email: contact.email ?? '' } : initial ?? empty);
       setTouched(false);
     }
   }, [isOpen, contact, initial]);
@@ -35,24 +38,24 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
     e.preventDefault();
     setTouched(true);
     if (Object.keys(errors).length > 0) return;
-    onSave({ name: form.name.trim(), relationship: form.relationship, phone: form.phone.trim() });
+    onSave({ name: form.name.trim(), relationship: form.relationship, phone: form.phone.trim(), email: form.email.trim() });
   };
 
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose} className="sheet-modal" initialBreakpoint={1} breakpoints={[0, 1]}>
       <form className="sheet" onSubmit={submit} noValidate>
         <div className="sheet__head">
-          <h2>{contact ? 'Editar contacto' : 'Nuevo contacto'}</h2>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Cerrar"><X size={22} /></button>
+          <h2>{contact ? t.editTitle : t.newTitle}</h2>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label={t.close}><X size={22} /></button>
         </div>
-        <p className="muted small">Use datos ficticios en el prototipo. Este contacto no recibirá alertas automáticamente.</p>
+        <p className="muted small">{t.note}</p>
 
         <IonInput
           className={fieldClass('name')}
-          label="Nombre"
+          label={t.name}
           labelPlacement="stacked"
           fill="outline"
-          placeholder="Ej.: Ana (demo)"
+          placeholder={t.namePlaceholder}
           value={form.name}
           maxlength={50}
           errorText={errors.name}
@@ -60,36 +63,51 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
         />
         <IonSelect
           className={fieldClass('relationship')}
-          label="Relación"
+          label={t.relationship}
           labelPlacement="stacked"
           fill="outline"
           interface="popover"
-          placeholder="Seleccione"
+          placeholder={t.relationshipPlaceholder}
           value={form.relationship || undefined}
           errorText={errors.relationship}
           onIonChange={(e) => setForm((f) => ({ ...f, relationship: String(e.detail.value ?? '') }))}
         >
-          {RELATIONSHIPS.map((r) => <IonSelectOption key={r} value={r}>{r}</IonSelectOption>)}
+          {RELATIONSHIPS.map((r) => <IonSelectOption key={r} value={r}>{tc.relationships[r] ?? r}</IonSelectOption>)}
         </IonSelect>
         <IonInput
           className={fieldClass('phone')}
-          label="Teléfono"
+          label={t.phone}
           labelPlacement="stacked"
           fill="outline"
           type="tel"
           inputmode="tel"
-          placeholder="Ej.: 300 000 0004"
+          placeholder={t.phonePlaceholder}
           value={form.phone}
           maxlength={20}
           errorText={errors.phone}
-          helperText="Entre 7 y 15 dígitos."
+          helperText={t.phoneHelper}
           onIonInput={(e) => setForm((f) => ({ ...f, phone: String(e.detail.value ?? '') }))}
         />
+        <IonInput
+          className={fieldClass('email')}
+          label={t.email}
+          labelPlacement="stacked"
+          fill="outline"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder={t.emailPlaceholder}
+          value={form.email}
+          maxlength={120}
+          errorText={errors.email}
+          helperText={t.emailHelper}
+          onIonInput={(e) => setForm((f) => ({ ...f, email: String(e.detail.value ?? '') }))}
+        />
         {touched && Object.keys(errors).length > 0 && (
-          <p className="form-error" role="alert">Revise los campos marcados.</p>
+          <p className="form-error" role="alert">{t.reviewFields}</p>
         )}
         <button type="submit" className="btn btn--primary btn--block">
-          <Save size={18} aria-hidden="true" /> {contact ? 'Guardar cambios' : 'Agregar contacto'}
+          <Save size={18} aria-hidden="true" /> {contact ? t.saveChanges : t.addContact}
         </button>
       </form>
     </IonModal>

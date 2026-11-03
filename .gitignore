@@ -25,6 +25,7 @@ dist-ssr
 
 # Secretos y credenciales (Política CCS)
 .env*
+!.env.example
 credentials/
 *.pem
 *.key

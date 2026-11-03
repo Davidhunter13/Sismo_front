@@ -10,14 +10,16 @@ interface AppLayoutProps {
   hideNav?: boolean;
   showSettings?: boolean;
   className?: string;
+  /** Elemento extra del encabezado, junto al botón de tema (p. ej. la brújula de Inicio). */
+  headerExtra?: ReactNode;
   children: ReactNode;
 }
 
 /** Estructura común: encabezado, contenido desplazable y navegación inferior. */
-export function AppLayout({ title, backTo, hideNav, showSettings, className, children }: AppLayoutProps) {
+export function AppLayout({ title, backTo, hideNav, showSettings, className, headerExtra, children }: AppLayoutProps) {
   return (
     <IonPage className={className}>
-      <Header title={title} backTo={backTo} showSettings={showSettings} />
+      <Header title={title} backTo={backTo} showSettings={showSettings} extra={headerExtra} />
       <IonContent className="app-content">
         <main className={`page${hideNav ? ' page--no-nav' : ''}`}>{children}</main>
       </IonContent>

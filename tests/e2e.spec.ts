@@ -60,7 +60,10 @@ test('activar y finalizar alerta actualiza el historial (modo demo)', async ({ p
 
   await v.getByRole('button', { name: /Finalizar alerta/ }).click();
   await page.locator('ion-alert').getByRole('button', { name: 'Finalizar' }).click();
-  await expect(page).toHaveURL(/\/inicio$/);
+  // Al finalizar se abre la lista «Después del sismo»; luego se vuelve a Inicio.
+  await expect(page).toHaveURL(/\/despues-del-sismo\?alerta=/);
+  await page.waitForTimeout(450);
+  await navTo(page, 'Inicio', /\/inicio$/);
   await expect(view(page).getByText('Sin alertas activas')).toBeVisible();
 
   const data = await readStorage(page);
@@ -100,17 +103,22 @@ test('contactos: validación, alta, edición, borrado y persistencia', async ({ 
   await expect(modal.getByText('Revise los campos marcados.')).toBeVisible();
   await expect(modal.getByText('Ingrese al menos 2 caracteres.')).toBeVisible();
   await expect(modal.getByText('El teléfono es obligatorio.')).toBeVisible();
+  await expect(modal.getByText('El correo es obligatorio.')).toBeVisible();
 
   await modal.locator('ion-input[label="Nombre"] input').fill('Pedro (demo)');
   await modal.locator('ion-input[label="Teléfono"] input').fill('12ab');
   await expect(modal.getByText('Entre 7 y 15 dígitos; puede iniciar con +.')).toBeVisible();
   await modal.locator('ion-input[label="Teléfono"] input').fill('300 000 0009');
+  await modal.locator('ion-input[label="Correo electrónico"] input').fill('pedro@');
+  await expect(modal.getByText('Ingrese un correo válido (ej.: nombre@correo.com).')).toBeVisible();
+  await modal.locator('ion-input[label="Correo electrónico"] input').fill('pedro.demo@example.com');
   await modal.locator('ion-select').click();
   await page.locator('ion-popover').getByText('Amigo/a', { exact: true }).click();
   await page.waitForTimeout(300);
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await expect(page.locator('ion-toast')).toContainText('Contacto agregado');
   await expect(view(page).locator('.contact-card')).toHaveCount(4);
+  await expect(view(page).locator('.contact-card', { hasText: 'Pedro (demo)' })).toContainText('pedro.demo@example.com');
 
   await view(page).getByRole('button', { name: 'Editar Pedro (demo)' }).click();
   await modal.locator('ion-input[label="Nombre"] input').fill('Pedro Editado (demo)');

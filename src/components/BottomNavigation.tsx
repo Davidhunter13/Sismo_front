@@ -2,24 +2,28 @@
 import { IonFooter, useIonRouter } from '@ionic/react';
 import { BookOpen, History, Home, MapPin, Users, type LucideIcon } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useT } from '../i18n/useT';
 import { goToRoot } from '../utils/navigation';
 
-const items: { path: string; label: string; icon: LucideIcon }[] = [
-  { path: '/inicio', label: 'Inicio', icon: Home },
-  { path: '/ubicacion', label: 'Ubicación', icon: MapPin },
-  { path: '/contactos', label: 'Contactos', icon: Users },
-  { path: '/historial', label: 'Historial', icon: History },
-  { path: '/guia', label: 'Guía', icon: BookOpen },
+type NavKey = 'home' | 'location' | 'contacts' | 'history' | 'guide';
+
+const items: { path: string; key: NavKey; icon: LucideIcon }[] = [
+  { path: '/inicio', key: 'home', icon: Home },
+  { path: '/ubicacion', key: 'location', icon: MapPin },
+  { path: '/contactos', key: 'contacts', icon: Users },
+  { path: '/historial', key: 'history', icon: History },
+  { path: '/guia', key: 'guide', icon: BookOpen },
 ];
 
 export function BottomNavigation() {
   const router = useIonRouter();
   const { pathname } = useLocation();
+  const t = useT().common.nav;
 
   return (
     <IonFooter className="bottom-nav ion-no-border">
-      <nav aria-label="Navegación principal">
-        {items.map(({ path, label, icon: Icon }) => {
+      <nav aria-label={t.main}>
+        {items.map(({ path, key, icon: Icon }) => {
           const active = pathname === path || pathname.startsWith(`${path}/`);
           return (
             <button
@@ -29,7 +33,7 @@ export function BottomNavigation() {
               onClick={() => !active && goToRoot(router, path)}
             >
               <Icon size={22} strokeWidth={active ? 2.4 : 2} aria-hidden="true" />
-              <span>{label}</span>
+              <span>{t[key]}</span>
             </button>
           );
         })}

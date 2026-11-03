@@ -124,11 +124,27 @@ La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 
 Desde Inicio también se puede **avisar que está bien** por SMS sin activar una alerta.
 
+## Correo de alerta (servidor pendiente)
+
+Al activar el SOS la app pregunta «¿Enviar correo a sus contactos?» y, si no hay respuesta en 20 s, lo envía. El correo lo envía **un servidor propio** (aún por conectar):
+
+1. Copie `.env.example` como `.env` (no se sube a git).
+2. Ponga en `VITE_ALERT_EMAIL_URL` la URL del servidor. La app le hace un POST JSON con asunto, destinatarios, cuerpo y ubicación (contrato en `src/services/emailService.ts`).
+3. Vuelva a compilar (`npm run build` / `npm run android`).
+
+Sin URL configurada, la alerta muestra «No se envió: falta conectar el servidor de correo». El correo es obligatorio al crear un contacto (los contactos guardados antes muestran «Falta el correo»). No se pregunta en simulacros ni si ningún contacto real tiene correo.
+
+## Idioma y tema
+
+- **Idioma:** español o inglés, desde la bienvenida o en Configuración. El idioma inicial se toma del teléfono. Traduce la interfaz, la guía, los SMS, la encuesta SUS, las fechas y la voz.
+- **Tema:** Sistema, Claro u Oscuro (Configuración → Tema), o el botón sol/luna del encabezado.
+- **Para desarrolladores:** los textos están en `src/i18n/ns/<pantalla>.ts` con `es` y `en`. En componentes: `const t = useT().<pantalla>`; en servicios: `getT().<pantalla>`. Si falta una traducción en `en`, TypeScript da error al compilar.
+
 Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación → sirena/linterna/vibración/SMS) para la página de Estadísticas.
 
 ## Vistas y rutas
 
-`/bienvenida` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila`
+`/bienvenida` · `/inicio` · `/alerta` · `/ubicacion` · `/contactos` · `/historial` · `/historial/:id` · `/guia` · `/configuracion` · `/estadisticas` · `/simulacro` · `/sismos` · `/ficha-medica` · `/encuesta` · `/mochila` · `/despues-del-sismo`
 
 ## Qué es real y qué es simulado
 
@@ -148,6 +164,14 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 | Mochila de emergencia | Real; recordatorios **dentro de la app** (no hay notificaciones programadas) |
 | Lectura en voz alta de la guía | Android: voz del sistema; navegador: Web Speech API |
 | Importar contactos | Android (selector del sistema) y Chrome Android (Contact Picker API) |
+| Brújula al punto de encuentro | Real y sin internet (GPS + magnetómetro). Rosa con N, NE, E, SE, S, SO, O y NO que gira con el teléfono. Mini brújula en Inicio (y en el encabezado al hacer scroll) y acceso «Brújula». Sin magnetómetro, dirección respecto al norte |
+| Buscar dirección del punto de encuentro | Esri ArcGIS (direcciones colombianas exactas, p. ej. «Carrera 20 # 39-52») + Photon/OpenStreetMap de respaldo; requiere internet. Para producción revisar los términos de Esri sobre almacenar resultados |
+| WhatsApp por contacto | Abre WhatsApp con el aviso listo (un contacto por vez, requiere internet); el número se normaliza (+57) |
+| Lista «Después del sismo» por alerta | Cada SOS empieza con la lista vacía; las anteriores se guardan con su alerta. Muestra el punto de encuentro con la brújula |
+| QR médico | Real; texto plano legible sin internet. En Android la alerta se muestra sobre la pantalla bloqueada |
+| Lista «Después del sismo» | Real; contenido orientativo, a validar con la UNGRD |
+| Indicador de red | Real (`navigator.onLine`); «con internet» no garantiza que la red no esté saturada |
+| Recordatorios de simulacro | Dentro de la app (cada 90 días y Simulacro Nacional en octubre) |
 | Geolocalización | Real si el usuario concede el permiso (en web requiere HTTPS o localhost) |
 | Coordenadas de prueba | Fijas y **rotuladas** como de prueba; nunca se presentan como la posición del usuario |
 | Mapa | Dos pestañas en Ubicación: «Esquema» (SVG, sin internet) y «Mapa real» (Leaflet + OpenStreetMap, requiere conexión y revela a OSM la zona consultada) |

@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { useT } from '../i18n/useT';
 import type { LocationSnapshot } from '../types';
 import { formatCoord } from '../utils/format';
 
@@ -7,9 +8,10 @@ import { formatCoord } from '../utils/format';
  * No hay servicio de mapas configurado en el prototipo.
  */
 export function LocationMap({ snapshot }: { snapshot: LocationSnapshot | null }) {
+  const t = useT().components.map;
   const isTest = snapshot?.source === 'prueba';
   return (
-    <figure className="schematic-map" aria-label="Representación esquemática de la ubicación">
+    <figure className="schematic-map" aria-label={t.schematicLabel}>
       <svg viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice">
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -26,14 +28,14 @@ export function LocationMap({ snapshot }: { snapshot: LocationSnapshot | null })
             <circle r="3.5" fill="#fff" />
           </g>
         ) : (
-          <text x="160" y="90" textAnchor="middle" className="schematic-map__empty">Sin ubicación</text>
+          <text x="160" y="90" textAnchor="middle" className="schematic-map__empty">{t.noLocation}</text>
         )}
       </svg>
       <figcaption>
         {snapshot
-          ? `${isTest ? 'Prueba · ' : ''}${formatCoord(snapshot.latitude)}, ${formatCoord(snapshot.longitude)}`
-          : 'Esquema sin datos'}
-        <span> · Esquema, no es un mapa real</span>
+          ? `${isTest ? t.testPrefix : ''}${formatCoord(snapshot.latitude)}, ${formatCoord(snapshot.longitude)}`
+          : t.noData}
+        <span>{t.notReal}</span>
       </figcaption>
     </figure>
   );

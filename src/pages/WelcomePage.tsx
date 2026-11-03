@@ -1,19 +1,22 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonContent, IonPage, IonToggle, useIonRouter } from '@ionic/react';
+import { IonContent, IonLabel, IonPage, IonSegment, IonSegmentButton, IonToggle, useIonRouter } from '@ionic/react';
 import { ArrowRight, BellRing, Info, MapPin, Users } from 'lucide-react';
 import { useState } from 'react';
 import { SismoLogo } from '../components/SismoLogo';
 import { useAppState } from '../context/appContext';
+import { LANGS, type Lang } from '../i18n';
+import { useT } from '../i18n/useT';
 
 const features = [
-  { icon: BellRing, text: 'Alerta local con señal sonora y visual' },
-  { icon: MapPin, text: 'Ubicación del dispositivo, si usted la autoriza' },
-  { icon: Users, text: 'Lista de contactos de confianza' },
-];
+  { icon: BellRing, key: 'alert' },
+  { icon: MapPin, key: 'location' },
+  { icon: Users, key: 'contacts' },
+] as const;
 
 export default function WelcomePage() {
   const router = useIonRouter();
   const { data, updateSettings, setDemoMode } = useAppState();
+  const { common: tc, welcome: t } = useT();
   const [loadDemo, setLoadDemo] = useState(true);
 
   const start = () => {
@@ -29,35 +32,46 @@ export default function WelcomePage() {
           <div className="welcome__hero">
             <SismoLogo size={88} />
             <h1>SISMO</h1>
-            <p className="welcome__tagline">Botón de pánico para emergencias sísmicas con alertas multicanal</p>
+            <p className="welcome__tagline">{t.tagline}</p>
           </div>
 
           <ul className="welcome__features">
-            {features.map(({ icon: Icon, text }) => (
-              <li key={text}><span><Icon size={20} aria-hidden="true" /></span>{text}</li>
+            {features.map(({ icon: Icon, key }) => (
+              <li key={key}><span><Icon size={20} aria-hidden="true" /></span>{t.features[key]}</li>
             ))}
           </ul>
 
           <div className="callout callout--info">
             <Info size={20} aria-hidden="true" />
             <p>
-              SISMO es una <strong>herramienta complementaria</strong>. No sustituye a los servicios oficiales de
-              emergencia: ante una emergencia comuníquese con la <strong>línea 123</strong>.
+              {t.disclaimerPre}<strong>{t.disclaimerTool}</strong>{t.disclaimerMid}<strong>{t.disclaimerLine}</strong>{t.disclaimerPost}
             </p>
+          </div>
+
+          <div className="card stack">
+            <strong>{tc.language.title} · Language</strong>
+            <IonSegment
+              value={data.settings.language}
+              onIonChange={(e) => updateSettings({ language: e.detail.value as Lang })}
+              className="segment"
+              aria-label={tc.language.title}
+            >
+              {LANGS.map((l) => <IonSegmentButton key={l.value} value={l.value}><IonLabel>{l.label}</IonLabel></IonSegmentButton>)}
+            </IonSegment>
           </div>
 
           <div className="card toggle-row">
             <span>
-              <strong>Modo de demostración</strong>
-              <small>Carga contactos e historial ficticios para explorar la app.</small>
+              <strong>{t.demoTitle}</strong>
+              <small>{t.demoHint}</small>
             </span>
-            <IonToggle checked={loadDemo} onIonChange={(e) => setLoadDemo(e.detail.checked)} aria-label="Cargar modo de demostración" />
+            <IonToggle checked={loadDemo} onIonChange={(e) => setLoadDemo(e.detail.checked)} aria-label={t.demoToggle} />
           </div>
 
           <button className="btn btn--primary btn--lg btn--block" onClick={start}>
-            Comenzar <ArrowRight size={20} aria-hidden="true" />
+            {t.start} <ArrowRight size={20} aria-hidden="true" />
           </button>
-          <p className="welcome__foot">Prototipo académico · Politécnico Grancolombiano</p>
+          <p className="welcome__foot">{t.foot}</p>
         </main>
       </IonContent>
     </IonPage>

@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
+import android.os.PowerManager;
 import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
 import android.view.WindowManager;
@@ -125,12 +126,16 @@ public class SismoNativePlugin extends Plugin {
             call.reject("Texto vacío.");
             return;
         }
+        // Idioma de la voz (etiqueta BCP-47, p. ej. "en-US"); por defecto español de Colombia.
+        String lang = call.getString("lang", "es-CO");
+        Locale locale = Locale.forLanguageTag(lang == null || lang.isEmpty() ? "es-CO" : lang);
+        if (locale.getLanguage().isEmpty()) locale = new Locale("es", "CO");
+        final Locale voice = locale;
         if (tts == null) {
             tts = new TextToSpeech(getContext(), status -> {
                 ttsReady = status == TextToSpeech.SUCCESS;
                 if (ttsReady) {
-                    int res = tts.setLanguage(new Locale("es", "CO"));
-                    if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) tts.setLanguage(new Locale("es"));
+                    applyVoice(voice);
                     tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "sismo");
                 }
             });
@@ -141,8 +146,17 @@ public class SismoNativePlugin extends Plugin {
             call.reject("La voz del sistema no está disponible.");
             return;
         }
+        applyVoice(voice);
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "sismo");
         call.resolve();
+    }
+
+    /** Fija la voz del idioma pedido; si el motor no la tiene, usa el idioma base (p. ej. "en" para "en-US"). */
+    private void applyVoice(Locale locale) {
+        int res = tts.setLanguage(locale);
+        if (res == TextToSpeech.LANG_MISSING_DATA || res == TextToSpeech.LANG_NOT_SUPPORTED) {
+            tts.setLanguage(new Locale(locale.getLanguage()));
+        }
     }
 
     @PluginMethod
@@ -270,6 +284,47 @@ public class SismoNativePlugin extends Plugin {
             if (on) getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         });
+        call.resolve();
+    }
+
+    // ---------- Mostrar sobre la pantalla de bloqueo ----------
+
+    /**
+     * Durante una alerta, SISMO se muestra encima de la pantalla bloqueada (y la enciende) para que
+     * rescatistas vean la ficha médica sin desbloquear. Al finalizar se desactiva.
+     */
+    @PluginMethod
+    public void setShowWhenLocked(PluginCall call) {
+        boolean on = Boolean.TRUE.equals(call.getBoolean("on", false));
+        getActivity().runOnUiThread(() -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                getActivity().setShowWhenLocked(on);
+                getActivity().setTurnScreenOn(on);
+            } else {
+                int flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
+                if (on) getActivity().getWindow().addFlags(flags);
+                else getActivity().getWindow().clearFlags(flags);
+            }
+        });
+        call.resolve();
+    }
+
+    /**
+     * Enciende la pantalla aunque esté apagada (p. ej. al detectar una caída) para que se vea el aviso
+     * «¿Está bien?». Usa un WakeLock de pantalla con ACQUIRE_CAUSES_WAKEUP durante unos segundos;
+     * junto con setShowWhenLocked el aviso queda visible sobre la pantalla de bloqueo.
+     */
+    @SuppressWarnings("deprecation")
+    @PluginMethod
+    public void wakeScreen(PluginCall call) {
+        PowerManager pm = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            PowerManager.WakeLock wl = pm.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE,
+                "sismo:despertar"
+            );
+            wl.acquire(10_000L);
+        }
         call.resolve();
     }
 

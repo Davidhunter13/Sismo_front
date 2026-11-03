@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { getT } from '../i18n';
 import type { EmergencyKit, KitItem } from '../types';
 import { newId } from './storageService';
 
@@ -6,21 +7,17 @@ import { newId } from './storageService';
  * Mochila de emergencia: lista base (orientativa; validar contra fuentes oficiales como la UNGRD)
  * y recordatorios dentro de la app para elementos que vencen y para la revisión periódica.
  */
-export const DEFAULT_KIT_ITEMS = [
-  'Agua potable (3 litros por persona al día, para 3 días)',
-  'Alimentos no perecederos',
-  'Linterna',
-  'Pilas de repuesto',
-  'Radio de pilas',
-  'Silbato',
-  'Botiquín de primeros auxilios',
-  'Medicamentos de uso personal',
-  'Copia de documentos de identidad',
-  'Dinero en efectivo',
-  'Cargador portátil (power bank)',
-  'Ropa abrigada y manta térmica',
-  'Tapabocas y elementos de aseo',
-];
+/**
+ * Lista base en el idioma activo: se lee al acceder, no al importar el módulo.
+ * Reenvía también `has`/`ownKeys`/descriptores porque map, filter, etc. consultan si existe cada índice.
+ */
+const kitItems = () => getT().services.kit.defaultItems;
+export const DEFAULT_KIT_ITEMS: readonly string[] = new Proxy([] as string[], {
+  get: (_, key) => Reflect.get(kitItems(), key),
+  has: (_, key) => Reflect.has(kitItems(), key),
+  ownKeys: () => Reflect.ownKeys(kitItems()),
+  getOwnPropertyDescriptor: (_, key) => Reflect.getOwnPropertyDescriptor(kitItems(), key),
+});
 
 /** Revisión recomendada cada 6 meses. */
 export const REVIEW_EVERY_DAYS = 180;
@@ -28,7 +25,7 @@ export const REVIEW_EVERY_DAYS = 180;
 export const EXPIRY_WARNING_DAYS = 30;
 
 export function createDefaultKit(): EmergencyKit {
-  return { items: DEFAULT_KIT_ITEMS.map((name): KitItem => ({ id: newId(), name, checked: false, isDefault: true })) };
+  return { items: getT().services.kit.defaultItems.map((name): KitItem => ({ id: newId(), name, checked: false, isDefault: true })) };
 }
 
 const DAY = 86_400_000;

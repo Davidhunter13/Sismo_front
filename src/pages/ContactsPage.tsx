@@ -7,11 +7,13 @@ import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactCard } from '../components/ContactCard';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
+import { useT } from '../i18n/useT';
 import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
 import type { Contact, ContactInput } from '../types';
 
 export default function ContactsPage() {
   const [presentToast] = useIonToast();
+  const t = useT().contacts;
   const { data, addContact, updateContact, deleteContact } = useAppState();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
@@ -32,50 +34,49 @@ export default function ContactsPage() {
       const picked = await pickContact();
       if (!picked) return;
       setEditing(null);
-      setImported({ name: picked.name, relationship: '', phone: picked.phone });
+      setImported({ name: picked.name, relationship: '', phone: picked.phone, email: '' });
       setFormOpen(true);
     } catch {
-      toast('No se pudo abrir la agenda.', 'warning');
+      toast(t.agendaError, 'warning');
     }
   };
 
   const save = (input: ContactInput) => {
     if (editing) {
       updateContact(editing.id, input);
-      toast('Contacto actualizado.');
+      toast(t.updated);
     } else {
       addContact(input);
-      toast('Contacto agregado.');
+      toast(t.added);
     }
     setFormOpen(false);
   };
 
   return (
-    <AppLayout title="Contactos de confianza" backTo="/inicio">
+    <AppLayout title={t.title} backTo="/inicio">
       <div className="callout callout--info">
         <Info size={20} aria-hidden="true" />
         <p>
-          Sus contactos <strong>no reciben alertas automáticamente</strong>: durante una alerta SISMO abre la app de mensajes con el
-          aviso listo y usted confirma el envío. Los contactos del modo de demostración son ficticios y nunca reciben SMS.
+          {t.infoPre}<strong>{t.infoStrong}</strong>{t.infoPost}
         </p>
       </div>
 
       <div className="section-head">
-        <h2 className="section-title">Mis contactos ({data.contacts.length})</h2>
+        <h2 className="section-title">{t.myContacts(data.contacts.length)}</h2>
         <div className="btn-pair">
           {isContactPickerSupported() && (
-            <button className="btn btn--outline btn--sm" onClick={importContact}><BookUser size={16} aria-hidden="true" /> De la agenda</button>
+            <button className="btn btn--outline btn--sm" onClick={importContact}><BookUser size={16} aria-hidden="true" /> {t.fromAgenda}</button>
           )}
-          <button className="btn btn--primary btn--sm" onClick={openNew}><UserPlus size={16} aria-hidden="true" /> Agregar</button>
+          <button className="btn btn--primary btn--sm" onClick={openNew}><UserPlus size={16} aria-hidden="true" /> {t.add}</button>
         </div>
       </div>
 
       {data.contacts.length === 0 ? (
         <section className="card empty-state">
           <Users size={44} aria-hidden="true" />
-          <h2>Aún no hay contactos</h2>
-          <p className="muted">Agregue personas de confianza para tenerlas a mano durante una emergencia.</p>
-          <button className="btn btn--primary" onClick={openNew}><UserPlus size={18} aria-hidden="true" /> Agregar contacto</button>
+          <h2>{t.emptyTitle}</h2>
+          <p className="muted">{t.emptyText}</p>
+          <button className="btn btn--primary" onClick={openNew}><UserPlus size={18} aria-hidden="true" /> {t.addContact}</button>
         </section>
       ) : (
         <ul className="list">
@@ -97,14 +98,14 @@ export default function ContactsPage() {
 
       <ConfirmationDialog
         isOpen={!!toDelete}
-        title="¿Eliminar contacto?"
-        message={toDelete ? `Se eliminará a «${toDelete.name}» de su lista.` : ''}
-        confirmText="Eliminar"
+        title={t.deleteTitle}
+        message={toDelete ? t.deleteMessage(toDelete.name) : ''}
+        confirmText={t.deleteConfirm}
         destructive
         onConfirm={() => {
           if (toDelete) {
             deleteContact(toDelete.id);
-            toast('Contacto eliminado.', 'medium');
+            toast(t.deleted, 'medium');
           }
         }}
         onClose={() => setToDelete(null)}

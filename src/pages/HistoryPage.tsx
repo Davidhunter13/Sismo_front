@@ -4,26 +4,28 @@ import { History } from 'lucide-react';
 import { AppLayout } from '../components/AppLayout';
 import { HistoryItem } from '../components/HistoryItem';
 import { useAppState } from '../context/appContext';
+import { useT } from '../i18n/useT';
 
 export default function HistoryPage() {
   const router = useIonRouter();
   const { data } = useAppState();
+  const t = useT().history;
   const alerts = [...data.alerts].sort((a, b) => b.activatedAt.localeCompare(a.activatedAt));
   const active = alerts.filter((a) => a.status === 'activa').length;
 
   return (
-    <AppLayout title="Historial de alertas" backTo="/inicio">
+    <AppLayout title={t.title} backTo="/inicio">
       <div className="stats">
-        <div className="card stat"><strong>{alerts.length}</strong><small>Total</small></div>
-        <div className="card stat"><strong>{active}</strong><small>Activas</small></div>
-        <div className="card stat"><strong>{alerts.filter((a) => a.isSeed).length}</strong><small>De ejemplo</small></div>
+        <div className="card stat"><strong>{alerts.length}</strong><small>{t.total}</small></div>
+        <div className="card stat"><strong>{active}</strong><small>{t.active}</small></div>
+        <div className="card stat"><strong>{alerts.filter((a) => a.isSeed).length}</strong><small>{t.samples}</small></div>
       </div>
 
       {alerts.length === 0 ? (
         <section className="card empty-state">
           <History size={44} aria-hidden="true" />
-          <h2>Sin registros</h2>
-          <p className="muted">Las alertas que active aparecerán aquí. También puede activar el modo de demostración en Configuración.</p>
+          <h2>{t.emptyTitle}</h2>
+          <p className="muted">{t.emptyText}</p>
         </section>
       ) : (
         <ul className="list">
@@ -32,7 +34,7 @@ export default function HistoryPage() {
           ))}
         </ul>
       )}
-      <p className="small muted center">«(sim.)» indica un estado del canal digital simulado: no se envió ningún mensaje real.</p>
+      <p className="small muted center">{t.simNote}</p>
     </AppLayout>
   );
 }

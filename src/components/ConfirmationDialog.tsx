@@ -1,6 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonAlert, type AlertInput } from '@ionic/react';
 import { useRef } from 'react';
+import { useT } from '../i18n/useT';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -21,14 +22,15 @@ export function ConfirmationDialog({
   isOpen,
   title,
   message,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText,
+  cancelText,
   destructive = false,
   inputs,
   onConfirm,
   onConfirmPress,
   onClose,
 }: ConfirmationDialogProps) {
+  const t = useT().common;
   const confirmed = useRef<{ value: unknown } | null>(null);
 
   // La acción se ejecuta cuando el diálogo terminó de cerrarse: si navegara antes,
@@ -49,9 +51,9 @@ export function ConfirmationDialog({
       cssClass="sismo-alert"
       onDidDismiss={handleDidDismiss}
       buttons={[
-        { text: cancelText, role: 'cancel', cssClass: 'sismo-alert__cancel' },
+        { text: cancelText ?? t.cancel, role: 'cancel', cssClass: 'sismo-alert__cancel' },
         {
-          text: confirmText,
+          text: confirmText ?? t.confirm,
           role: 'confirm',
           cssClass: destructive ? 'sismo-alert__danger' : 'sismo-alert__confirm',
           handler: (value) => {

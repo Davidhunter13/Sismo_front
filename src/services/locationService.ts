@@ -1,6 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { Capacitor } from '@capacitor/core';
 import { Geolocation, type Position } from '@capacitor/geolocation';
+import { getT } from '../i18n';
 import type { LocationPermission, LocationSnapshot } from '../types';
 
 export interface LocationResult {
@@ -42,11 +43,12 @@ export async function requestLocationPermissionOnNative(): Promise<LocationPermi
 
 /** Solicita la posición real del dispositivo. Nunca devuelve coordenadas inventadas. */
 export async function requestDeviceLocation(): Promise<LocationResult> {
+  const t = getT().services.location;
   if (!isGeolocationAvailable()) {
-    return { permission: 'no_disponible', snapshot: null, message: 'Este navegador o dispositivo no ofrece geolocalización.' };
+    return { permission: 'no_disponible', snapshot: null, message: t.unavailable };
   }
   if (!Capacitor.isNativePlatform() && !window.isSecureContext) {
-    return { permission: 'no_disponible', snapshot: null, message: 'La geolocalización requiere HTTPS o localhost.' };
+    return { permission: 'no_disponible', snapshot: null, message: t.insecure };
   }
   try {
     const pos = await bestPosition();
@@ -61,16 +63,16 @@ export async function requestDeviceLocation(): Promise<LocationResult> {
         source: 'dispositivo',
       },
       message: precise
-        ? 'Ubicación obtenida del dispositivo.'
-        : `Ubicación aproximada (±${Math.round(pos.coords.accuracy)} m): no se logró mayor precisión.`,
+        ? t.obtained
+        : t.approximate(Math.round(pos.coords.accuracy)),
     };
   } catch (err) {
     const code = (err as { code?: number }).code;
     const text = String((err as { message?: string }).message ?? '').toLowerCase();
     if (code === 1 || text.includes('denied')) {
-      return { permission: 'denegado', snapshot: null, message: 'Permiso de ubicación denegado.' };
+      return { permission: 'denegado', snapshot: null, message: t.denied };
     }
-    return { permission: 'no_disponible', snapshot: null, message: 'No fue posible obtener la ubicación (tiempo agotado o señal insuficiente).' };
+    return { permission: 'no_disponible', snapshot: null, message: t.failed };
   }
 }
 
@@ -94,14 +96,15 @@ async function bestPosition(): Promise<Position> {
     finish = resolve;
     fail = reject;
   });
-  const timer = window.setTimeout(() => (best ? finish() : fail({ code: 3, message: 'timeout' })), REFINE_MS);
+  const timer = window.setTimeout(finish, REFINE_MS);
 
   try {
     watchId = await Geolocation.watchPosition({ enableHighAccuracy: true, timeout: REFINE_MS, maximumAge: 0 }, (pos, err) => {
       if (pos) {
         if (!best || pos.coords.accuracy < best.coords.accuracy) best = pos;
         if (pos.coords.accuracy <= GOOD_ACCURACY_M) finish();
-      } else if (err && !best) {
+      } else if (err && !best && isDenied(err)) {
+        // Solo el permiso denegado corta la espera; un tiempo agotado se resuelve con la respaldo de abajo.
         fail(err);
       }
     });
@@ -110,5 +113,17 @@ async function bestPosition(): Promise<Position> {
     window.clearTimeout(timer);
     if (watchId) await Geolocation.clearWatch({ id: watchId });
   }
-  return best as unknown as Position;
+  if (best) return best;
+  // Sin GPS (p. ej. un computador) la alta precisión nunca llega: se pide una ubicación aproximada
+  // por WiFi o red, que responde rápido. Se acepta una lectura reciente de hasta 5 minutos.
+  return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: FALLBACK_MS, maximumAge: 5 * 60_000 });
+}
+
+/** Tiempo máximo de la ubicación aproximada de respaldo (ms). */
+const FALLBACK_MS = 15_000;
+
+function isDenied(err: unknown): boolean {
+  const code = (err as { code?: number }).code;
+  const text = String((err as { message?: string }).message ?? '').toLowerCase();
+  return code === 1 || text.includes('denied');
 }

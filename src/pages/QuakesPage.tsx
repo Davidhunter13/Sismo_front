@@ -4,6 +4,8 @@ import { Activity, ExternalLink, Info, Loader2, RefreshCw, WifiOff } from 'lucid
 import { useCallback, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { useAppState } from '../context/appContext';
+import { getLocale } from '../i18n';
+import { useT } from '../i18n/useT';
 import { fetchNearbyQuakes, NEARBY_RADIUS_KM, type Quake, type QuakePeriod } from '../services/quakeService';
 
 type Status = 'cargando' | 'listo' | 'error';
@@ -12,6 +14,8 @@ const magnitudeTone = (m: number) => (m >= 6 ? 'quake-mag--high' : m >= 4.5 ? 'q
 
 export default function QuakesPage() {
   const { data } = useAppState();
+  const t = useT().quakes;
+  const locale = getLocale(data.settings.language);
   const [period, setPeriod] = useState<QuakePeriod>('day');
   const [quakes, setQuakes] = useState<Quake[]>([]);
   const [status, setStatus] = useState<Status>('cargando');
@@ -37,27 +41,25 @@ export default function QuakesPage() {
   }, [load]);
 
   return (
-    <AppLayout title="Sismos recientes" backTo="/inicio">
+    <AppLayout title={t.title} backTo="/inicio">
       <IonSegment value={period} onIonChange={(e) => setPeriod(e.detail.value as QuakePeriod)} className="segment">
-        <IonSegmentButton value="day"><IonLabel>Últimas 24 h</IonLabel></IonSegmentButton>
-        <IonSegmentButton value="week"><IonLabel>Últimos 7 días</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="day"><IonLabel>{t.day}</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="week"><IonLabel>{t.week}</IonLabel></IonSegmentButton>
       </IonSegment>
 
       <p className="small muted">
-        {origin
-          ? `Sismos de magnitud 2,5 o mayor a menos de ${NEARBY_RADIUS_KM} km de su última ubicación.`
-          : 'Sismos de magnitud 2,5 o mayor en Colombia. Registre su ubicación para ver los cercanos a usted.'}
+        {origin ? t.nearby(NEARBY_RADIUS_KM) : t.colombia}
       </p>
 
       <section className="card card--flush">
         {status === 'cargando' && (
-          <div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> Consultando el catálogo del USGS…</div>
+          <div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> {t.loading}</div>
         )}
         {status === 'error' && (
-          <div className="real-map__placeholder"><WifiOff size={22} aria-hidden="true" /> No se pudo consultar. Revise su conexión.</div>
+          <div className="real-map__placeholder"><WifiOff size={22} aria-hidden="true" /> {t.error}</div>
         )}
         {status === 'listo' && quakes.length === 0 && (
-          <div className="real-map__placeholder"><Activity size={22} aria-hidden="true" /> No hay sismos registrados en este periodo.</div>
+          <div className="real-map__placeholder"><Activity size={22} aria-hidden="true" /> {t.empty}</div>
         )}
         {status === 'listo' && quakes.length > 0 && (
           <ul className="quake-list">
@@ -67,13 +69,13 @@ export default function QuakesPage() {
                 <div>
                   <strong>{q.place}</strong>
                   <small>
-                    {new Date(q.time).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}
-                    {` · ${Math.round(q.depthKm)} km de profundidad`}
-                    {q.distanceKm != null && ` · a ${Math.round(q.distanceKm)} km`}
+                    {new Date(q.time).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })}
+                    {t.depth(Math.round(q.depthKm))}
+                    {q.distanceKm != null && t.distance(Math.round(q.distanceKm))}
                   </small>
                 </div>
                 {q.url && (
-                  <a className="icon-btn icon-btn--soft" href={q.url} target="_blank" rel="noopener noreferrer" aria-label="Ver detalle en el USGS">
+                  <a className="icon-btn icon-btn--soft" href={q.url} target="_blank" rel="noopener noreferrer" aria-label={t.detail}>
                     <ExternalLink size={16} aria-hidden="true" />
                   </a>
                 )}
@@ -84,16 +86,13 @@ export default function QuakesPage() {
       </section>
 
       <button className="btn btn--outline btn--block" onClick={() => void load()} disabled={status === 'cargando'}>
-        <RefreshCw size={18} aria-hidden="true" /> Actualizar
+        <RefreshCw size={18} aria-hidden="true" /> {t.refresh}
       </button>
 
       <section className="card">
-        <h2 className="card__title"><Info size={18} aria-hidden="true" /> Fuente</h2>
+        <h2 className="card__title"><Info size={18} aria-hidden="true" /> {t.sourceTitle}</h2>
         <ul className="bullets">
-          <li>Datos del Servicio Geológico de EE. UU. (USGS), catálogo público y gratuito. Pueden tardar unos minutos en aparecer.</li>
-          <li>Para información oficial en Colombia consulte el Servicio Geológico Colombiano (sgc.gov.co).</li>
-          <li>Su ubicación no se envía: se descarga el listado general y se filtra en este dispositivo.</li>
-          <li>SISMO no detecta ni predice sismos.</li>
+          {t.source.map((s) => <li key={s}>{s}</li>)}
         </ul>
       </section>
     </AppLayout>

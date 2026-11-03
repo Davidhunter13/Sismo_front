@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { createContext, useContext } from 'react';
 import type {
-  AlertRecord, AlertSource, AppData, Contact, ContactInput, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
+  AlertRecord, AlertSource, AppData, Contact, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
   MeetingPoint, Settings, SusResponse,
 } from '../types';
 
@@ -26,6 +26,8 @@ export interface AppStateValue {
   setMeetingPoint: (point: MeetingPoint | null) => void;
   addSusResponse: (response: SusResponse) => void;
   setKit: (kit: EmergencyKit | null) => void;
+  setPostQuakeDone: (done: number[], alertId?: string) => void;
+  setEmailStatus: (alertId: string, status: EmailStatus) => void;
   setLocation: (snapshot: LocationSnapshot | null, permission?: LocationPermission) => void;
   setLocationPermission: (permission: LocationPermission) => void;
   setDemoMode: (enabled: boolean) => void;

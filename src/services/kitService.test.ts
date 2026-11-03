@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { setLang } from '../i18n';
 import type { EmergencyKit } from '../types';
 import { createDefaultKit, daysUntil, DEFAULT_KIT_ITEMS, kitStatus } from './kitService';
 
@@ -42,5 +43,18 @@ describe('kitStatus', () => {
     const k = createDefaultKit();
     expect(k.items).toHaveLength(DEFAULT_KIT_ITEMS.length);
     expect(k.items.every((i) => !i.checked && i.isDefault)).toBe(true);
+  });
+});
+
+describe('lista base en inglés', () => {
+  beforeEach(() => setLang('en'));
+  afterEach(() => setLang('es'));
+
+  it('se crea en el idioma activo', () => {
+    const k = createDefaultKit();
+    expect(k.items).toHaveLength(DEFAULT_KIT_ITEMS.length);
+    expect(k.items[0].name).toBe('Drinking water (3 liters per person per day, for 3 days)');
+    expect(k.items.map((i) => i.name)).toContain('Whistle');
+    expect(DEFAULT_KIT_ITEMS[2]).toBe('Flashlight');
   });
 });

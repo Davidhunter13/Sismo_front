@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import type { AlertMetrics, AlertRecord } from '../types';
+import { getT } from '../i18n';
 import { eventTypeLabel } from '../utils/format';
 
 /**
@@ -27,14 +28,10 @@ export function takeTrace(): AlertMetrics {
 
 export type MetricKey = 'decision' | 'siren' | 'torch' | 'vibration' | 'sms' | 'drillReaction';
 
-export const metricLabels: Record<MetricKey, string> = {
-  decision: 'SOS → confirmación',
-  siren: 'Confirmación → sirena',
-  torch: 'Confirmación → linterna',
-  vibration: 'Confirmación → vibración',
-  sms: 'Confirmación → SMS abierto',
-  drillReaction: 'Señal del simulacro → confirmación',
-};
+/** Nombres de las métricas en el idioma activo (se leen al acceder, como `eventTypeLabel`). */
+export const metricLabels = new Proxy({} as Record<MetricKey, string>, {
+  get: (_, key) => getT().services.metrics[key as MetricKey],
+});
 
 /** Duración en ms de cada métrica de una alerta, o undefined si falta alguna marca. */
 export function metricValue(alert: AlertRecord, key: MetricKey): number | undefined {

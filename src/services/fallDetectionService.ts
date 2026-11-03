@@ -13,7 +13,8 @@ export const FALL_COUNTDOWN_S = 30;
 const G = 9.81;
 const FREE_FALL = 0.35 * G;
 const IMPACT = 2.5 * G;
-const HARD_IMPACT = 4 * G;
+// Impacto aislado (sin caída libre previa): 6 g. Con 4 g se disparaba al apretar o sacudir el teléfono.
+const HARD_IMPACT = 6 * G;
 const FALL_WINDOW_MS = 1000;
 /** Tras un disparo se ignoran nuevas detecciones durante este tiempo. */
 const COOLDOWN_MS = 60_000;

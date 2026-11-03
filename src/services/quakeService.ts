@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { getT } from '../i18n';
 
 /**
  * Sismos recientes desde el catálogo público del USGS (gratuito, sin llave, permite CORS).
@@ -49,7 +50,7 @@ function parseFeature(f: unknown): Quake | null {
   return {
     id: feat.id,
     magnitude: p.mag,
-    place: typeof p.place === 'string' ? p.place : 'Lugar no informado',
+    place: typeof p.place === 'string' ? p.place : getT().services.quakes.unknownPlace,
     time: p.time,
     latitude: lat,
     longitude: lng,

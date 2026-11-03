@@ -16,6 +16,7 @@ import LocationPage from './pages/LocationPage';
 import { FallDetector } from './components/FallDetector';
 import KitPage from './pages/KitPage';
 import MedicalPage from './pages/MedicalPage';
+import PostQuakePage from './pages/PostQuakePage';
 import SurveyPage from './pages/SurveyPage';
 import QuakesPage from './pages/QuakesPage';
 import SettingsPage from './pages/SettingsPage';
@@ -79,6 +80,7 @@ function Routes() {
         <Route exact path="/ficha-medica" component={MedicalPage} />
         <Route exact path="/encuesta" component={SurveyPage} />
         <Route exact path="/mochila" component={KitPage} />
+        <Route exact path="/despues-del-sismo" component={PostQuakePage} />
         <Route exact path="/">
           <Redirect to={data.settings.onboarded ? '/inicio' : '/bienvenida'} />
         </Route>

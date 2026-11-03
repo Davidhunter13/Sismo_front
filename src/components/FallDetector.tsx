@@ -3,9 +3,11 @@ import { useIonRouter } from '@ionic/react';
 import { AlertTriangle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppState } from '../context/appContext';
+import { useT } from '../i18n/useT';
 import { FALL_COUNTDOWN_S, watchForFalls } from '../services/fallDetectionService';
 import { beginTrace, mark } from '../services/metricsService';
 import { startAlertSignals } from '../services/signalsService';
+import { showOverLockScreen, wakeForAttention } from '../services/screenService';
 import { playWhistleBurst } from '../services/sirenService';
 import { startVibration, stopVibration } from '../services/vibrationService';
 
@@ -16,6 +18,7 @@ import { startVibration, stopVibration } from '../services/vibrationService';
 export function FallDetector() {
   const router = useIonRouter();
   const { data, activeAlert, activateAlert } = useAppState();
+  const t = useT().components.fall;
   const { settings } = data;
   const [remaining, setRemaining] = useState<number | null>(null);
   const triggered = useRef(false);
@@ -27,6 +30,8 @@ export function FallDetector() {
     return watchForFalls(() => {
       triggered.current = false;
       setRemaining(FALL_COUNTDOWN_S);
+      // Si la pantalla estaba apagada, se enciende y el aviso aparece sobre la de bloqueo (Android).
+      void wakeForAttention();
       void startVibration();
       void playWhistleBurst();
     });
@@ -35,6 +40,8 @@ export function FallDetector() {
   const dismiss = useCallback(() => {
     setRemaining(null);
     stopVibration();
+    // Sin alerta en curso, SISMO deja de mostrarse sobre la pantalla de bloqueo.
+    void showOverLockScreen(false);
   }, []);
 
   const raiseAlert = useCallback(() => {
@@ -55,8 +62,8 @@ export function FallDetector() {
       raiseAlert();
       return;
     }
-    const t = window.setTimeout(() => setRemaining((r) => (r === null ? r : r - 1)), 1000);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setRemaining((r) => (r === null ? r : r - 1)), 1000);
+    return () => window.clearTimeout(timer);
   }, [remaining, raiseAlert]);
 
   if (remaining === null) return null;
@@ -65,11 +72,11 @@ export function FallDetector() {
     <div className="fall-overlay" role="alertdialog" aria-modal="true" aria-labelledby="fall-title" aria-describedby="fall-desc">
       <div className="fall-dialog">
         <AlertTriangle size={44} aria-hidden="true" />
-        <h2 id="fall-title">¿Está bien?</h2>
-        <p id="fall-desc">Detectamos una caída o un impacto fuerte. Si no responde, se activará la alerta en</p>
-        <strong className="fall-count" aria-live="assertive">{remaining} s</strong>
-        <button className="btn btn--success btn--lg btn--block" onClick={dismiss}>Estoy bien</button>
-        <button className="btn btn--danger btn--block" onClick={raiseAlert}>Pedir ayuda ahora</button>
+        <h2 id="fall-title">{t.title}</h2>
+        <p id="fall-desc">{t.desc}</p>
+        <strong className="fall-count" aria-live="assertive">{t.seconds(remaining)}</strong>
+        <button className="btn btn--success btn--lg btn--block" onClick={dismiss}>{t.ok}</button>
+        <button className="btn btn--danger btn--block" onClick={raiseAlert}>{t.help}</button>
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { getLocale } from '../i18n';
 import { isNative, SismoNative } from './nativeBridge';
 
 /**
- * Lectura en voz alta de la guía de emergencia.
+ * Lectura en voz alta de la guía de emergencia, con la voz del idioma activo (getLocale()).
  * - App Android: TextToSpeech del sistema (el WebView de Android no ofrece speechSynthesis).
- * - Navegador: Web Speech API en español.
+ * - Navegador: Web Speech API.
  */
 export function isSpeechSupported(): boolean {
   return isNative() || (typeof window !== 'undefined' && 'speechSynthesis' in window);
@@ -13,7 +14,7 @@ export function isSpeechSupported(): boolean {
 export async function speak(text: string, onEnd?: () => void): Promise<boolean> {
   if (isNative()) {
     try {
-      await SismoNative.speak({ text });
+      await SismoNative.speak({ text, lang: getLocale() });
       // El plugin no notifica el final: se consulta hasta que termine. La primera consulta espera a que
       // el motor de voz arranque (la primera vez se inicializa).
       window.setTimeout(() => {
@@ -33,7 +34,7 @@ export async function speak(text: string, onEnd?: () => void): Promise<boolean> 
   if (!isSpeechSupported()) return false;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'es-CO';
+  u.lang = getLocale();
   u.rate = 0.95;
   u.onend = () => onEnd?.();
   u.onerror = () => onEnd?.();

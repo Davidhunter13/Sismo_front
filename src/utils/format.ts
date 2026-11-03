@@ -1,20 +1,20 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { getLocale, getT } from '../i18n';
 import type { EventType } from '../types';
 
-const dateTime = new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
-const time = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const longDate = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
-
-export const formatDateTime = (iso: string) => dateTime.format(new Date(iso));
-export const formatTime = (iso: string) => time.format(new Date(iso));
-export const formatLongDate = (d = new Date()) => longDate.format(d);
+// Formatos según el idioma activo (es-CO o en-US).
+export const formatDateTime = (iso: string) =>
+  new Intl.DateTimeFormat(getLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
+export const formatTime = (iso: string) =>
+  new Intl.DateTimeFormat(getLocale(), { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(iso));
+export const formatLongDate = (d = new Date()) =>
+  new Intl.DateTimeFormat(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
 export const formatCoord = (n: number) => n.toFixed(5);
 
-export const eventTypeLabel: Record<EventType, string> = {
-  sismo: 'Sismo',
-  emergencia_general: 'Otra emergencia',
-  prueba: 'Prueba del sistema',
-};
+/** Nombre del tipo de evento en el idioma activo (se lee en el momento de usarse). */
+export const eventTypeLabel = new Proxy({} as Record<EventType, string>, {
+  get: (_, key) => getT().labels.eventType[key as EventType],
+});
 
 export function formatDuration(fromIso: string, toIso?: string): string {
   const ms = Math.max(0, (toIso ? new Date(toIso) : new Date()).getTime() - new Date(fromIso).getTime());

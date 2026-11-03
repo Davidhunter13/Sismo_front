@@ -221,6 +221,10 @@ test('configuración: se puede escuchar cada sonido antes de elegirlo', async ({
 test('inicio: «Avisar que estoy bien» requiere contactos reales', async ({ page }) => {
   await onboard(page); // modo demo: solo contactos ficticios
   await expect(view(page).getByRole('button', { name: 'Avisar que estoy bien' })).toBeDisabled();
+  // Explica por qué y ofrece agregar un contacto real.
+  await expect(view(page).getByText(/Bloqueado: sus contactos son de demostración/)).toBeVisible();
+  await view(page).getByRole('button', { name: 'Agregar un contacto real' }).click();
+  await expect(page).toHaveURL(/\/contactos$/);
 });
 
 test('ficha médica: compartida por defecto en la alerta; se puede desactivar', async ({ page }) => {
@@ -236,7 +240,7 @@ test('ficha médica: compartida por defecto en la alerta; se puede desactivar', 
   await expect(view(page).locator('.medical-card')).toContainText('Penicilina');
   await view(page).getByRole('button', { name: /Finalizar alerta/ }).click();
   await page.locator('ion-alert').getByRole('button', { name: 'Finalizar' }).click();
-  await expect(page).toHaveURL(/\/inicio$/);
+  await expect(page).toHaveURL(/\/despues-del-sismo\?alerta=/);
 
   // El usuario desactiva «Compartir»: deja de mostrarse.
   await goTo(page, '/ficha-medica', 'Ficha médica');
@@ -253,7 +257,7 @@ test('estadísticas: cuenta alertas y exporta CSV sin datos personales', async (
   await activateAlert(page);
   await view(page).getByRole('button', { name: /Finalizar alerta/ }).click();
   await page.locator('ion-alert').getByRole('button', { name: 'Finalizar' }).click();
-  await expect(page).toHaveURL(/\/inicio$/);
+  await expect(page).toHaveURL(/\/despues-del-sismo\?alerta=/);
 
   await goTo(page, '/estadisticas', 'Estadísticas');
   await expect(view(page).locator('.stat-tile').first()).toContainText('1');

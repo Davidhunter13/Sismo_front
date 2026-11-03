@@ -52,7 +52,7 @@ test('capturas visuales', async ({ browser }) => {
   await shot(page, '04-alerta-activa.png');
   await view(page).getByRole('button', { name: /Finalizar alerta/ }).click();
   await page.locator('ion-alert').getByRole('button', { name: 'Finalizar' }).click();
-  await expect(page).toHaveURL(/\/inicio$/);
+  await expect(page).toHaveURL(/\/despues-del-sismo\?alerta=/);
   await settle(page);
 
   await page.goto('/ubicacion');

@@ -1,14 +1,15 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
-  AlertRecord, AlertSource, AppData, ContactInput, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint,
+  AlertRecord, AlertSource, AppData, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint,
   Settings, SusResponse,
 } from '../types';
+import { setLang } from '../i18n';
 import { clearData, createEmptyData, loadData, newId, saveData } from '../services/storageService';
 import { demoAlerts, demoContacts } from '../services/demoData';
 import { requestDeviceLocation } from '../services/locationService';
 import { takeTrace } from '../services/metricsService';
-import { keepScreenOn } from '../services/screenService';
+import { keepScreenOn, showOverLockScreen } from '../services/screenService';
 import { stopAlertSignals } from '../services/signalsService';
 import { AppStateContext, type AppStateValue, type DrillState } from './appContext';
 
@@ -43,13 +44,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => saveData(data), [data]);
 
-  // Atributos de accesibilidad en <html> (Ionic reescribe sus clases al iniciar).
+  // Idioma activo para los servicios (SMS, etiquetas, fechas). Se fija durante el render para que
+  // los textos calculados en este mismo render ya salgan en el idioma nuevo.
+  setLang(data.settings.language);
+
+  // Atributos de accesibilidad y tema en <html> (Ionic reescribe sus clases al iniciar).
   useEffect(() => {
-    const { highContrast, largeText, reduceMotion } = data.settings;
+    const { highContrast, largeText, reduceMotion, theme } = data.settings;
     const root = document.documentElement;
     root.toggleAttribute('data-a11y-contrast', highContrast);
     root.toggleAttribute('data-a11y-large-text', largeText);
     root.toggleAttribute('data-a11y-reduce-motion', reduceMotion);
+    if (theme === 'sistema') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', theme === 'oscuro' ? 'dark' : 'light');
   }, [data.settings]);
 
   const activeAlert = useMemo(
@@ -129,6 +136,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const hasActiveAlert = activeAlert !== null;
   useEffect(() => {
     void keepScreenOn(hasActiveAlert);
+    // Durante la alerta, visible sobre la pantalla de bloqueo (ficha médica para rescatistas).
+    void showOverLockScreen(hasActiveAlert);
   }, [hasActiveAlert]);
 
   // Ubicación automática durante la alerta: se toma al activarla (aunque no hubiera una guardada; si el
@@ -217,6 +226,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setData((d) => ({ ...d, kit }));
   }, []);
 
+  const setEmailStatus = useCallback((alertId: string, emailStatus: EmailStatus) => {
+    setData((d) => ({ ...d, alerts: d.alerts.map((a) => (a.id === alertId ? { ...a, emailStatus } : a)) }));
+  }, []);
+
+  /** Con alertId guarda el avance en esa alerta; sin él, en la lista de práctica (sin alertas). */
+  const setPostQuakeDone = useCallback((postQuakeDone: number[], alertId?: string) => {
+    setData((d) =>
+      alertId
+        ? { ...d, alerts: d.alerts.map((a) => (a.id === alertId ? { ...a, postQuakeDone } : a)) }
+        : { ...d, postQuakeDone },
+    );
+  }, []);
+
   const setLocation = useCallback((snapshot: LocationSnapshot | null, permission?: LocationPermission) => {
     setData((d) => ({ ...d, lastLocation: snapshot, locationPermission: permission ?? d.locationPermission }));
   }, []);
@@ -264,6 +286,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setMeetingPoint,
     addSusResponse,
     setKit,
+    setPostQuakeDone,
+    setEmailStatus,
     setLocation,
     setLocationPermission,
     setDemoMode,

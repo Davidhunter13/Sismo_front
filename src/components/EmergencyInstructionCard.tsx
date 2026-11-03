@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { Square, Volume2, type LucideIcon } from 'lucide-react';
+import { useT } from '../i18n/useT';
 
 interface EmergencyInstructionCardProps {
   icon: LucideIcon;
@@ -12,6 +13,7 @@ interface EmergencyInstructionCardProps {
 }
 
 export function EmergencyInstructionCard({ icon: Icon, title, steps, speaking, onListen }: EmergencyInstructionCardProps) {
+  const t = useT().components.instruction;
   return (
     <article className="card instruction-card">
       <header>
@@ -21,7 +23,7 @@ export function EmergencyInstructionCard({ icon: Icon, title, steps, speaking, o
           <button
             className={`icon-btn ${speaking ? 'icon-btn--danger' : 'icon-btn--soft'} instruction-card__listen`}
             onClick={onListen}
-            aria-label={speaking ? `Detener lectura de ${title}` : `Escuchar ${title}`}
+            aria-label={speaking ? t.stop(title) : t.listen(title)}
           >
             {speaking ? <Square size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
           </button>

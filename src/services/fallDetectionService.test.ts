@@ -32,16 +32,25 @@ describe('createFallDetector', () => {
 
   it('un impacto muy fuerte dispara aunque no haya caída libre', () => {
     const onFall = vi.fn();
-    createFallDetector(onFall)(4.5 * G, 0);
+    createFallDetector(onFall)(6.5 * G, 0);
     expect(onFall).toHaveBeenCalledTimes(1);
   });
 
   it('ignora nuevas detecciones durante el periodo de espera', () => {
     const onFall = vi.fn();
     const feed = createFallDetector(onFall);
-    feed(4.5 * G, 0);
-    feed(4.5 * G, 10_000);
-    feed(4.5 * G, 61_000);
+    feed(6.5 * G, 0);
+    feed(6.5 * G, 10_000);
+    feed(6.5 * G, 61_000);
     expect(onFall).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('falsas alarmas', () => {
+  it('apretar o sacudir fuerte el teléfono (hasta 5 g, sin caída libre) no dispara', () => {
+    const onFall = vi.fn();
+    const feed = createFallDetector(onFall);
+    [1, 3.5, 5, 4.2, 2, 5].forEach((g, i) => feed(g * G, i * 50));
+    expect(onFall).not.toHaveBeenCalled();
   });
 });

@@ -22,10 +22,12 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Canal digital | Solo simulación | SMS a contactos con ubicación y punto de encuentro + SMS «Estoy bien» al finalizar |
 | Ubicación | Una lectura al tocar un botón | Afinado de GPS (hasta 10 s) y actualización cada 2 min durante la alerta |
 | Mapa | Esquema SVG | Pestañas «Esquema» y «Mapa real» (OpenStreetMap) con punto de encuentro |
-| Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica, lectura en voz alta de la guía y mochila de emergencia |
+| Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica con QR, lectura en voz alta, mochila de emergencia y lista «Después del sismo» |
+| Orientación | Mapa | + Brújula sin internet hacia el punto de encuentro |
+| Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 50 pruebas e2e + 39 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 86 pruebas e2e + 78 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -56,14 +58,17 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Llamar al 123:** abre el marcador con el número listo.
 - **SMS de alerta:** abre la app de mensajes con los contactos reales y el aviso: tipo de evento, ubicación (con precisión), punto de encuentro y resumen de la ficha médica (si «Compartir» está activo). Estado honesto «SMS abierto», porque SISMO no puede verificar el envío.
-- **SMS «Estoy bien»:** al finalizar la alerta se ofrece avisar a los contactos que la persona está a salvo.
+- **SMS «Estoy bien»:** al finalizar la alerta se ofrece avisar a los contactos que la persona está a salvo, y luego se abre la lista «Después del sismo».
+- **Correo de alerta (servidor pendiente de conectar):** al activar el SOS aparece «¿Enviar correo a sus contactos?» con cuenta regresiva de **20 s**: «Sí, enviar ahora» o el silencio lo envían; «No enviar» lo cancela (luego se puede reintentar). No se pregunta en simulacros ni si ningún contacto real tiene correo. La app **no envía correos por sí misma ni guarda credenciales**: arma la solicitud (asunto, destinatarios, cuerpo con ubicación, punto de encuentro, ficha médica y batería) y la envía por POST a `VITE_ALERT_EMAIL_URL` (`.env`; ejemplo en `.env.example`), con tiempo límite y dos reintentos con espera exponencial. Mientras no esté configurado, el estado dice «No se envió: falta conectar el servidor de correo». El contrato JSON para el servidor está documentado en `src/services/emailService.ts`.
+- **Correo obligatorio en los contactos:** nuevo campo «Correo electrónico» validado en el formulario. Los contactos guardados antes muestran «Falta el correo» hasta editarlos.
+- **WhatsApp por contacto:** en la alerta, un botón por contacto abre WhatsApp con el mismo aviso (WhatsApp no admite varios destinatarios en un enlace y requiere internet). El número se normaliza al formato de WhatsApp.
 - Los contactos de demostración (ficticios) nunca reciben SMS.
 
 ### 2.4 Ubicación
 
-- Afinado del GPS: escucha hasta 10 s y conserva la lectura más precisa (para antes si llega a ±25 m).
+- Afinado del GPS: escucha hasta 10 s y conserva la lectura más precisa (para antes si llega a ±25 m). Si en ese tiempo no llega ninguna lectura de alta precisión (computadores sin GPS), pide una ubicación aproximada por WiFi/red, que responde rápido.
 - **Durante la alerta** se actualiza al activarla y cada 2 minutos si hay permiso. Se guarda en el dispositivo y el SMS usa la más reciente. Se cuentan las actualizaciones por alerta.
-- **Punto de encuentro:** se guarda desde la ubicación actual o tocando el mapa real. Se muestra en verde en el mapa y se incluye en el SMS.
+- **Punto de encuentro:** se guarda desde la ubicación actual, tocando el mapa real («Elegir en el mapa» sube automáticamente hasta el mapa) o **buscando una dirección**: fuente principal **Esri ArcGIS World Geocoding** (gratuito sin llave para búsquedas), que entiende la nomenclatura colombiana y tiene números de casa (p. ej. «Carrera 20 # 39-52» → punto exacto en La Soledad) y algunos lugares por nombre; en paralelo **Photon** (OpenStreetMap) como respaldo. Cada resultado indica si es «Dirección exacta» o «Aproximada». Los resultados exactos más cercanos al usuario van primero. Se descartaron Nominatim (no encuentra direcciones colombianas) y Overpass (bloquea consultas). **Licencia:** Esri permite búsquedas anónimas sin almacenar resultados; guardar el punto de encuentro es un almacenamiento, así que para producción hay que revisar sus términos o usar una cuenta ArcGIS Location Platform (tiene cupo gratuito).
 
 ### 2.5 Información
 
@@ -89,7 +94,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Modo atrapado:** para quien queda bajo escombros. Apaga las señales continuas, baja el brillo y deja apagar la pantalla. Cada 3 minutos emite una ráfaga corta: tres pitidos de silbato y un ciclo de linterna SOS (Android) o vibración (navegador). En Android lo ejecuta el servicio nativo con un WakeLock parcial, así que sigue con la pantalla apagada. **Al salir del modo se retoman las señales normales** según la configuración.
 - **Silbato de rescate:** opción de sonido en Configuración («Sirena» o «Silbato»). Tres pitidos de ~3,1 kHz (señal internacional de auxilio): se oye mejor entre escombros y gasta menos batería que la sirena. Cada opción tiene un botón **«Escuchar»** con una muestra (3 s de sirena o un ciclo de silbato) que se detiene sola o con «Detener»; no está disponible durante una alerta activa.
 - **Batería en el SMS:** el aviso incluye «Batería: X %» para que los contactos sepan cuánto tiempo queda para comunicarse.
-- **Detección de caídas («¿Está bien?»):** con la app abierta, el acelerómetro detecta caída libre seguida de impacto, o un impacto muy fuerte. Muestra una cuenta regresiva de 30 s con «Estoy bien» y «Pedir ayuda ahora»; si nadie responde, activa la alerta (origen `deteccion_automatica`). **Desactivada por defecto** por posibles falsas alarmas.
+- **Detección de caídas («¿Está bien?»):** con la app abierta, el acelerómetro detecta caída libre seguida de impacto, o un impacto muy fuerte (≥ 6 g). Si la pantalla está apagada, la enciende y muestra el aviso sobre la pantalla de bloqueo (Android). Muestra una cuenta regresiva de 30 s con «Estoy bien» y «Pedir ayuda ahora»; si nadie responde, activa la alerta (origen `deteccion_automatica`). **Desactivada por defecto** por posibles falsas alarmas.
 - **Ubicación automática al dar SOS:** se toma al activar la alerta aunque no hubiera una guardada; si el permiso no se había pedido, se pide en ese momento. Solo deja de intentarlo si el permiso fue denegado.
 - Archivos: `trappedService.ts`, `batteryService.ts`, `fallDetectionService.ts`, `components/FallDetector.tsx`, `sirenService.ts`; `AlertService.java`, `SismoNativePlugin.java`.
 
@@ -116,8 +121,38 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | El simulacro podía guardar «activó antes de la señal» aunque la señal ya se hubiera mostrado | La activación leía el estado del simulacro desde una vista con datos desactualizados | El estado del simulacro se lee de una referencia siempre actualizada del estado global |
 | Al salir del modo atrapado no volvían las señales | Solo se restauraba la pantalla encendida | Se reactivan sonido, linterna, vibración y destello según la configuración |
 | Con SOS sin ubicación guardada, la alerta quedaba sin ubicación | Solo se pedía con permiso ya concedido | Se toma automáticamente al activar (ver 2.7) |
+| Modo oscuro: pestañas no seleccionadas, textos pequeños y opciones del diálogo de SOS casi invisibles | Ionic usaba sus grises de tema claro | Escala completa de grises oscuros para Ionic y color principal claro en oscuro; verificado con capturas |
+| Alto contraste + modo oscuro: fondo blanco y textos oscuros | El alto contraste forzaba colores de tema claro | Alto contraste propio para oscuro (blanco sobre negro) |
+| Botones del diálogo en mayúsculas y sin el rojo de «Activar alerta» en la app compilada | En la compilación de producción el CSS de Ionic se carga después y ganaba con la misma especificidad | Reglas del diálogo más específicas (`ion-alert.sismo-alert …`) |
+| «Estoy a salvo · Finalizar alerta» volvía a Inicio | — | Ahora abre la lista «Después del sismo» (tras un simulacro sigue abriendo la encuesta) |
+| WhatsApp decía que el contacto no existía | WhatsApp exige el número con código de país y sin «+» | Botón de WhatsApp por contacto en la alerta con el número normalizado (`whatsappNumber`: se quita el «+» y se antepone 57 a celulares colombianos guardados sin indicativo) |
+| La detección de caídas se activó al apretar el teléfono con fuerza | El umbral de impacto aislado (4 g) se alcanza con un apretón o sacudida | Impacto aislado sube a 6 g; caída libre + impacto se mantiene. Prueba de falsas alarmas |
+| La cuenta regresiva del correo se quedaba en 20 s y nunca enviaba (detectado por las pruebas) | La pantalla de alerta se redibuja cada segundo y reiniciaba el temporizador | El temporizador ya no depende de los redibujos (referencia a la función de envío) |
+| El mapa real podía verse gris | El mapa se dibujaba antes de tener su tamaño final (pestañas, transiciones) o las teselas no cargaban (sin internet o un bloqueador) | El mapa se recalcula cada vez que cambia su contenedor y, si las teselas fallan, muestra un aviso en lugar de quedar gris |
+| «Elegir en el mapa» no llevaba al mapa | — | Sube automáticamente hasta el mapa |
+| La búsqueda de dirección no encontraba «Carrera 20 # 39-52» (Consejo Colombiano de Seguridad) | OpenStreetMap casi no tiene números de casa en Colombia | Esri ArcGIS como fuente principal (punto exacto), Photon de respaldo, limpieza del texto (paréntesis, «Barrio», «D.C.») |
+| En el PC «Solicitar mi ubicación» terminaba en «tiempo agotado» | Tras el afinado de GPS, sin GPS la alta precisión nunca llega | Respaldo con ubicación aproximada por WiFi/red |
+| «Avisar que estoy bien» bloqueado sin explicación | Los contactos de demostración son ficticios y no reciben mensajes | Texto que explica el bloqueo y enlace «Agregar un contacto real» |
+| La flecha de las brújulas apuntaba 45° desviada (p. ej. al Este con rumbo NE) | El ícono de flecha viene inclinado 45° de fábrica | Se compensa la inclinación (`ICON_TILT`); verificado con capturas |
+| Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
+| El «¿Está bien?» no se vio porque la pantalla estaba apagada | El aviso no encendía la pantalla | Al detectar una caída la app enciende la pantalla y se muestra sobre la de bloqueo (Android, `wakeScreen` + `setShowWhenLocked`) |
 
-### 2.11 Base técnica (iteraciones anteriores)
+### 2.11 Orientación, rescatistas, contexto y presentación
+
+- **Brújula al punto de encuentro** (en Ubicación y en la alerta): flecha que apunta al punto de encuentro, distancia en metros y dirección en grados con punto cardinal. **Funciona sin internet**: usa el GPS en vivo y el magnetómetro (`deviceorientationabsolute` en Android/Chrome, `webkitCompassHeading` en iOS). Sin magnetómetro dibuja la dirección respecto al norte. Indica «ya llegó» a menos de 25 m. Archivos: `compassService.ts`, `components/MeetingCompass.tsx`.
+- **Lista «Después del sismo»** (`/despues-del-sismo`, acceso en Inicio y en la alerta; se abre sola al finalizar la alerta): 11 pasos (heridos, gas, electricidad, agua, grietas, escaleras, punto de encuentro, réplicas, uso del teléfono, información oficial, avisar a la familia) con casillas y barra de progreso. **Cada alerta tiene su propia lista** (`AlertRecord.postQuakeDone`): al dar SOS empieza vacía y las anteriores se conservan con su alerta, sin borrar datos (preparado para migrar a una base de datos). Desde Inicio se abre la de la alerta más reciente; sin alertas, una lista de práctica. Arriba muestra el **punto de encuentro con la brújula** o, si no hay uno configurado, invita a configurarlo (botón que lleva a la brújula en Ubicación). Orientativa: debe validarse con la UNGRD.
+- **QR médico:** en la ficha médica y en la pantalla de alerta. Contiene la ficha en texto plano (nombre, sangre, alergias, medicamentos, condiciones, notas, línea 123): cualquier lector de QR lo muestra **sin internet ni app**. Solo se genera si «Compartir» está activo. Siempre sobre fondo blanco para que lo lean los escáneres. Librería `qrcode`.
+- **Ficha médica sobre la pantalla de bloqueo (Android):** durante la alerta SISMO se muestra encima de la pantalla bloqueada y la enciende (`setShowWhenLocked` / `setTurnScreenOn`), para que los rescatistas vean la ficha y el QR sin desbloquear. Se desactiva al finalizar.
+- **Indicador de red:** aviso «Sin internet» en Inicio y en la alerta (qué sigue funcionando: SMS, 123, brújula, esquema; qué no: mapa real y sismos recientes) y fila «Conexión a internet» en la disponibilidad de servicios.
+- **Recordatorios de simulacro:** en Inicio y en Simulacro, si nunca se ha hecho uno o pasaron 90 días; en septiembre y octubre recuerda el **Simulacro Nacional de Respuesta a Emergencias** (la fecha exacta se remite a la UNGRD). Dentro de la app. Archivo: `drillReminderService.ts`.
+- **Modo oscuro:** Configuración → Tema: Sistema (sigue al teléfono), Claro u Oscuro, y un **botón sol/luna en el encabezado** (junto a la tuerca) para cambiar rápido entre claro y oscuro.
+- **Brújula siempre visible** en Ubicación: sin punto de encuentro explica cómo activarla.
+- **Rosa de los vientos (N, NE, E, SE, S, SO, O, NO; en inglés W):** en la brújula completa y en la mini. La rosa gira con el teléfono para que la N señale el norte real y la flecha marca el rumbo al punto de encuentro sobre ella. Componente `CompassRose`.
+- **Brújula en el encabezado de Inicio:** al hacer scroll y perder de vista la mini brújula, aparece junto al botón de tema una rosa pequeña (N, E, S, O) que gira igual; al tocarla abre la brújula completa.
+- **Mini brújula en Inicio:** gira en vivo con el magnetómetro; con punto de encuentro apunta hacia él y muestra la distancia, sin él apunta al norte e invita a configurarlo. Sin sensor (computador) la aguja se balancea suavemente. No deja el GPS encendido (usa la última ubicación guardada) para ahorrar batería. Al tocarla abre la brújula completa. Paleta oscura propia; el azul de marca (`--brand`) se separa del azul de textos (`--navy`). Incluye alto contraste para oscuro. Revisado con capturas en Configuración y en el diálogo de SOS; el resto de pantallas falta revisarlo en el teléfono.
+- **Idioma español / inglés:** selector en la bienvenida y en Configuración; el idioma inicial se toma del teléfono. Traduce toda la interfaz, la guía de emergencia, la lista post-sismo, los SMS, la encuesta SUS (versión estándar en inglés), la lista de la mochila, las etiquetas, las fechas (`es-CO` / `en-US`) y la voz de lectura. Infraestructura propia sin dependencias en `src/i18n/` (un archivo por pantalla con `es` y `en`; TypeScript avisa si falta una traducción). Los valores guardados (tipos de evento, relaciones de contacto) no se traducen: solo su etiqueta.
+
+### 2.12 Base técnica (iteraciones anteriores)
 
 - App Android con Capacitor, ícono adaptativo y márgenes de zona segura (Android 15+ dibuja de borde a borde).
 - Permisos al abrir la app: ubicación y notificaciones.
@@ -134,7 +169,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Widget y acceso rápido piden confirmación | Evitar activaciones accidentales |
 | El SMS no se abre automáticamente | Abrir otra app envía SISMO a segundo plano; se deja al usuario decidir el momento |
 | Estado «SMS abierto», nunca «Enviada» | SISMO no puede comprobar el envío ni la entrega |
-| Ubicación actualizada solo en el dispositivo | No hay canal automático todavía (ver ntfy en la hoja de ruta) |
+| Ubicación actualizada solo en el dispositivo | El envío automático será por el servidor de correo (pendiente de conectar) |
 | Ficha médica compartida por defecto en la alerta y el SMS, con opción de desactivarla | En una emergencia es más útil que rescatistas y contactos la conozcan; el usuario conserva el control. El aviso de la página explica qué se comparte |
 | CSV sin datos personales | Permite compartir métricas para la tesis sin exponer a nadie |
 | Sismos: descarga general y filtro local | No revelar la ubicación del usuario a terceros |
@@ -143,6 +178,14 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Tras un simulacro se ofrece la encuesta y no el SMS «Estoy bien» | No tiene sentido avisar a la familia de un ejercicio; sí medir la usabilidad |
 | Importar contactos con el selector del sistema | Acceso solo al contacto elegido, sin permiso sobre toda la agenda |
 | Recordatorios de la mochila dentro de la app | Evita otro permiso y otra dependencia (notificaciones programadas) |
+| QR con texto plano (no un enlace) | Se lee sin internet ni app con cualquier lector de QR |
+| Brújula con GPS + magnetómetro, sin mapas | Debe funcionar sin internet justo cuando las redes fallan |
+| Simulacro Nacional: solo el mes, no la fecha | La UNGRD fija la fecha cada año; se evita mostrar una fecha equivocada |
+| Internacionalización propia sin librerías | Pocas dependencias y verificación de traducciones faltantes en tiempo de compilación |
+| Valores guardados en español, etiquetas traducidas | Cambiar de idioma no altera ni rompe los datos ya guardados |
+| Correo enviado por un servidor propio, no desde el teléfono | Enviar correo requiere credenciales del proveedor; nunca deben ir dentro de la app (política CCS de secretos) |
+| Silencio de 20 s = enviar el correo | Si la persona no puede responder (herida o atrapada), el aviso igual sale |
+| Estado «Sin servidor» explícito | La app nunca dice que el correo salió si no es así |
 
 ---
 
@@ -160,6 +203,9 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Mochila:** los recordatorios aparecen al abrir la app; no hay notificaciones programadas.
 - **Lectura en voz alta:** depende de que el teléfono tenga una voz en español instalada.
 - **Batería en el SMS:** no disponible en iPhone ni en Firefox (no exponen la Battery API).
+- **Brújula:** la precisión depende del magnetómetro (objetos metálicos o imanes la desvían; puede requerir calibrar moviendo el teléfono en forma de 8). En computadores no hay brújula.
+- **Indicador de red:** «con internet» solo significa que hay una red; tras un sismo puede estar saturada.
+- **Traducción al inglés:** la guía de emergencia, la lista post-sismo y la mochila en inglés deben validarse por una persona con criterio técnico; los SMS se envían en el idioma de quien los manda.
 
 ---
 
@@ -169,8 +215,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **39 de 39** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **50 de 50** superadas |
+| Pruebas unitarias (Vitest) | **78 de 78** superadas |
+| Pruebas e2e (Playwright, móvil y escritorio) | **86 de 86** superadas |
 | Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
@@ -184,8 +230,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | # | Mejora | Valor |
 |---|---|---|
 | 1 | **Prueba en dispositivo físico** de todo lo listado en la sección 5 | Requisito antes de validar con usuarios |
-| 2 | Canal automático con **ntfy** (tema aleatorio por usuario, invitación por QR) | Notificación push a contactos sin servidor propio |
-| 3 | Envío automático de la ubicación actualizada por ntfy | Seguimiento si la persona se desplaza |
+| 2 | **Conectar el servidor de correo** (`VITE_ALERT_EMAIL_URL`; contrato en `src/services/emailService.ts`) | El correo de alerta empieza a enviarse de verdad |
+| 3 | Enviar por correo la ubicación actualizada durante la alerta (mismo servidor) | Seguimiento si la persona se desplaza |
 | 4 | Pruebas automáticas faltantes (sección 5) y calibración de los umbrales de caída con pruebas reales | Cobertura del 20 % humano del modelo 80/20 |
 | 4b | Notificaciones programadas para la mochila | Recordatorios aunque no se abra la app |
 | 5 | Proyecto iOS | Ampliar el alcance a iPhone |

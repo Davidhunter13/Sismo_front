@@ -12,7 +12,8 @@ export interface SismoNativePlugin {
   stopTrapped(): Promise<void>;
   setBrightness(options: { level: number }): Promise<void>;
   getBattery(): Promise<{ level: number; charging: boolean }>;
-  speak(options: { text: string }): Promise<void>;
+  /** `lang`: etiqueta BCP-47 de la voz (p. ej. 'en-US'); por defecto 'es-CO'. */
+  speak(options: { text: string; lang?: string }): Promise<void>;
   stopSpeaking(): Promise<void>;
   isSpeaking(): Promise<{ speaking: boolean }>;
   pickContact(): Promise<{ cancelled: boolean; name?: string; phone?: string }>;
@@ -24,6 +25,8 @@ export interface SismoNativePlugin {
   stopAll(): Promise<void>;
   getStatus(): Promise<{ siren: boolean; torch: boolean; vibration: boolean; trapped: boolean; hasFlash: boolean }>;
   setKeepScreenOn(options: { on: boolean }): Promise<void>;
+  setShowWhenLocked(options: { on: boolean }): Promise<void>;
+  wakeScreen(): Promise<void>;
   requestNotifications(): Promise<{ granted: boolean }>;
   consumeLaunchAction(): Promise<{ action: 'sos' | null }>;
   shareCsv(options: { filename: string; content: string }): Promise<void>;

@@ -9,6 +9,9 @@ export const defaultSettings: Settings = {
   visualSignalEnabled: true,
   vibrationEnabled: true,
   alarmSound: 'sirena',
+  // Idioma inicial según el teléfono o navegador; el usuario puede cambiarlo en Configuración.
+  language: typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es',
+  theme: 'sistema',
   fallDetection: false,
   highContrast: false,
   largeText: false,
@@ -30,6 +33,7 @@ export function createEmptyData(): AppData {
     meetingPoint: null,
     susResponses: [],
     kit: null,
+    postQuakeDone: [],
   };
 }
 
@@ -48,6 +52,7 @@ export function loadData(): AppData {
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
       alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
       susResponses: Array.isArray(parsed.susResponses) ? parsed.susResponses : [],
+      postQuakeDone: Array.isArray(parsed.postQuakeDone) ? parsed.postQuakeDone : [],
     };
   } catch {
     return createEmptyData();

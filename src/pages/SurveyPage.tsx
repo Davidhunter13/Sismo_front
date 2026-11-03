@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { useAppState } from '../context/appContext';
+import { useT } from '../i18n/useT';
 import { newId } from '../services/storageService';
 import { SUS_ITEMS, SUS_SCALE, susGrade, susScore } from '../services/susService';
 
@@ -14,6 +15,7 @@ export default function SurveyPage() {
   const [presentToast] = useIonToast();
   const { search } = useLocation();
   const { addSusResponse } = useAppState();
+  const t = useT().survey;
   const drillAlertId = new URLSearchParams(search).get('alerta') ?? undefined;
   const [answers, setAnswers] = useState<(number | null)[]>(Array(SUS_ITEMS.length).fill(null));
   const [result, setResult] = useState<number | null>(null);
@@ -26,33 +28,32 @@ export default function SurveyPage() {
     const score = susScore(values);
     addSusResponse({ id: newId(), answeredAt: new Date().toISOString(), answers: values, score, drillAlertId });
     setResult(score);
-    presentToast({ message: 'Respuestas guardadas. ¡Gracias!', duration: 2200, color: 'success', position: 'top' });
+    presentToast({ message: t.thanks, duration: 2200, color: 'success', position: 'top' });
   };
 
   if (result !== null) {
     return (
-      <AppLayout title="Encuesta de usabilidad" backTo="/inicio">
+      <AppLayout title={t.title} backTo="/inicio">
         <section className="card empty-state">
           <ClipboardCheck size={44} aria-hidden="true" />
-          <h2>Puntaje SUS: {result}</h2>
-          <p className="muted">{susGrade(result)}. El promedio de referencia es 68.</p>
-          <button className="btn btn--primary" onClick={() => router.push('/estadisticas', 'forward', 'replace')}>Ver estadísticas</button>
+          <h2>{t.score(result)}</h2>
+          <p className="muted">{t.reference(susGrade(result))}</p>
+          <button className="btn btn--primary" onClick={() => router.push('/estadisticas', 'forward', 'replace')}>{t.viewStats}</button>
         </section>
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout title="Encuesta de usabilidad" backTo="/inicio">
+    <AppLayout title={t.title} backTo="/inicio">
       <p className="muted small">
-        {drillAlertId ? 'Gracias por hacer el simulacro. ' : ''}
-        Indique qué tan de acuerdo está con cada afirmación (1 = totalmente en desacuerdo, 5 = totalmente de acuerdo).
-        Las respuestas son anónimas y se guardan solo en este dispositivo.
+        {drillAlertId ? t.drillThanks : ''}
+        {t.intro}
       </p>
       {SUS_ITEMS.map((item, i) => (
         <fieldset key={item} className="card sus-item">
           <legend><strong>{i + 1}.</strong> {item}</legend>
-          <div className="sus-scale" role="radiogroup" aria-label={`Afirmación ${i + 1}`}>
+          <div className="sus-scale" role="radiogroup" aria-label={t.item(i + 1)}>
             {SUS_SCALE.map((label, v) => {
               const value = v + 1;
               const id = `sus-${i}-${value}`;
@@ -72,11 +73,11 @@ export default function SurveyPage() {
               );
             })}
           </div>
-          <div className="sus-ends small muted"><span>Desacuerdo</span><span>Acuerdo</span></div>
+          <div className="sus-ends small muted"><span>{t.disagree}</span><span>{t.agree}</span></div>
         </fieldset>
       ))}
       <button className="btn btn--primary btn--lg btn--block" onClick={submit} disabled={!complete}>
-        Enviar respuestas ({answers.filter((a) => a !== null).length}/{SUS_ITEMS.length})
+        {t.submit(answers.filter((a) => a !== null).length, SUS_ITEMS.length)}
       </button>
     </AppLayout>
   );

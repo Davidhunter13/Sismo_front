@@ -4,6 +4,7 @@ import { BarChart3, ClipboardCheck, Download, Info } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { useAppState } from '../context/appContext';
+import { useT } from '../i18n/useT';
 import { alertsToCsv, formatMs, metricLabels, metricValue, summarize, type MetricKey } from '../services/metricsService';
 import { isNative, SismoNative } from '../services/nativeBridge';
 import { susGrade, susToCsv } from '../services/susService';
@@ -16,6 +17,7 @@ export default function StatsPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
   const { data } = useAppState();
+  const t = useT().stats;
   const [filter, setFilter] = useState<Filter>('todas');
 
   const alerts = useMemo(
@@ -48,33 +50,33 @@ export default function StatsPage() {
         URL.revokeObjectURL(url);
       }
     } catch {
-      presentToast({ message: 'No se pudo exportar el archivo.', duration: 2500, color: 'warning', position: 'top' });
+      presentToast({ message: t.exportError, duration: 2500, color: 'warning', position: 'top' });
     }
   };
 
   return (
-    <AppLayout title="Estadísticas" backTo="/inicio">
+    <AppLayout title={t.title} backTo="/inicio">
       <IonSegment value={filter} onIonChange={(e) => setFilter(e.detail.value as Filter)} className="segment">
-        <IonSegmentButton value="todas"><IonLabel>Todas</IonLabel></IonSegmentButton>
-        <IonSegmentButton value="reales"><IonLabel>Reales</IonLabel></IonSegmentButton>
-        <IonSegmentButton value="simulacros"><IonLabel>Simulacros</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="todas"><IonLabel>{t.filterAll}</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="reales"><IonLabel>{t.filterReal}</IonLabel></IonSegmentButton>
+        <IonSegmentButton value="simulacros"><IonLabel>{t.filterDrills}</IonLabel></IonSegmentButton>
       </IonSegment>
 
       <section className="stat-grid">
-        <div className="card stat-tile"><span>Alertas</span><strong>{alerts.length}</strong></div>
-        <div className="card stat-tile"><span>Con SMS abierto</span><strong>{pct(smsCount)}</strong></div>
-        <div className="card stat-tile"><span>Con ubicación real</span><strong>{pct(withLocation)}</strong></div>
+        <div className="card stat-tile"><span>{t.alerts}</span><strong>{alerts.length}</strong></div>
+        <div className="card stat-tile"><span>{t.withSms}</span><strong>{pct(smsCount)}</strong></div>
+        <div className="card stat-tile"><span>{t.withLocation}</span><strong>{pct(withLocation)}</strong></div>
       </section>
 
       <section className="card">
-        <h2 className="card__title"><BarChart3 size={18} aria-hidden="true" /> Tiempos de respuesta</h2>
+        <h2 className="card__title"><BarChart3 size={18} aria-hidden="true" /> {t.timesTitle}</h2>
         {alerts.length === 0 ? (
-          <p className="muted small">Aún no hay alertas registradas en este filtro. Haga un simulacro para empezar a medir.</p>
+          <p className="muted small">{t.noAlerts}</p>
         ) : (
           <div className="table-wrap">
             <table className="stat-table">
               <thead>
-                <tr><th>Métrica</th><th>n</th><th>Mediana</th><th>Promedio</th><th>Máx.</th></tr>
+                <tr><th>{t.colMetric}</th><th>n</th><th>{t.colMedian}</th><th>{t.colMean}</th><th>{t.colMax}</th></tr>
               </thead>
               <tbody>
                 {METRICS.map((k) => {
@@ -96,35 +98,32 @@ export default function StatsPage() {
       </section>
 
       <button className="btn btn--primary btn--block" onClick={() => void exportCsv('metricas')} disabled={alerts.length === 0}>
-        <Download size={18} aria-hidden="true" /> Exportar CSV
+        <Download size={18} aria-hidden="true" /> {t.exportCsv}
       </button>
 
       <section className="card stack">
-        <h2 className="card__title"><ClipboardCheck size={18} aria-hidden="true" /> Usabilidad (SUS)</h2>
+        <h2 className="card__title"><ClipboardCheck size={18} aria-hidden="true" /> {t.susTitle}</h2>
         {sus.count === 0 ? (
-          <p className="muted small">Aún no hay respuestas. La encuesta se ofrece al finalizar un simulacro.</p>
+          <p className="muted small">{t.susEmpty}</p>
         ) : (
           <p className="small">
-            <strong>{sus.count}</strong> respuesta(s) · promedio <strong>{sus.mean?.toFixed(1)}</strong> ({susGrade(sus.mean ?? 0)}) ·
-            mediana {sus.median?.toFixed(1)}. Referencia: 68.
+            <strong>{sus.count}</strong>{t.susResponses}<strong>{sus.mean?.toFixed(1)}</strong> ({susGrade(sus.mean ?? 0)})
+            {t.susMedian(sus.median?.toFixed(1) ?? '')}
           </p>
         )}
         <div className="btn-pair">
-          <button className="btn btn--outline" onClick={() => router.push('/encuesta', 'forward')}>Responder encuesta</button>
+          <button className="btn btn--outline" onClick={() => router.push('/encuesta', 'forward')}>{t.answerSurvey}</button>
           <button className="btn btn--outline" onClick={() => void exportCsv('sus')} disabled={sus.count === 0}>
-            <Download size={16} aria-hidden="true" /> CSV SUS
+            <Download size={16} aria-hidden="true" /> {t.susCsv}
           </button>
         </div>
       </section>
 
       <section className="card">
-        <h2 className="card__title"><Info size={18} aria-hidden="true" /> Cómo se mide</h2>
+        <h2 className="card__title"><Info size={18} aria-hidden="true" /> {t.howTitle}</h2>
         <ul className="bullets">
-          <li><strong>SOS → confirmación:</strong> desde que se toca SOS hasta que se confirma el tipo de evento.</li>
-          <li><strong>Confirmación → sirena / linterna / vibración:</strong> tiempo que tarda cada señal en encenderse.</li>
-          <li><strong>Confirmación → SMS abierto:</strong> hasta que se abre la app de mensajes (no confirma el envío).</li>
-          <li><strong>Señal del simulacro → confirmación:</strong> tiempo de reacción en los simulacros.</li>
-          <li>No incluye los datos de ejemplo del modo de demostración. El CSV no contiene nombres, contactos ni coordenadas.</li>
+          {t.how.map((h) => <li key={h.term}><strong>{h.term}</strong>{h.text}</li>)}
+          <li>{t.howNote}</li>
         </ul>
       </section>
     </AppLayout>

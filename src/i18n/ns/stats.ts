@@ -1,0 +1,68 @@
+// Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+// Pantalla de Estadísticas.
+
+const es = {
+  title: 'Estadísticas',
+  filterAll: 'Todas',
+  filterReal: 'Reales',
+  filterDrills: 'Simulacros',
+  alerts: 'Alertas',
+  withSms: 'Con SMS abierto',
+  withLocation: 'Con ubicación real',
+  timesTitle: 'Tiempos de respuesta',
+  noAlerts: 'Aún no hay alertas registradas en este filtro. Haga un simulacro para empezar a medir.',
+  colMetric: 'Métrica',
+  colMedian: 'Mediana',
+  colMean: 'Promedio',
+  colMax: 'Máx.',
+  exportCsv: 'Exportar CSV',
+  exportError: 'No se pudo exportar el archivo.',
+  susTitle: 'Usabilidad (SUS)',
+  susEmpty: 'Aún no hay respuestas. La encuesta se ofrece al finalizar un simulacro.',
+  susResponses: ' respuesta(s) · promedio ',
+  susMedian: (median: string) => ` · mediana ${median}. Referencia: 68.`,
+  answerSurvey: 'Responder encuesta',
+  susCsv: 'CSV SUS',
+  howTitle: 'Cómo se mide',
+  how: [
+    { term: 'SOS → confirmación:', text: ' desde que se toca SOS hasta que se confirma el tipo de evento.' },
+    { term: 'Confirmación → sirena / linterna / vibración:', text: ' tiempo que tarda cada señal en encenderse.' },
+    { term: 'Confirmación → SMS abierto:', text: ' hasta que se abre la app de mensajes (no confirma el envío).' },
+    { term: 'Señal del simulacro → confirmación:', text: ' tiempo de reacción en los simulacros.' },
+  ],
+  howNote: 'No incluye los datos de ejemplo del modo de demostración. El CSV no contiene nombres, contactos ni coordenadas.',
+};
+
+const en: typeof es = {
+  title: 'Statistics',
+  filterAll: 'All',
+  filterReal: 'Real',
+  filterDrills: 'Drills',
+  alerts: 'Alerts',
+  withSms: 'With SMS opened',
+  withLocation: 'With real location',
+  timesTitle: 'Response times',
+  noAlerts: 'No alerts recorded for this filter yet. Run a drill to start measuring.',
+  colMetric: 'Metric',
+  colMedian: 'Median',
+  colMean: 'Average',
+  colMax: 'Max.',
+  exportCsv: 'Export CSV',
+  exportError: 'The file could not be exported.',
+  susTitle: 'Usability (SUS)',
+  susEmpty: 'No responses yet. The survey is offered at the end of a drill.',
+  susResponses: ' response(s) · average ',
+  susMedian: (median: string) => ` · median ${median}. Benchmark: 68.`,
+  answerSurvey: 'Take the survey',
+  susCsv: 'SUS CSV',
+  howTitle: 'How it is measured',
+  how: [
+    { term: 'SOS → confirmation:', text: ' from tapping SOS until the event type is confirmed.' },
+    { term: 'Confirmation → siren / flashlight / vibration:', text: ' time it takes each signal to turn on.' },
+    { term: 'Confirmation → SMS opened:', text: ' until the messaging app opens (it does not confirm sending).' },
+    { term: 'Drill signal → confirmation:', text: ' reaction time in drills.' },
+  ],
+  howNote: 'Demo mode sample data is not included. The CSV contains no names, contacts or coordinates.',
+};
+
+export default { es, en };

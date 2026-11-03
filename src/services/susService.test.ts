@@ -1,6 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { describe, expect, it } from 'vitest';
-import { SUS_ITEMS, susGrade, susScore, susToCsv } from './susService';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { setLang } from '../i18n';
+import { SUS_ITEMS, SUS_SCALE, susGrade, susScore, susToCsv } from './susService';
 
 describe('susScore', () => {
   it('tiene 10 afirmaciones', () => {
@@ -37,5 +38,26 @@ describe('susToCsv', () => {
     const [header, row] = csv.split('\n');
     expect(header).toBe('id,fecha,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,puntaje,tras_simulacro');
     expect(row).toBe('r1,2026-11-01,3,3,3,3,3,3,3,3,3,3,50,si');
+  });
+});
+
+describe('SUS en inglés', () => {
+  beforeEach(() => setLang('en'));
+  afterEach(() => setLang('es'));
+
+  it('afirmaciones y escala estándar (Brooke) e interpretación', () => {
+    expect(SUS_ITEMS).toHaveLength(10);
+    expect(SUS_ITEMS[0]).toBe('I think that I would like to use this app frequently.');
+    expect(SUS_SCALE[0]).toBe('Strongly disagree');
+    expect(SUS_SCALE).toHaveLength(5);
+    expect(SUS_SCALE.map((s) => s)).toEqual(['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree']);
+    expect(susGrade(90)).toBe('Excellent');
+    expect(susGrade(70)).toBe('Acceptable (above average)');
+    expect(susGrade(40)).toBe('Poor');
+  });
+
+  it('vuelve al español al cambiar de idioma', () => {
+    setLang('es');
+    expect(SUS_ITEMS[0]).toBe('Creo que me gustaría usar esta aplicación con frecuencia.');
   });
 });
