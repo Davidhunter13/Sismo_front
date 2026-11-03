@@ -563,3 +563,9 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 @media (prefers-reduced-motion: reduce) {
   .compass-rose--idle .compass-rose__needle svg { animation: none; }
 }
+
+/* ---------- Ruta al punto de encuentro ---------- */
+.route-summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.95rem; min-height: 24px; }
+.route-map { border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+.route-map__canvas { height: 260px; background: var(--surface-2); z-index: 0; }
+.route-map__line { stroke: #1d6fd8; stroke-opacity: 0.9; stroke-linecap: round; stroke-linejoin: round; fill: none; }

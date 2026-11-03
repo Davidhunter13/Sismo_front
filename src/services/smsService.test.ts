@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setLang } from '../i18n';
 import type { Contact, LocationSnapshot, MedicalInfo } from '../types';
-import { buildAlertMessage, buildSafeMessage, buildSmsUrl, buildWhatsappUrl, medicalSummary, whatsappNumber } from './smsService';
+import { buildAlertMessage, buildSafeMessage, buildSmsUrl, buildWhatsappUrl, medicalSummary, normalizePhone, whatsappNumber } from './smsService';
 
 const real: LocationSnapshot = { latitude: 4.65, longitude: -74.1, accuracy: 12.4, timestamp: '2026-11-01T10:00:00Z', source: 'dispositivo' };
 const medical: MedicalInfo = { bloodType: 'O+', allergies: 'Penicilina', medications: '', conditions: '', notes: '', showOnAlert: true };
@@ -70,6 +70,15 @@ describe('whatsappNumber y buildWhatsappUrl', () => {
   });
   it('arma el enlace wa.me con el texto codificado', () => {
     expect(buildWhatsappUrl(contact('3203498531'), 'Hola & adiós')).toBe('https://wa.me/573203498531?text=Hola%20%26%20adi%C3%B3s');
+  });
+});
+
+describe('normalizePhone (SMS)', () => {
+  it('agrega +57 a celulares colombianos sin indicativo; respeta el resto', () => {
+    expect(normalizePhone('320 349 8531')).toBe('+573203498531');
+    expect(normalizePhone('+57 320 349 8531')).toBe('+573203498531');
+    expect(normalizePhone('(601) 555-12-34')).toBe('6015551234');
+    expect(normalizePhone('+1 415 555 0100')).toBe('+14155550100');
   });
 });
 

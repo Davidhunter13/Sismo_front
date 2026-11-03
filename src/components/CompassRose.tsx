@@ -21,9 +21,9 @@ interface Props {
 }
 
 /**
- * Rosa de los vientos con puntos cardinales (N, NE, E, SE, S, SO, O, NO).
- * La rosa gira con el teléfono (−orientación) para que la N señale el norte real, y la aguja se dibuja
- * sobre la rosa en el rumbo del destino: así apunta al destino en el mundo real.
+ * Rosa de los vientos con puntos cardinales (N, NE, E, SE, S, SO, O, NO) FIJOS: la N siempre arriba.
+ * Solo gira la flecha: con brújula, rumbo − orientación del teléfono (apunta al destino en el mundo real
+ * aunque se mueva el celular); sin brújula, el rumbo respecto al norte (N arriba).
  */
 export function CompassRose({ size, heading, target, compact = false, center, className = '' }: Props) {
   const cardinals = useT().features.compass.cardinals;
@@ -36,7 +36,7 @@ export function CompassRose({ size, heading, target, compact = false, center, cl
       style={{ width: size, height: size }}
       aria-hidden="true"
     >
-      <div className="compass-rose__card" style={{ transform: `rotate(${heading === null ? 0 : -heading}deg)` }}>
+      <div className="compass-rose__card">
         {labels.map(({ label, angle, main }) => (
           <span
             key={label}
@@ -51,7 +51,7 @@ export function CompassRose({ size, heading, target, compact = false, center, cl
         {center ? (
           <span className="compass-rose__center">{center}</span>
         ) : (
-          <span className="compass-rose__needle" style={{ transform: `rotate(${(target ?? 0) - ICON_TILT}deg)` }}>
+          <span className="compass-rose__needle" style={{ transform: `rotate(${(target ?? 0) - (heading ?? 0) - ICON_TILT}deg)` }}>
             <Navigation size={compact ? 22 : size * 0.36} />
           </span>
         )}

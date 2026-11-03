@@ -41,7 +41,7 @@ export function MiniCompass({ onVisibleChange }: { onVisibleChange?: (visible: b
     : t.miniSetUp;
 
   return (
-    <button ref={ref} className="card mini-compass" onClick={() => router.push('/ubicacion?ver=brujula', 'forward')} aria-label={`${title}. ${detail}`}>
+    <button ref={ref} className={`card mini-compass${point ? '' : ' meeting-missing'}`} onClick={() => router.push('/ubicacion?ver=brujula', 'forward')} aria-label={`${title}. ${detail}`}>
       {/* Rosa con N, E, S y O que gira con el teléfono; la aguja marca el punto de encuentro (o el norte). */}
       <CompassRose size={64} heading={heading} target={target} compact className="mini-compass__rose" />
       <span className="mini-compass__text">

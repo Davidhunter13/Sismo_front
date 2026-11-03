@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 86 pruebas e2e + 78 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 88 pruebas e2e + 86 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -134,6 +134,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | En el PC «Solicitar mi ubicación» terminaba en «tiempo agotado» | Tras el afinado de GPS, sin GPS la alta precisión nunca llega | Respaldo con ubicación aproximada por WiFi/red |
 | «Avisar que estoy bien» bloqueado sin explicación | Los contactos de demostración son ficticios y no reciben mensajes | Texto que explica el bloqueo y enlace «Agregar un contacto real» |
 | La flecha de las brújulas apuntaba 45° desviada (p. ej. al Este con rumbo NE) | El ícono de flecha viene inclinado 45° de fábrica | Se compensa la inclinación (`ICON_TILT`); verificado con capturas |
+| «Estoy bien» por SMS abría WhatsApp y decía que el número no existía | En algunos teléfonos el enlace SMS lo atiende WhatsApp, que exige el código de país | Los celulares colombianos sin indicativo se envían con +57 también en el SMS (`normalizePhone`) |
+| Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
 | El «¿Está bien?» no se vio porque la pantalla estaba apagada | El aviso no encendía la pantalla | Al detectar una caída la app enciende la pantalla y se muestra sobre la de bloqueo (Android, `wakeScreen` + `setShowWhenLocked`) |
 
@@ -146,8 +148,9 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 - **Indicador de red:** aviso «Sin internet» en Inicio y en la alerta (qué sigue funcionando: SMS, 123, brújula, esquema; qué no: mapa real y sismos recientes) y fila «Conexión a internet» en la disponibilidad de servicios.
 - **Recordatorios de simulacro:** en Inicio y en Simulacro, si nunca se ha hecho uno o pasaron 90 días; en septiembre y octubre recuerda el **Simulacro Nacional de Respuesta a Emergencias** (la fecha exacta se remite a la UNGRD). Dentro de la app. Archivo: `drillReminderService.ts`.
 - **Modo oscuro:** Configuración → Tema: Sistema (sigue al teléfono), Claro u Oscuro, y un **botón sol/luna en el encabezado** (junto a la tuerca) para cambiar rápido entre claro y oscuro.
+- **Ruta al punto de encuentro («Cómo llegar»)** en Ubicación y en «Después del sismo»: mapa con el trazado, modos **A pie / Carro o moto / Bici** con distancia y tiempo, y botones **«Abrir ruta en Google Maps»** (guía por voz) y, en el modo carro/moto, **«Abrir en Waze»** (enlace público gratuito, sin llave). Rutas gratuitas de OpenStreetMap (routing.openstreetmap.de, sin llave; para moto se usa el perfil de carro). Requiere internet (sin conexión lo indica y remite a la brújula). Archivos: `routeService.ts`, `components/MeetingRoute.tsx`, `components/RouteMap.tsx`.
 - **Brújula siempre visible** en Ubicación: sin punto de encuentro explica cómo activarla.
-- **Rosa de los vientos (N, NE, E, SE, S, SO, O, NO; en inglés W):** en la brújula completa y en la mini. La rosa gira con el teléfono para que la N señale el norte real y la flecha marca el rumbo al punto de encuentro sobre ella. Componente `CompassRose`.
+- **Rosa de los vientos (N, NE, E, SE, S, SO, O, NO; en inglés W):** en la brújula completa, en la mini y en la del encabezado. Las letras quedan **fijas** (N arriba) y **solo gira la flecha**: con brújula del teléfono marca el rumbo al punto de encuentro aunque se gire el celular (rumbo − orientación); sin punto de encuentro apunta al norte real. Componente `CompassRose`. Sin punto de encuentro, la tarjeta de la brújula y la mini brújula se marcan con **borde amarillo y un aviso**.
 - **Brújula en el encabezado de Inicio:** al hacer scroll y perder de vista la mini brújula, aparece junto al botón de tema una rosa pequeña (N, E, S, O) que gira igual; al tocarla abre la brújula completa.
 - **Mini brújula en Inicio:** gira en vivo con el magnetómetro; con punto de encuentro apunta hacia él y muestra la distancia, sin él apunta al norte e invita a configurarlo. Sin sensor (computador) la aguja se balancea suavemente. No deja el GPS encendido (usa la última ubicación guardada) para ahorrar batería. Al tocarla abre la brújula completa. Paleta oscura propia; el azul de marca (`--brand`) se separa del azul de textos (`--navy`). Incluye alto contraste para oscuro. Revisado con capturas en Configuración y en el diálogo de SOS; el resto de pantallas falta revisarlo en el teléfono.
 - **Idioma español / inglés:** selector en la bienvenida y en Configuración; el idioma inicial se toma del teléfono. Traduce toda la interfaz, la guía de emergencia, la lista post-sismo, los SMS, la encuesta SUS (versión estándar en inglés), la lista de la mochila, las etiquetas, las fechas (`es-CO` / `en-US`) y la voz de lectura. Infraestructura propia sin dependencias en `src/i18n/` (un archivo por pantalla con `es` y `en`; TypeScript avisa si falta una traducción). Los valores guardados (tipos de evento, relaciones de contacto) no se traducen: solo su etiqueta.
@@ -215,7 +218,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **78 de 78** superadas |
+| Pruebas unitarias (Vitest) | **88 de 88** superadas |
 | Pruebas e2e (Playwright, móvil y escritorio) | **86 de 86** superadas |
 | Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
@@ -230,6 +233,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | # | Mejora | Valor |
 |---|---|---|
 | 1 | **Prueba en dispositivo físico** de todo lo listado en la sección 5 | Requisito antes de validar con usuarios |
+| 1b | Rutas sin depender del servidor público (p. ej. servidor OSRM propio) si se espera mucho uso | El servicio gratuito es de uso moderado |
 | 2 | **Conectar el servidor de correo** (`VITE_ALERT_EMAIL_URL`; contrato en `src/services/emailService.ts`) | El correo de alerta empieza a enviarse de verdad |
 | 3 | Enviar por correo la ubicación actualizada durante la alerta (mismo servidor) | Seguimiento si la persona se desplaza |
 | 4 | Pruebas automáticas faltantes (sección 5) y calibración de los umbrales de caída con pruebas reales | Cobertura del 20 % humano del modelo 80/20 |

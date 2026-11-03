@@ -93,10 +93,17 @@ export function openWhatsapp(contact: Contact, body: string): void {
   else window.open(url, '_blank', 'noopener');
 }
 
-/** Deja solo dígitos y el "+" inicial, que es lo que entiende el esquema sms:. */
-function normalizePhone(phone: string): string {
+/**
+ * Deja solo dígitos y el "+" inicial, que es lo que entiende el esquema sms:. A los celulares colombianos
+ * guardados sin indicativo (10 dígitos que empiezan por 3) se les agrega +57: en algunos teléfonos el enlace
+ * sms: lo atiende WhatsApp, que sin el código de país dice que el número no existe.
+ */
+export function normalizePhone(phone: string): string {
   const trimmed = phone.trim();
-  return (trimmed.startsWith('+') ? '+' : '') + trimmed.replace(/\D/g, '');
+  const digits = trimmed.replace(/\D/g, '');
+  if (trimmed.startsWith('+')) return `+${digits}`;
+  if (digits.length === 10 && digits.startsWith('3')) return `+57${digits}`;
+  return digits;
 }
 
 export function buildSmsUrl(contacts: Contact[], body: string): string {

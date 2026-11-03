@@ -1,9 +1,10 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonCheckbox, useIonRouter } from '@ionic/react';
-import { ClipboardCheck, MapPinned, Navigation, RotateCcw } from 'lucide-react';
+import { ClipboardCheck, MapPinned, Navigation, RotateCcw, Route } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { MeetingCompass } from '../components/MeetingCompass';
+import { MeetingRoute } from '../components/MeetingRoute';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { formatDateTime } from '../utils/format';
@@ -15,7 +16,9 @@ import { formatDateTime } from '../utils/format';
  * - Sin parámetro, la de la alerta real más reciente; si nunca hubo una, la lista de práctica.
  */
 export default function PostQuakePage() {
-  const t = useT().features.postQuake;
+  const tf = useT().features;
+  const t = tf.postQuake;
+  const tr = tf.route;
   const router = useIonRouter();
   const { search } = useLocation();
   const { data, setPostQuakeDone } = useAppState();
@@ -52,6 +55,8 @@ export default function PostQuakePage() {
           <>
             <p className="small">{t.meetingHint(data.meetingPoint.label)}</p>
             <MeetingCompass meetingPoint={data.meetingPoint} fallback={alert?.location ?? data.lastLocation} />
+            <h3 className="card__title"><Route size={16} aria-hidden="true" /> {tr.title}</h3>
+            <MeetingRoute meetingPoint={data.meetingPoint} from={alert?.location ?? data.lastLocation} />
           </>
         ) : (
           <>

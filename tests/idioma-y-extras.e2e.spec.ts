@@ -249,6 +249,38 @@ test('tema: el botón del encabezado alterna claro y oscuro', async ({ page }) =
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 });
 
+test('ruta al punto de encuentro: distancia, tiempo por modo y enlace a Google Maps', async ({ page, context }) => {
+  // Servicio de rutas simulado: la prueba no depende de internet.
+  await page.route('https://routing.openstreetmap.de/**', (route) => {
+    const car = route.request().url().includes('/routed-car/');
+    return route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 'Ok',
+        routes: [{ distance: car ? 849 : 519, duration: car ? 180 : 420, geometry: { coordinates: [[-74.1, 4.65], [-74.09, 4.66]] } }],
+      }),
+    });
+  });
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 4.65, longitude: -74.1, accuracy: 10 });
+  await onboard(page, false);
+  await goTo(page, '/ubicacion', 'Ubicación');
+  const v = view(page);
+  // Sin punto de encuentro: aviso y borde amarillo.
+  await expect(v.locator('#brujula.meeting-missing')).toContainText('No tiene un punto de encuentro configurado');
+  await v.getByRole('button', { name: 'Solicitar mi ubicación' }).click();
+  await expect.poll(async () => (await readStorage(page)).lastLocation?.latitude, { timeout: 15_000 }).toBe(4.65);
+  await v.getByRole('button', { name: 'Mi ubicación actual' }).click();
+  await expect(v.locator('#brujula')).not.toHaveClass(/meeting-missing/);
+
+  const ruta = v.locator('#ruta');
+  await expect(ruta.locator('.route-summary')).toContainText('519 m · 7 min aprox.');
+  await ruta.locator('ion-segment-button[value="car"]').click();
+  await expect(ruta.locator('.route-summary')).toContainText('849 m · 3 min aprox.');
+  await expect(ruta.getByRole('link', { name: /Abrir ruta en Google Maps/ })).toHaveAttribute('href', /travelmode=driving/);
+  await expect(ruta.getByRole('link', { name: /Abrir en Waze/ })).toHaveAttribute('href', 'https://waze.com/ul?ll=4.65,-74.1&navigate=yes');
+});
+
 test('mini brújula en inicio: invita a configurar y abre la brújula completa', async ({ page }) => {
   await onboard(page, false);
   const mini = view(page).locator('.mini-compass');

@@ -164,9 +164,10 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 | Mochila de emergencia | Real; recordatorios **dentro de la app** (no hay notificaciones programadas) |
 | Lectura en voz alta de la guía | Android: voz del sistema; navegador: Web Speech API |
 | Importar contactos | Android (selector del sistema) y Chrome Android (Contact Picker API) |
-| Brújula al punto de encuentro | Real y sin internet (GPS + magnetómetro). Rosa con N, NE, E, SE, S, SO, O y NO que gira con el teléfono. Mini brújula en Inicio (y en el encabezado al hacer scroll) y acceso «Brújula». Sin magnetómetro, dirección respecto al norte |
+| Brújula al punto de encuentro | Real y sin internet (GPS + magnetómetro). Rosa con N, NE, E, SE, S, SO, O y NO fijos; solo gira la flecha. Borde amarillo si no hay punto de encuentro. Mini brújula en Inicio (y en el encabezado al hacer scroll) y acceso «Brújula». Sin magnetómetro, dirección respecto al norte |
 | Buscar dirección del punto de encuentro | Esri ArcGIS (direcciones colombianas exactas, p. ej. «Carrera 20 # 39-52») + Photon/OpenStreetMap de respaldo; requiere internet. Para producción revisar los términos de Esri sobre almacenar resultados |
-| WhatsApp por contacto | Abre WhatsApp con el aviso listo (un contacto por vez, requiere internet); el número se normaliza (+57) |
+| WhatsApp por contacto | Abre WhatsApp con el aviso listo (un contacto por vez, requiere internet); el número se normaliza (+57). El SMS también agrega +57 a celulares sin indicativo |
+| Ruta al punto de encuentro | Mapa con la ruta a pie, en carro/moto o en bici (OpenStreetMap, gratis, requiere internet) y botones para abrirla en Google Maps (guía por voz) o en Waze (carro/moto) |
 | Lista «Después del sismo» por alerta | Cada SOS empieza con la lista vacía; las anteriores se guardan con su alerta. Muestra el punto de encuentro con la brújula |
 | QR médico | Real; texto plano legible sin internet. En Android la alerta se muestra sobre la pantalla bloqueada |
 | Lista «Después del sismo» | Real; contenido orientativo, a validar con la UNGRD |

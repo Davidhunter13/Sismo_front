@@ -1,12 +1,13 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonInput, IonLabel, IonSegment, IonSegmentButton, useIonToast } from '@ionic/react';
-import { Crosshair, ExternalLink, Flag, FlaskConical, Info, Loader2, MapPin, MapPinned, MapPinOff, Navigation, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Crosshair, ExternalLink, Flag, FlaskConical, Info, Loader2, MapPin, MapPinned, MapPinOff, Navigation, Route, Search, Trash2 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { LocationMap } from '../components/LocationMap';
 import { LocationStatusCard } from '../components/LocationStatusCard';
 import { MeetingCompass } from '../components/MeetingCompass';
+import { MeetingRoute } from '../components/MeetingRoute';
 import { useT } from '../i18n/useT';
 import { useAppState } from '../context/appContext';
 import { testLocation } from '../services/demoData';
@@ -243,10 +244,23 @@ export default function LocationPage() {
       </section>
 
       {/* Siempre visible: sin punto de encuentro, la tarjeta indica cómo activarla. */}
-      <section className="card" id="brujula">
+      {/* Sin punto de encuentro la tarjeta se marca en amarillo con un aviso. */}
+      <section className={`card${meetingPoint ? '' : ' meeting-missing'}`} id="brujula">
         <h2 className="card__title"><Navigation size={18} aria-hidden="true" /> {tf.compass.title}</h2>
+        {!meetingPoint && (
+          <p className="callout callout--warning callout--row small" role="alert">
+            <AlertTriangle size={18} aria-hidden="true" /> <span>{tf.compass.missingAlert}</span>
+          </p>
+        )}
         <MeetingCompass meetingPoint={meetingPoint} fallback={lastLocation} />
       </section>
+
+      {meetingPoint && (
+        <section className="card" id="ruta">
+          <h2 className="card__title"><Route size={18} aria-hidden="true" /> {tf.route.title}</h2>
+          <MeetingRoute meetingPoint={meetingPoint} from={lastLocation} />
+        </section>
+      )}
 
       <section className="card">
         <h2 className="card__title"><Info size={18} aria-hidden="true" /> {t.limitsTitle}</h2>
