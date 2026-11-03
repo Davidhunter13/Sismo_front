@@ -41,8 +41,10 @@ import java.util.Locale;
 )
 public class SismoNativePlugin extends Plugin {
 
-    /** Enlace que abren el widget y el acceso rápido. */
+    /** Enlace del acceso rápido: abre SISMO con el diálogo de SOS. */
     static final Uri SOS_URI = Uri.parse("sismo://sos");
+    /** Enlace del segundo toque del widget: la alerta se activa sin diálogo (ya se confirmó con el doble toque). */
+    static final Uri SOS_NOW_URI = Uri.parse("sismo://sos-ahora");
 
     // ---------- Señales ----------
 
@@ -354,27 +356,32 @@ public class SismoNativePlugin extends Plugin {
 
     // ---------- Accesos de SOS (widget y acceso rápido) ----------
 
-    /** Devuelve y consume la acción con la que se abrió la app ("sos" o null). */
+    /** Devuelve y consume la acción con la que se abrió la app ("sos", "sos_now" o null). */
     @PluginMethod
     public void consumeLaunchAction(PluginCall call) {
         JSObject ret = new JSObject();
         Intent intent = getActivity().getIntent();
-        if (intent != null && SOS_URI.equals(intent.getData())) {
-            ret.put("action", "sos");
-            intent.setData(null);
-        } else {
-            ret.put("action", (String) null);
-        }
+        String action = intent != null ? launchAction(intent.getData()) : null;
+        if (action != null) intent.setData(null);
+        ret.put("action", action);
         call.resolve(ret);
     }
 
     @Override
     protected void handleOnNewIntent(Intent intent) {
         super.handleOnNewIntent(intent);
-        if (intent != null && SOS_URI.equals(intent.getData())) {
-            intent.setData(null);
-            notifyListeners("sosRequested", new JSObject(), true);
-        }
+        String action = intent != null ? launchAction(intent.getData()) : null;
+        if (action == null) return;
+        intent.setData(null);
+        JSObject data = new JSObject();
+        data.put("immediate", "sos_now".equals(action));
+        notifyListeners("sosRequested", data, true);
+    }
+
+    private static String launchAction(Uri uri) {
+        if (SOS_NOW_URI.equals(uri)) return "sos_now";
+        if (SOS_URI.equals(uri)) return "sos";
+        return null;
     }
 
     // ---------- Compartir CSV ----------

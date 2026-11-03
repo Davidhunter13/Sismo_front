@@ -1,5 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonInput, IonModal, IonSelect, IonSelectOption } from '@ionic/react';
+import { IonInput, IonModal } from '@ionic/react';
 import { Save, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useT } from '../i18n/useT';
@@ -61,19 +61,27 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
           errorText={errors.name}
           onIonInput={(e) => setForm((f) => ({ ...f, name: String(e.detail.value ?? '') }))}
         />
-        <IonSelect
-          className={fieldClass('relationship')}
-          label={t.relationship}
-          labelPlacement="stacked"
-          fill="outline"
-          interface="popover"
-          placeholder={t.relationshipPlaceholder}
-          value={form.relationship || undefined}
-          errorText={errors.relationship}
-          onIonChange={(e) => setForm((f) => ({ ...f, relationship: String(e.detail.value ?? '') }))}
-        >
-          {RELATIONSHIPS.map((r) => <IonSelectOption key={r} value={r}>{tc.relationships[r] ?? r}</IonSelectOption>)}
-        </IonSelect>
+        {/* Opciones visibles en el formulario y no en una lista flotante: dentro de este modal, en algunos
+            navegadores de PC (simuladores de celular, navegador integrado del editor) la lista no aparecía.
+            Son pocas opciones y así se eligen con un solo toque. */}
+        <fieldset className={`chip-field${touched && errors.relationship ? ' chip-field--invalid' : ''}`}>
+          <legend>{t.relationship}</legend>
+          <div className="chip-field__options" role="radiogroup" aria-label={t.relationship}>
+            {RELATIONSHIPS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                role="radio"
+                aria-checked={form.relationship === r}
+                className={`chip${form.relationship === r ? ' chip--active' : ''}`}
+                onClick={() => setForm((f) => ({ ...f, relationship: r }))}
+              >
+                {tc.relationships[r] ?? r}
+              </button>
+            ))}
+          </div>
+          {touched && errors.relationship && <small className="chip-field__error">{errors.relationship}</small>}
+        </fieldset>
         <IonInput
           className={fieldClass('phone')}
           label={t.phone}

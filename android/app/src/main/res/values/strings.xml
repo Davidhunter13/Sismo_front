@@ -4,6 +4,16 @@
     <string name="title_activity_main">SISMO</string>
     <string name="package_name">co.edu.poli.sismo</string>
     <string name="custom_url_scheme">co.edu.poli.sismo</string>
-    <string name="widget_sos_description">Botón SOS: abre SISMO para activar una alerta</string>
+    <string name="widget_sos_description">Botón SOS: toque dos veces para activar una alerta</string>
+    <string name="widget_sos_armed_description">Toque otra vez para activar la alerta</string>
     <string name="tile_sos_label">SOS SISMO</string>
+    <string name="widget_large_label">SOS SISMO (grande)</string>
+    <!-- Widget: estado normal y «armado» (después del primer toque). -->
+    <string name="widget_sos_label">SOS</string>
+    <string name="widget_sos_label_armed">¿SOS?</string>
+    <string name="widget_sos_confirm_small">Toque\notra vez</string>
+    <string name="widget_sos_big">SOS</string>
+    <string name="widget_sos_confirm_big">¿ACTIVAR?</string>
+    <string name="widget_sos_status_idle">Toque 2 veces para pedir ayuda</string>
+    <string name="widget_sos_status_armed">Toque otra vez para activar la alerta</string>
 </resources>

@@ -200,8 +200,7 @@ async function addRealContact(page: import('@playwright/test').Page) {
   await modal.locator('ion-input[label="Nombre"] input').fill('Luisa');
   await modal.locator('ion-input[label="Teléfono"] input').fill('320 349 8531');
   await modal.locator('ion-input[label="Correo electrónico"] input').fill('luisa@example.com');
-  await modal.locator('ion-select').click();
-  await page.locator('ion-popover').getByText('Familiar', { exact: true }).click();
+  await modal.getByRole('radio', { name: 'Familiar' }).click();
   await page.waitForTimeout(300);
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await expect(view(page).locator('.contact-card')).toHaveCount(1);

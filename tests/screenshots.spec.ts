@@ -69,8 +69,7 @@ test('capturas visuales', async ({ browser }) => {
   await expect(modal).toBeVisible();
   await modal.locator('ion-input[label="Nombre"] input').fill('Pedro (demo)');
   await modal.locator('ion-input[label="Teléfono"] input').fill('300 000 0004');
-  await modal.locator('ion-select').click();
-  await page.locator('ion-popover').getByText('Amigo/a', { exact: true }).click();
+  await modal.getByRole('radio', { name: 'Amigo/a' }).click();
   await page.waitForTimeout(700);
   await shot(page, '07-agregar-contacto.png', true);
 

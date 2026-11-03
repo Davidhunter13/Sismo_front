@@ -39,7 +39,8 @@ export interface Contact {
 }
 
 /** Origen de la activación del SOS. */
-export type AlertSource = 'app' | 'acceso_rapido' | 'deteccion_automatica';
+/** 'widget': doble toque del widget de Android (se activa sin el diálogo de tipo de evento). */
+export type AlertSource = 'app' | 'acceso_rapido' | 'widget' | 'deteccion_automatica';
 
 export type ThemePref = 'sistema' | 'claro' | 'oscuro';
 export type { Lang };

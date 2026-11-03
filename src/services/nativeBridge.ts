@@ -28,9 +28,10 @@ export interface SismoNativePlugin {
   setShowWhenLocked(options: { on: boolean }): Promise<void>;
   wakeScreen(): Promise<void>;
   requestNotifications(): Promise<{ granted: boolean }>;
-  consumeLaunchAction(): Promise<{ action: 'sos' | null }>;
+  /** 'sos': acceso rápido (abre el diálogo). 'sos_now': doble toque del widget (activa sin diálogo). */
+  consumeLaunchAction(): Promise<{ action: 'sos' | 'sos_now' | null }>;
   shareCsv(options: { filename: string; content: string }): Promise<void>;
-  addListener(event: 'sosRequested', listener: () => void): Promise<PluginListenerHandle>;
+  addListener(event: 'sosRequested', listener: (data: { immediate?: boolean }) => void): Promise<PluginListenerHandle>;
 }
 
 export const SismoNative = registerPlugin<SismoNativePlugin>('SismoNative');

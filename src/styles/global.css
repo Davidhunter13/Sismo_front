@@ -591,3 +591,10 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 .meeting-list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
 .meeting-list li > span { flex: 1; min-width: 0; }
 .meeting-list li small { display: block; color: var(--muted); }
+
+/* Campo de opciones con botones (relación del contacto) */
+.chip-field { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px 10px; margin: 0; }
+.chip-field legend { padding: 0 4px; font-size: 0.78rem; color: var(--text); }
+.chip-field__options { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-field--invalid { border-color: var(--danger); }
+.chip-field__error { display: block; margin-top: 6px; color: var(--danger); font-size: 0.75rem; }

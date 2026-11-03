@@ -74,12 +74,12 @@ La linterna usa `CameraManager.setTorchMode`, que **no requiere permiso de cáma
 | `AlertService.java` | Servicio en primer plano: sirena o silbato (AudioTrack, uso «alarma»), linterna en código SOS, vibración SOS y **modo atrapado** (ráfagas cada 3 min con WakeLock). Sigue con la pantalla bloqueada. Notificación con «Silenciar sonido» |
 | `SismoNativePlugin.java` | Puente con la app web: señales, modo atrapado, brillo, pantalla encendida, batería, voz (TextToSpeech), selector de contactos, permiso de notificaciones, accesos SOS y exportar CSV |
 | `SosTileService.java` | Acceso rápido «SOS SISMO» en el panel de ajustes rápidos |
-| `SosWidgetProvider.java` | Widget SOS para la pantalla de inicio: logo circular de SISMO con etiqueta roja «SOS» encima (`res/layout/widget_sos.xml`) |
+| `SosWidgetProvider.java` / `SosWidgetLargeProvider.java` | Widgets SOS 1×1 (logo circular con etiqueta «SOS») y 2×2 (botón SOS redondo grande). Se activan con **doble toque** en el propio widget |
 
-El widget y el acceso rápido **abren SISMO con el diálogo de SOS listo**; la alerta se confirma en la app para evitar activaciones accidentales.
+El **widget activa la alerta con doble toque**, sin abrir diálogos: el primer toque lo cambia a «Toque otra vez» (borde amarillo) durante 4 s y el segundo enciende de inmediato la sirena, la linterna y la vibración y abre SISMO directo en la alerta (tipo «Sismo»). Si no hay segundo toque, vuelve solo a la normalidad. El **acceso rápido** sigue abriendo el diálogo de SOS. El SMS no se puede enviar solo: Android exige que la persona lo confirme en la app de mensajes.
 
 - **Agregar el acceso rápido:** desliza dos veces desde arriba → lápiz (editar) → arrastra «SOS SISMO» a los activos.
-- **Agregar el widget:** mantén pulsada la pantalla de inicio → Widgets → SISMO → arrastra «SOS».
+- **Agregar el widget:** mantén pulsada la pantalla de inicio → Widgets → SISMO → arrastra «SOS SISMO» (1×1) o «SOS SISMO (grande)» (2×2).
 
 ### Ícono de la app
 

@@ -112,8 +112,7 @@ test('contactos: validación, alta, edición, borrado y persistencia', async ({ 
   await modal.locator('ion-input[label="Correo electrónico"] input').fill('pedro@');
   await expect(modal.getByText('Ingrese un correo válido (ej.: nombre@correo.com).')).toBeVisible();
   await modal.locator('ion-input[label="Correo electrónico"] input').fill('pedro.demo@example.com');
-  await modal.locator('ion-select').click();
-  await page.locator('ion-popover').getByText('Amigo/a', { exact: true }).click();
+  await modal.getByRole('radio', { name: 'Amigo/a' }).click();
   await page.waitForTimeout(300);
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await expect(page.locator('ion-toast')).toContainText('Contacto agregado');

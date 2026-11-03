@@ -46,3 +46,21 @@ export async function refreshNativeSignals(): Promise<void> {
     // Plugin no disponible: se conserva el último estado conocido.
   }
 }
+
+/**
+ * Alerta activada con el doble toque del widget: Android ya encendió sirena, linterna y vibración antes de
+ * que cargara la app (MainActivity). Aquí se ajustan a la Configuración del usuario: se apagan las que tenga
+ * desactivadas. El sonido queda en sirena aunque se haya elegido el silbato: cambiarlo exigiría apagarla y
+ * volver a encenderla, y el servicio procesa las órdenes en otro hilo (podría quedar en silencio).
+ */
+export async function adoptNativeAlertSignals(settings: Settings): Promise<void> {
+  if (!isNative()) {
+    startAlertSignals(settings);
+    return;
+  }
+  await refreshNativeSignals();
+  if (!settings.soundEnabled) stopSiren();
+  else mark('sirenAt');
+  if (!settings.visualSignalEnabled || settings.reduceMotion) stopTorch();
+  if (!settings.vibrationEnabled) stopVibration();
+}

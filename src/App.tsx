@@ -35,7 +35,6 @@ setupIonicReact({ mode: 'md' });
 function Routes() {
   const router = useIonRouter();
   const { data, setLocationPermission } = useAppState();
-  const onboarded = data.settings.onboarded;
   useLocationAutoRefresh();
 
   // En Android se piden los permisos al abrir la app (ubicación y luego notificaciones, para mostrar la
@@ -50,19 +49,22 @@ function Routes() {
     })();
   }, [setLocationPermission]);
 
-  // Widget y acceso rápido de Android: abren el diálogo de SOS en la pantalla de inicio.
+  // Acceso rápido: abre el diálogo de SOS en Inicio. Widget (doble toque): activa la alerta sin diálogo.
+  // También sin registro terminado: en una emergencia el SOS no se bloquea.
   useEffect(() => {
-    if (!Capacitor.isNativePlatform() || !onboarded) return;
-    const openSos = () => {
+    if (!Capacitor.isNativePlatform()) return;
+    const openSos = (immediate: boolean) => {
       goToRoot(router, '/inicio');
-      requestSosDialog();
+      requestSosDialog(immediate);
     };
-    void SismoNative.consumeLaunchAction().then(({ action }) => action === 'sos' && openSos()).catch(() => undefined);
-    const handle = SismoNative.addListener('sosRequested', openSos);
+    void SismoNative.consumeLaunchAction()
+      .then(({ action }) => action && openSos(action === 'sos_now'))
+      .catch(() => undefined);
+    const handle = SismoNative.addListener('sosRequested', (d) => openSos(d.immediate === true));
     return () => {
       void handle.then((h) => h.remove());
     };
-  }, [router, onboarded]);
+  }, [router]);
 
   return (
     <>

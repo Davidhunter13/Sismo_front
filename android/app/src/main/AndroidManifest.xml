@@ -56,6 +56,17 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sos_info" />
         </receiver>
+
+        <!-- Widget SOS grande (2×2): botón redondo con doble toque. -->
+        <receiver
+            android:name=".SosWidgetLargeProvider"
+            android:exported="false"
+            android:label="@string/widget_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sos_large_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Textos en inglés del widget (según el idioma del teléfono). -->
+<resources>
+    <string name="widget_sos_description">SOS button: tap twice to trigger an alert</string>
+    <string name="widget_sos_armed_description">Tap again to trigger the alert</string>
+    <string name="widget_large_label">SOS SISMO (large)</string>
+    <string name="widget_sos_label_armed">SOS?</string>
+    <string name="widget_sos_confirm_small">Tap\nagain</string>
+    <string name="widget_sos_confirm_big">TRIGGER?</string>
+    <string name="widget_sos_status_idle">Tap twice to ask for help</string>
+    <string name="widget_sos_status_armed">Tap again to trigger the alert</string>
+</resources>

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente. -->
-<!-- Widget SOS: etiqueta roja «SOS» arriba y el logo circular de SISMO debajo. Todo el widget es el botón.
-     El logo tiene tamaño fijo para que siempre sea un círculo aunque la celda del escritorio sea rectangular. -->
+<!-- Widget SOS 1×1: etiqueta roja «SOS» arriba y el logo circular de SISMO debajo. Todo el widget es el botón.
+     Primer toque: el logo cambia a «Toque otra vez» (SosWidgetProvider); segundo toque: alerta activada.
+     El círculo tiene tamaño fijo para que siempre sea redondo aunque la celda del escritorio sea rectangular. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_sos_button"
     android:layout_width="match_parent"
@@ -12,6 +13,7 @@
     android:padding="2dp">
 
     <TextView
+        android:id="@+id/widget_sos_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/widget_sos_badge"
@@ -20,18 +22,37 @@
         android:paddingTop="1dp"
         android:paddingEnd="12dp"
         android:paddingBottom="1dp"
-        android:text="SOS"
+        android:text="@string/widget_sos_label"
         android:textColor="#FFFFFF"
         android:textSize="13sp"
         android:textStyle="bold" />
 
-    <ImageView
+    <FrameLayout
         android:layout_width="52dp"
         android:layout_height="52dp"
-        android:layout_marginTop="3dp"
-        android:background="@drawable/widget_sos_ring"
-        android:importantForAccessibility="no"
-        android:padding="3dp"
-        android:scaleType="fitCenter"
-        android:src="@mipmap/ic_launcher_round" />
+        android:layout_marginTop="3dp">
+
+        <ImageView
+            android:id="@+id/widget_sos_logo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_sos_ring"
+            android:importantForAccessibility="no"
+            android:padding="3dp"
+            android:scaleType="fitCenter"
+            android:src="@mipmap/ic_launcher_round" />
+
+        <TextView
+            android:id="@+id/widget_sos_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/widget_sos_circle_armed"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:text="@string/widget_sos_confirm_small"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

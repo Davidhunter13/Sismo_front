@@ -22,7 +22,7 @@ import { drillReminder } from '../services/drillReminderService';
 import { kitStatus } from '../services/kitService';
 import { beginTrace, mark } from '../services/metricsService';
 import { useOnline } from '../services/networkService';
-import { startAlertSignals } from '../services/signalsService';
+import { adoptNativeAlertSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenSupported } from '../services/sirenService';
 import { onSosDialogRequest } from '../services/sosRequestService';
 import type { AlertSource, EventType } from '../types';
@@ -54,8 +54,23 @@ export default function HomePage() {
     [activeAlert, router],
   );
 
-  // Widget o acceso rápido de Android.
-  useEffect(() => onSosDialogRequest(() => openSos('acceso_rapido')), [openSos]);
+  // Doble toque del widget: ya es la confirmación, así que la alerta se activa sin diálogo (tipo «Sismo»).
+  // Las señales ya las encendió Android; aquí solo se ajustan a la Configuración.
+  const activateFromWidget = useCallback(() => {
+    if (!activeAlert) {
+      beginTrace();
+      mark('confirmedAt');
+      activateAlert('sismo', 'widget');
+      void adoptNativeAlertSignals(settings);
+    }
+    router.push('/alerta', 'forward');
+  }, [activeAlert, activateAlert, router, settings]);
+
+  // Widget (doble toque) o acceso rápido de Android (abre el diálogo).
+  useEffect(
+    () => onSosDialogRequest((immediate) => (immediate ? activateFromWidget() : openSos('acceso_rapido'))),
+    [openSos, activateFromWidget],
+  );
 
   const onConfirm = (value?: unknown) => {
     activateAlert((value as EventType) ?? 'sismo', source.current);

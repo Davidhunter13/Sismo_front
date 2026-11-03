@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 100 pruebas e2e + 95 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 100 pruebas e2e + 97 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -50,7 +50,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 ### 2.2 Activación sin abrir la app (Android)
 
 - **Acceso rápido «SOS SISMO»** en el panel de ajustes rápidos (`SosTileService.java`).
-- **Widget SOS** para la pantalla de inicio (`SosWidgetProvider.java`): el **logo circular de SISMO** (el mismo ícono de la app) con anillo rojo y una etiqueta roja **«SOS»** encima. El logo tiene tamaño fijo para que siempre se vea redondo (antes era un óvalo rojo que se estiraba con la celda). En Android 12+ el selector de widgets muestra esa misma vista previa.
+- **Widgets SOS** para la pantalla de inicio: **1×1** (logo circular de SISMO con etiqueta roja «SOS» encima) y **2×2** (logo y nombre arriba, botón SOS redondo grande y una línea de estado). Ambos se activan con **doble toque en el propio widget**: el primer toque lo «arma» durante 4 s («¿SOS? Toque otra vez» / «¿ACTIVAR?» con borde amarillo) y el segundo activa la alerta sin diálogo. Android enciende **de inmediato** sirena, linterna y vibración (`MainActivity`, antes de que cargue la app web) y SISMO abre directo la pantalla de alerta (tipo «Sismo», origen `widget`), con la ubicación automática. Luego la app apaga las señales que el usuario tenga desactivadas en Configuración; el sonido queda en sirena aunque se haya elegido el silbato (cambiarlo podía dejarla en silencio). Funciona aunque el registro no esté terminado. El segundo toque abre la actividad directamente porque Android no permite abrir pantallas desde un receptor en segundo plano. Textos del widget en español o inglés según el idioma del teléfono. Archivos: `SosWidgetProvider.java`, `SosWidgetLargeProvider.java`, `res/layout/widget_sos*.xml`.
 - Ambos abren SISMO con el diálogo de SOS listo. La confirmación se mantiene para evitar activaciones accidentales (por ejemplo, en el bolsillo).
 - Cada alerta registra su origen (`app` o `acceso_rapido`) para comparar tiempos.
 
@@ -141,6 +141,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | «Estoy bien» por SMS abría WhatsApp y decía que el número no estaba registrado | En algunos teléfonos el enlace SMS lo atiende WhatsApp, que no entiende ese formato (número junto al texto, varios destinatarios) | «Estoy bien» (Inicio y al finalizar la alerta) ahora pregunta el canal: «Por SMS» o «WhatsApp: <contacto>» con el enlace oficial wa.me (`useNotifySafe`). Además el SMS agrega +57 a celulares sin indicativo |
 | En el PC, Waze abría sin punto de salida | El enlace de la app solo lleva el destino y la web de Waze no conoce la ubicación | En el navegador se usa el mapa web de Waze con salida y destino |
 | En modo oscuro el paso actual del registro se leía mal (azul sobre azul) | El azul de marca (`--brand`) no cambia en oscuro | El paso actual y el selector de puntos usan `--navy`, que se aclara en oscuro |
+| En el PC, al tocar «Relación» al crear un contacto no aparecían las opciones (en el celular sí) | La lista flotante de Ionic dentro del modal no se mostraba en algunos navegadores de PC (simulador de celular o navegador integrado del editor) | Las 6 opciones se muestran como botones dentro del formulario (`ContactFormModal`): no dependen de ventanas flotantes y se eligen con un toque |
 | Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
 | El «¿Está bien?» no se vio porque la pantalla estaba apagada | El aviso no encendía la pantalla | Al detectar una caída la app enciende la pantalla y se muestra sobre la de bloqueo (Android, `wakeScreen` + `setShowWhenLocked`) |
@@ -175,7 +176,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | Señales en un servicio nativo en primer plano | Android pausa la app en segundo plano; el servicio mantiene sirena, linterna y vibración con la pantalla bloqueada |
 | Linterna con `setTorchMode` en lugar de la cámara | No requiere permiso de cámara y no compite con la vista web |
-| Widget y acceso rápido piden confirmación | Evitar activaciones accidentales |
+| El widget se activa con doble toque; el acceso rápido pide confirmación en el diálogo | El doble toque en el widget evita activaciones accidentales (p. ej. en el bolsillo) sin perder tiempo en diálogos |
 | El SMS no se abre automáticamente | Abrir otra app envía SISMO a segundo plano; se deja al usuario decidir el momento |
 | Estado «SMS abierto», nunca «Enviada» | SISMO no puede comprobar el envío ni la entrega |
 | Ubicación actualizada solo en el dispositivo | El envío automático será por el servidor de correo (pendiente de conectar) |
@@ -224,7 +225,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **95 de 95** superadas |
+| Pruebas unitarias (Vitest) | **97 de 97** superadas |
 | Pruebas e2e (Playwright, móvil y escritorio) | **100 de 100** superadas |
 | Cubierto por pruebas e2e | Registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
