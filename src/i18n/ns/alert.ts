@@ -20,6 +20,10 @@ const es = {
     message: (n: number) => `Se abrirá la app de mensajes con un aviso para sus ${n} contacto(s).`,
     no: 'No, gracias',
     send: 'Enviar «Estoy bien»',
+    sheetHeader: '¿Por dónde avisa que está bien?',
+    viaSms: (n: number) => `Por SMS (${n} contacto(s))`,
+    viaWhatsapp: (name: string) => `WhatsApp: ${name}`,
+    cancel: 'Ahora no',
   },
   empty: {
     title: 'Alerta',
@@ -168,6 +172,10 @@ const en: typeof es = {
     message: (n: number) => `Your messaging app will open with a message for your ${n} contact(s).`,
     no: 'No, thanks',
     send: 'Send «I am OK»',
+    sheetHeader: 'How do you want to say you are OK?',
+    viaSms: (n: number) => `By SMS (${n} contact(s))`,
+    viaWhatsapp: (name: string) => `WhatsApp: ${name}`,
+    cancel: 'Not now',
   },
   empty: {
     title: 'Alert',

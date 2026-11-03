@@ -222,6 +222,19 @@ test('correo: al activar pregunta y «No enviar» lo cancela', async ({ page }) 
   await expect(view(page).getByRole('button', { name: 'WhatsApp: Luisa' })).toBeVisible();
 });
 
+test('«Avisar que estoy bien»: elige SMS o WhatsApp por contacto', async ({ page }) => {
+  await onboard(page, false);
+  await addRealContact(page);
+  await goTo(page, '/inicio', 'Panel principal');
+  await view(page).getByRole('button', { name: 'Avisar que estoy bien' }).click();
+  const sheet = page.locator('ion-action-sheet');
+  await expect(sheet.getByText('¿Por dónde avisa que está bien?')).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'Por SMS (1 contacto(s))' })).toBeVisible();
+  await expect(sheet.getByRole('button', { name: 'WhatsApp: Luisa' })).toBeVisible();
+  await sheet.getByRole('button', { name: 'Ahora no' }).click();
+  await expect(sheet).toBeHidden();
+});
+
 test('correo: sin respuesta en 20 s se envía; sin servidor configurado lo indica', async ({ page }) => {
   test.setTimeout(90_000);
   await onboard(page, false);

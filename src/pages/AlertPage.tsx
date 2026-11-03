@@ -1,5 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonToggle, useIonAlert, useIonRouter, useIonToast } from '@ionic/react';
+import { IonToggle, useIonRouter, useIonToast } from '@ionic/react';
 import {
   BatteryLow, BellOff, CheckCircle2, ClipboardList, Navigation, Eye, Flashlight, FlashlightOff, HeartPulse, MessageCircle, MessageSquare, Phone, Radio, Send, ShieldCheck, Siren, Smartphone,
   Timer, Volume2, VolumeX,
@@ -23,7 +23,8 @@ import { keepScreenOn } from '../services/screenService';
 import { isTrapped, startTrapped, stopTrapped, TRAPPED_INTERVAL_MS } from '../services/trappedService';
 import { refreshNativeSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
-import { buildAlertMessage, buildSafeMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
+import { buildAlertMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
+import { useNotifySafe } from '../components/useNotifySafe';
 import type { Contact } from '../types';
 import { isTorchApiAvailable, isTorchOn, startTorchBlink, stopTorch } from '../services/torchService';
 import { isVibrating, isVibrationSupported, startVibration, stopVibration } from '../services/vibrationService';
@@ -33,7 +34,7 @@ import { goToRoot } from '../utils/navigation';
 export default function AlertPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
-  const [presentAlert] = useIonAlert();
+  const notifySafe = useNotifySafe();
   const tf = useT().features;
   const ta = useT().alert;
   const { data, activeAlert, endAlert, markSmsOpened } = useAppState();
@@ -138,21 +139,8 @@ export default function AlertPage() {
       goAfterAlert(id);
       return;
     }
-    // Cierre del ciclo de comunicación: ofrecer el SMS «Estoy bien».
-    let sendSafe = false;
-    void presentAlert({
-      header: ta.safe.header,
-      message: ta.safe.message(smsContacts.length),
-      cssClass: 'sismo-alert',
-      buttons: [
-        { text: ta.safe.no, role: 'cancel', cssClass: 'sismo-alert__cancel' },
-        { text: ta.safe.send, cssClass: 'sismo-alert__confirm', handler: () => { sendSafe = true; } },
-      ],
-      onDidDismiss: () => {
-        goAfterAlert(id);
-        if (sendSafe) openSmsComposer(smsContacts, buildSafeMessage(data.settings.userName, eventType));
-      },
-    });
+    // Cierre del ciclo de comunicación: elegir por dónde avisar «Estoy bien» (SMS o WhatsApp por contacto).
+    notifySafe(eventType, () => goAfterAlert(id));
   };
 
   if (!activeAlert) {

@@ -27,7 +27,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 88 pruebas e2e + 87 pruebas unitarias + integración continua con APK automático |
+| Calidad | 18 pruebas e2e | 90 pruebas e2e + 87 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -58,7 +58,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Llamar al 123:** abre el marcador con el número listo.
 - **SMS de alerta:** abre la app de mensajes con los contactos reales y el aviso: tipo de evento, ubicación (con precisión), punto de encuentro y resumen de la ficha médica (si «Compartir» está activo). Estado honesto «SMS abierto», porque SISMO no puede verificar el envío.
-- **SMS «Estoy bien»:** al finalizar la alerta se ofrece avisar a los contactos que la persona está a salvo, y luego se abre la lista «Después del sismo».
+- **«Estoy bien»:** al finalizar la alerta (y desde Inicio) se pregunta por dónde avisar: **por SMS** a todos los contactos o **por WhatsApp** a cada contacto (enlace oficial wa.me). Luego se abre la lista «Después del sismo».
 - **Correo de alerta (servidor pendiente de conectar):** al activar el SOS aparece «¿Enviar correo a sus contactos?» con cuenta regresiva de **20 s**: «Sí, enviar ahora» o el silencio lo envían; «No enviar» lo cancela (luego se puede reintentar). No se pregunta en simulacros ni si ningún contacto real tiene correo. La app **no envía correos por sí misma ni guarda credenciales**: arma la solicitud (asunto, destinatarios, cuerpo con ubicación, punto de encuentro, ficha médica y batería) y la envía por POST a `VITE_ALERT_EMAIL_URL` (`.env`; ejemplo en `.env.example`), con tiempo límite y dos reintentos con espera exponencial. Mientras no esté configurado, el estado dice «No se envió: falta conectar el servidor de correo». El contrato JSON para el servidor está documentado en `src/services/emailService.ts`.
 - **Correo obligatorio en los contactos:** nuevo campo «Correo electrónico» validado en el formulario. Los contactos guardados antes muestran «Falta el correo» hasta editarlos.
 - **WhatsApp por contacto:** en la alerta, un botón por contacto abre WhatsApp con el mismo aviso (WhatsApp no admite varios destinatarios en un enlace y requiere internet). El número se normaliza al formato de WhatsApp.
@@ -134,7 +134,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | En el PC «Solicitar mi ubicación» terminaba en «tiempo agotado» | Tras el afinado de GPS, sin GPS la alta precisión nunca llega | Respaldo con ubicación aproximada por WiFi/red |
 | «Avisar que estoy bien» bloqueado sin explicación | Los contactos de demostración son ficticios y no reciben mensajes | Texto que explica el bloqueo y enlace «Agregar un contacto real» |
 | La flecha de las brújulas apuntaba 45° desviada (p. ej. al Este con rumbo NE) | El ícono de flecha viene inclinado 45° de fábrica | Se compensa la inclinación (`ICON_TILT`); verificado con capturas |
-| «Estoy bien» por SMS abría WhatsApp y decía que el número no existía | En algunos teléfonos el enlace SMS lo atiende WhatsApp, que exige el código de país | Los celulares colombianos sin indicativo se envían con +57 también en el SMS (`normalizePhone`) |
+| «Estoy bien» por SMS abría WhatsApp y decía que el número no estaba registrado | En algunos teléfonos el enlace SMS lo atiende WhatsApp, que no entiende ese formato (número junto al texto, varios destinatarios) | «Estoy bien» (Inicio y al finalizar la alerta) ahora pregunta el canal: «Por SMS» o «WhatsApp: <contacto>» con el enlace oficial wa.me (`useNotifySafe`). Además el SMS agrega +57 a celulares sin indicativo |
 | En el PC, Waze abría sin punto de salida | El enlace de la app solo lleva el destino y la web de Waze no conoce la ubicación | En el navegador se usa el mapa web de Waze con salida y destino |
 | Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
@@ -220,7 +220,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
 | Pruebas unitarias (Vitest) | **87 de 87** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **88 de 88** superadas |
+| Pruebas e2e (Playwright, móvil y escritorio) | **90 de 90** superadas |
 | Cubierto por pruebas e2e | Páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |

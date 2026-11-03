@@ -12,6 +12,7 @@ import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { HeaderCompass, MiniCompass } from '../components/MiniCompass';
 import { NetworkBanner } from '../components/NetworkBanner';
 import { PanicButton } from '../components/PanicButton';
+import { useNotifySafe } from '../components/useNotifySafe';
 import { ServiceIndicator } from '../components/ServiceIndicator';
 import type { BadgeTone } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
@@ -23,7 +24,6 @@ import { beginTrace, mark } from '../services/metricsService';
 import { useOnline } from '../services/networkService';
 import { startAlertSignals } from '../services/signalsService';
 import { isSirenSupported } from '../services/sirenService';
-import { buildSafeMessage, openSmsComposer } from '../services/smsService';
 import { onSosDialogRequest } from '../services/sosRequestService';
 import type { AlertSource, EventType } from '../types';
 import { eventTypeLabel, formatLongDate } from '../utils/format';
@@ -110,7 +110,9 @@ export default function HomePage() {
     { path: '/mochila', label: t.tiles.kit, detail: kitDetail, icon: Backpack, warn: kitWarn },
   ];
 
-  const sendSafe = () => openSmsComposer(smsContacts, buildSafeMessage(settings.userName));
+  // Elige el canal (SMS o WhatsApp por contacto) en lugar de depender del enlace SMS.
+  const notifySafe = useNotifySafe();
+  const sendSafe = () => notifySafe();
 
   const s = t.services;
   const sound: { tone: BadgeTone; status: string } = !isSirenSupported()
