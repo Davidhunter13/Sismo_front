@@ -103,7 +103,7 @@ Si el celular sigue mostrando el ícono anterior, desinstale la app y vuelva a i
 | `npm run typecheck` | Verificación de TypeScript |
 | `npm run test:unit` | Pruebas unitarias (Vitest) de la lógica: SMS, métricas, sismos, SUS, mochila y detección de caídas |
 | `npm run test:e2e` | Pruebas Playwright en vista móvil (Pixel 7) y de escritorio (1440×900) |
-| `npm run screenshots` | Regenera `screenshots/visual/` y `screenshots/codigo/` |
+| `npm run screenshots` | Genera las capturas de pantalla y de código en `screenshots/<fecha>/visual/` y `screenshots/<fecha>/codigo/` (las de otras fechas se conservan) |
 
 La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 
@@ -146,7 +146,7 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 
 **Logo:** cuadrado redondeado (círculo en el ícono redondo) azul marino `#0B2545` con una onda sísmica blanca (el temblor y la señal de vida) y un punto rojo `#D62828` (la alerta, «estoy aquí»). Se usa en la bienvenida (`SismoLogo.tsx`), el ícono de Android y los widgets.
 
-**Paleta principal:** azul SISMO `#0B2545` (marca), rojo `#D62828` (solo SOS, alerta y datos faltantes), verde `#1B7A4B` (listo), amarillo `#8F5300` (revisar), morado `#6B3FA0` (modo de demostración), fondo `#F3F5F9` y tarjetas `#FFFFFF`. En modo oscuro: fondo `#0E141C`, tarjetas `#18212D` y textos aclarados (p. ej. azul `#9CC0F0`). La tabla completa de tokens, claro y oscuro, está en [AVANCES §2.13](docs/AVANCES_Y_HOJA_DE_RUTA.md).
+**Paleta principal:** azul SISMO `#0B2545` (marca), rojo `#D62828` (solo SOS, alerta y datos faltantes), verde `#1B7A4B` (listo), amarillo `#8F5300` (revisar), morado `#6B3FA0` (modo de demostración), fondo `#F3F5F9` y tarjetas `#FFFFFF`. En modo oscuro: fondo `#0E141C`, tarjetas `#18212D` y textos aclarados (p. ej. azul `#9CC0F0`). La tabla completa de tokens, claro y oscuro, está en [AVANCES §2.13](docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-02.md).
 
 ## Vistas y rutas
 
@@ -217,7 +217,7 @@ capacitor.config.ts  Id de la app (co.edu.poli.sismo), nombre y carpeta web (dis
 
 ## Avances y hoja de ruta
 
-El detalle de lo implementado, las decisiones de diseño, las limitaciones y las mejoras planeadas está en [docs/AVANCES_Y_HOJA_DE_RUTA.md](docs/AVANCES_Y_HOJA_DE_RUTA.md).
+El detalle de lo implementado, las decisiones de diseño, las limitaciones y las mejoras planeadas está en [docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-02.md](docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-02.md).
 
 ## Pendiente para el equipo (revisión humana, regla 80/20)
 

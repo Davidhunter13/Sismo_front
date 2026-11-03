@@ -55,7 +55,7 @@ export function MeetingRoute({ meetingPoint, from }: Props) {
 
   return (
     <div className="stack">
-      <IonSegment value={mode} onIonChange={(e) => setMode(e.detail.value as TravelMode)} className="segment" aria-label={t.modeLabel}>
+      <IonSegment value={mode} onIonChange={(e) => setMode(e.detail.value as TravelMode)} className="segment segment--compact" aria-label={t.modeLabel}>
         <IonSegmentButton value="foot"><IonLabel>{t.foot}</IonLabel></IonSegmentButton>
         <IonSegmentButton value="car"><IonLabel>{t.car}</IonLabel></IonSegmentButton>
         <IonSegmentButton value="bike"><IonLabel>{t.bike}</IonLabel></IonSegmentButton>

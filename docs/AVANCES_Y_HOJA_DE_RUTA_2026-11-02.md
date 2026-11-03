@@ -7,6 +7,8 @@ Resume las funciones agregadas, las decisiones de diseño, las limitaciones cono
 
 Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
+**Última actualización:** 2 de noviembre de 2026 (la fecha también va en el nombre del archivo).
+
 ---
 
 ## 1. Resumen
@@ -147,6 +149,8 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | En modo oscuro el paso actual del registro se leía mal (azul sobre azul) | El azul de marca (`--brand`) no cambia en oscuro | El paso actual y el selector de puntos usan `--navy`, que se aclara en oscuro |
 | En el PC, al tocar «Relación» al crear un contacto no aparecían las opciones (en el celular sí) | La lista flotante de Ionic dentro del modal no se mostraba en algunos navegadores de PC (simulador de celular o navegador integrado del editor) | Las 6 opciones se muestran como botones dentro del formulario (`ContactFormModal`): no dependen de ventanas flotantes y se eligen con un toque |
 | En el widget 1×1 «Toque otra vez» se partía en líneas y se cortaba | No cabía en el círculo de 52 dp | Texto corto en dos líneas («OTRA / VEZ», «TAP / AGAIN») con tamaño automático |
+| Con la app recién instalada (sin registro), el doble toque del widget encendía sirena, linterna y vibración pero mostraba la bienvenida en vez de la alerta | Al arrancar, la redirección a la bienvenida le ganaba a la navegación a Inicio | La app lee primero con qué acción se abrió y luego elige la primera pantalla (`App.tsx`). Comprobado en el emulador |
+| En el widget 2×2 «¿ACTIVAR?» tocaba el borde del círculo | El tamaño de letra se cambiaba con un método que el widget ignora | Se usa `setTextViewTextSize` (15 sp) |
 | En la vista de escritorio las opciones del umbral de batería se cortaban | Ionic da un ancho mínimo a cada opción del selector | Clase `segment--compact` sin ancho mínimo |
 | Las letras N/S/E/O giraban junto con el teléfono | Se rotaba toda la rosa | Letras fijas; solo gira la flecha |
 | Costaba encontrar la brújula | Estaba al final de Ubicación y solo con punto de encuentro | Tarjeta siempre visible y acceso «Brújula» en Inicio que baja directo a ella |
@@ -265,6 +269,7 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 | Cubierto por pruebas e2e | Datos faltantes en rojo (aviso en Inicio y bordes), confirmaciones y borrar puntos en el registro, editar y eliminar contactos en el registro, ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
+| Prueba en emulador Android 16 | Widgets 1×1 y 2×2 (selector, colocación, doble toque), alerta abierta desde el widget con la app recién instalada, señales nativas encendidas y notificación «Alerta SISMO activa» (capturas en `screenshots/2026-11-02/android/`) |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |
 | Sin pruebas automáticas | Funciones nativas de Android |
 
@@ -283,3 +288,102 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 | 5 | Proyecto iOS | Ampliar el alcance a iPhone |
 | 6 | Alertas oficiales del Servicio Geológico Colombiano | Fuente nacional además del USGS |
 | 7 | Funcionamiento sin conexión (PWA / service worker) | La guía y la alerta local disponibles sin red |
+
+## 7. Evidencias: capturas de pantalla y de código
+
+Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screenshots/AAAA-MM-DD/`), para conservar el historial del prototipo. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
+
+### 7.1 Carpeta `screenshots/2026-10-24/` (primera versión)
+
+| Carpeta | Archivo | Qué muestra |
+|---|---|---|
+| `visual/` | `01-bienvenida.png` | Bienvenida |
+| `visual/` | `02-inicio.png` | Panel principal |
+| `visual/` | `03-confirmacion-alerta.png` | Diálogo de confirmación del SOS |
+| `visual/` | `04-alerta-activa.png` | Alerta activa |
+| `visual/` | `05-ubicacion.png` | Ubicación |
+| `visual/` | `06-contactos.png` | Contactos de confianza |
+| `visual/` | `07-agregar-contacto.png` | Agregar contacto |
+| `visual/` | `08-historial.png` | Historial |
+| `visual/` | `09-guia-emergencia.png` | Guía de emergencia |
+| `visual/` | `10-configuracion.png` | Configuración |
+| `visual/` | `12-vista-escritorio.png` | Vista de escritorio |
+| `codigo/` | `13-estructura-proyecto.png` | Estructura del proyecto |
+| `codigo/` | `14-package-json.png` | `package.json` |
+| `codigo/` | `15-navegacion-rutas.png` | Rutas (`App.tsx`) |
+| `codigo/` | `16-componente-boton-panico.png` | Componente del botón de pánico |
+| `codigo/` | `17-logica-alertas.png` | Lógica de alertas |
+
+### 7.2 Carpeta `screenshots/2026-11-02/` (esta versión)
+
+**`visual/`** (vista móvil 390×844, español):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-bienvenida.png` | Bienvenida con idioma y modo de demostración |
+| `02-registro-1-nombre.png` | Registro, paso 1: nombre |
+| `03-registro-2-ubicacion.png` | Registro, paso 2: ubicación obtenida |
+| `04-registro-3-puntos-de-encuentro.png` | Registro, paso 3: dos puntos de encuentro en lista |
+| `05-registro-4-nuevo-contacto.png` | Registro, paso 4: formulario de contacto con la relación en botones |
+| `06-registro-4-contactos.png` | Registro, paso 4: contacto agregado con editar y eliminar |
+| `07-inicio.png` | Inicio tras el registro |
+| `08-sos-tipo-de-evento.png` | Diálogo del SOS: tipo de evento |
+| `09-alerta-pregunta-correo.png` | Pregunta «¿Enviar correo a sus contactos?» con cuenta regresiva |
+| `10-alerta-activa.png` | Alerta activa |
+| `11-alerta-ahorro-bateria.png` | Ahorro de batería automático (batería al 15 %) |
+| `12-alerta-avisar-bateria-baja.png` | Elegir canal para avisar batería baja |
+| `13-estoy-bien-canal.png` | «Estoy bien»: SMS o WhatsApp por contacto |
+| `14-despues-del-sismo.png` | Lista «Después del sismo» |
+| `15-despues-del-sismo-completo.png` | «Después del sismo» completa: brújula y ruta al punto más cercano |
+| `16-ubicacion-mapa-real.png` | Ubicación con el mapa real y los puntos de encuentro |
+| `17-brujula-varios-puntos.png` | Brújula con «Guiar hacia» (más cercano y distancias) |
+| `18-ruta-al-punto-de-encuentro.png` | Ruta a pie con mapa, distancia y tiempo |
+| `19-contactos.png` | Contactos |
+| `20-configuracion-completa.png` | Configuración completa (incluye ahorro de batería) |
+| `21-registro-sos-disponible.png` | Registro con el botón «SOS · Emergencia ahora» |
+| `22-inicio-datos-faltantes.png` | Inicio con el aviso rojo de datos faltantes |
+| `23-ubicacion-datos-faltantes.png` | Ubicación con bordes rojos en lo que falta |
+| `24-inicio-demostracion.png` | Inicio en modo de demostración |
+| `25-inicio-completo.png` | Inicio completo (accesos rápidos) |
+| `26-historial.png` | Historial |
+| `27-detalle-de-alerta.png` | Detalle de una alerta |
+| `28-guia-de-emergencia.png` | Guía de emergencia |
+| `29-mochila-de-emergencia.png` | Mochila de emergencia |
+| `30-ficha-medica.png` | Ficha médica |
+| `31-simulacro.png` | Simulacro |
+| `32-estadisticas.png` | Estadísticas |
+| `33-sismos-recientes.png` | Sismos recientes (USGS) |
+| `34-encuesta-sus.png` | Encuesta SUS |
+| `35-inicio-tema-oscuro.png` | Tema oscuro |
+| `36-inicio-ingles.png` | Interfaz en inglés |
+| `37-vista-escritorio.png` | Vista de escritorio |
+
+**`codigo/`**:
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-estructura-proyecto.png` | Estructura del proyecto |
+| `02-package-json.png` | `package.json` |
+| `03-navegacion-rutas.png` | Rutas (`App.tsx`) |
+| `04-componente-boton-panico.png` | `PanicButton.tsx` |
+| `05-registro-obligatorio.png` | `SetupPage.tsx`: registro de 4 pasos |
+| `06-datos-faltantes.png` | `setupGaps.ts`: datos faltantes (borde rojo) |
+| `07-puntos-de-encuentro.png` | `meetingPoints.ts`: varios puntos y el más cercano |
+| `08-mensajes-sms-whatsapp.png` | `smsService.ts`: aviso de alerta, «Estoy bien» y batería baja |
+| `09-ahorro-bateria-automatico.png` | `AlertPage.tsx`: ahorro de batería automático |
+| `10-ubicacion-cada-5-minutos.png` | `useLocationAutoRefresh.ts` |
+| `11-widget-doble-toque.png` | `SosWidgetProvider.java`: doble toque |
+| `12-widget-diseno-2x2.png` | `widget_sos_large.xml`: diseño del widget 2×2 |
+| `13-paleta-de-colores.png` | `theme.css`: paleta de colores |
+
+**`android/`** (emulador Android 16, en español):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-selector-de-widgets.png` | Selector de widgets con «SOS SISMO» (1×1) y «SOS SISMO (grande)» (2×2) |
+| `02-widgets-en-pantalla-de-inicio.png` | Los dos widgets en la pantalla de inicio |
+| `03-widget-1x1-primer-toque.png` | Widget 1×1 tras el primer toque: «¿SOS? / OTRA VEZ» |
+| `04-widget-2x2-primer-toque.png` | Widget 2×2 tras el primer toque: «¿ACTIVAR?» con borde amarillo |
+| `05-alerta-activada-desde-el-widget.png` | Segundo toque: SISMO abre la alerta activa (app recién instalada, sin registro) |
+| `06-notificacion-alerta-activa.png` | Notificación «Alerta SISMO activa · Sirena · Linterna SOS · Vibración» con «Silenciar sonido» |
+

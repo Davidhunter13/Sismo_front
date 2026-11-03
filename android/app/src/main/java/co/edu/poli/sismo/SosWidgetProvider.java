@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -79,7 +80,7 @@ public class SosWidgetProvider extends AppWidgetProvider {
             views = new RemoteViews(context.getPackageName(), R.layout.widget_sos_large);
             views.setTextViewText(R.id.widget_sos_circle, context.getString(armed ? R.string.widget_sos_confirm_big : R.string.widget_sos_big));
             views.setInt(R.id.widget_sos_circle, "setBackgroundResource", armed ? R.drawable.widget_sos_circle_armed : R.drawable.widget_sos_circle);
-            views.setFloat(R.id.widget_sos_circle, "setTextSize", armed ? 17f : 28f);
+            views.setTextViewTextSize(R.id.widget_sos_circle, TypedValue.COMPLEX_UNIT_SP, armed ? 15f : 28f);
             views.setTextViewText(R.id.widget_sos_status, context.getString(armed ? R.string.widget_sos_status_armed : R.string.widget_sos_status_idle));
         } else {
             views = new RemoteViews(context.getPackageName(), R.layout.widget_sos);

@@ -2,7 +2,7 @@
 import { Capacitor } from '@capacitor/core';
 import { IonApp, IonRouterOutlet, setupIonicReact, useIonRouter } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import { AppStateProvider } from './context/AppStateProvider';
 import { useAppState } from './context/appContext';
@@ -51,20 +51,33 @@ function Routes() {
 
   // Acceso rápido: abre el diálogo de SOS en Inicio. Widget (doble toque): activa la alerta sin diálogo.
   // También sin registro terminado: en una emergencia el SOS no se bloquea.
+  // Si la app se ABRE con esa acción, se lee antes de elegir la primera pantalla: antes, sin registro, la
+  // redirección a la bienvenida le ganaba a la navegación a Inicio y la alerta no se mostraba (visto en emulador).
+  const [launch, setLaunch] = useState<'pendiente' | 'sos' | 'sos_now' | null>(Capacitor.isNativePlatform() ? 'pendiente' : null);
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
-    const openSos = (immediate: boolean) => {
-      goToRoot(router, '/inicio');
-      requestSosDialog(immediate);
-    };
     void SismoNative.consumeLaunchAction()
-      .then(({ action }) => action && openSos(action === 'sos_now'))
-      .catch(() => undefined);
-    const handle = SismoNative.addListener('sosRequested', (d) => openSos(d.immediate === true));
+      .then(({ action }) => {
+        if (action) requestSosDialog(action === 'sos_now'); // queda pendiente hasta que Inicio se monte
+        setLaunch(action);
+      })
+      .catch(() => setLaunch(null));
+  }, []);
+
+  // Con la app ya abierta (widget o acceso rápido en segundo plano).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handle = SismoNative.addListener('sosRequested', (d) => {
+      goToRoot(router, '/inicio');
+      requestSosDialog(d.immediate === true);
+    });
     return () => {
       void handle.then((h) => h.remove());
     };
   }, [router]);
+
+  // Mientras se lee la acción de arranque (milisegundos) no se dibuja nada: la pantalla de inicio de Android la cubre.
+  if (launch === 'pendiente') return null;
 
   return (
     <>
@@ -88,7 +101,7 @@ function Routes() {
         <Route exact path="/mochila" component={KitPage} />
         <Route exact path="/despues-del-sismo" component={PostQuakePage} />
         <Route exact path="/">
-          <Redirect to={data.settings.onboarded ? '/inicio' : '/bienvenida'} />
+          <Redirect to={launch || data.settings.onboarded ? '/inicio' : '/bienvenida'} />
         </Route>
       </IonRouterOutlet>
     </>
