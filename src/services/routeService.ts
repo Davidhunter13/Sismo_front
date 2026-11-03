@@ -70,11 +70,15 @@ export function googleMapsUrl(mode: TravelMode, from: LatLng, to: LatLng): strin
 }
 
 /**
- * Enlace a Waze con la navegación hacia el punto (gratis, sin llave; abre la app si está instalada).
- * Waze solo navega en vehículo, por eso se ofrece en el modo carro/moto.
+ * Enlace a Waze (gratis, sin llave). Waze solo navega en vehículo: se ofrece en el modo carro/moto.
+ * - App (celular): `waze.com/ul` abre la app y navega al destino desde el GPS actual (salida más exacta).
+ * - Navegador (PC): el mapa web de Waze no conoce la ubicación del usuario, así que se usa `live-map`,
+ *   que acepta salida y destino en el enlace.
  */
-export function wazeUrl(to: LatLng): string {
-  return `https://waze.com/ul?ll=${to.latitude},${to.longitude}&navigate=yes`;
+export function wazeUrl(to: LatLng, from: LatLng | null, app: boolean): string {
+  if (app || !from) return `https://waze.com/ul?ll=${to.latitude},${to.longitude}&navigate=yes`;
+  const ll = (p: LatLng) => `ll.${p.latitude},${p.longitude}`;
+  return `https://www.waze.com/live-map/directions?${new URLSearchParams({ from: ll(from), to: ll(to) })}`;
 }
 
 export const formatDistance = (m: number) => (m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`);

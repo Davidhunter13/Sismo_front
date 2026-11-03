@@ -278,7 +278,7 @@ test('ruta al punto de encuentro: distancia, tiempo por modo y enlace a Google M
   await ruta.locator('ion-segment-button[value="car"]').click();
   await expect(ruta.locator('.route-summary')).toContainText('849 m · 3 min aprox.');
   await expect(ruta.getByRole('link', { name: /Abrir ruta en Google Maps/ })).toHaveAttribute('href', /travelmode=driving/);
-  await expect(ruta.getByRole('link', { name: /Abrir en Waze/ })).toHaveAttribute('href', 'https://waze.com/ul?ll=4.65,-74.1&navigate=yes');
+  await expect(ruta.getByRole('link', { name: /Abrir en Waze/ })).toHaveAttribute('href', 'https://www.waze.com/live-map/directions?from=ll.4.65%2C-74.1&to=ll.4.65%2C-74.1');
 });
 
 test('mini brújula en inicio: invita a configurar y abre la brújula completa', async ({ page }) => {

@@ -3,6 +3,7 @@ import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 import { ExternalLink, Loader2, Route } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useT } from '../i18n/useT';
+import { isNative } from '../services/nativeBridge';
 import { useOnline } from '../services/networkService';
 import { fetchRoute, formatDistance, formatDuration, googleMapsUrl, wazeUrl, type RouteResult, type TravelMode } from '../services/routeService';
 import type { MeetingPoint } from '../types';
@@ -82,7 +83,7 @@ export function MeetingRoute({ meetingPoint, from }: Props) {
         <ExternalLink size={18} aria-hidden="true" /> {t.openGoogle}
       </a>
       {mode === 'car' && (
-        <a className="btn btn--outline btn--block" href={wazeUrl(meetingPoint)} target="_blank" rel="noopener noreferrer">
+        <a className="btn btn--outline btn--block" href={wazeUrl(meetingPoint, from, isNative())} target="_blank" rel="noopener noreferrer">
           <ExternalLink size={18} aria-hidden="true" /> {t.openWaze}
         </a>
       )}

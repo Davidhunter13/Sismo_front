@@ -26,8 +26,14 @@ describe('routeUrl y googleMapsUrl', () => {
 });
 
 describe('wazeUrl', () => {
-  it('navegación hacia el destino', () => {
-    expect(wazeUrl(to)).toBe('https://waze.com/ul?ll=4.6324,-74.0727&navigate=yes');
+  it('app del celular: navega al destino desde el GPS', () => {
+    expect(wazeUrl(to, from, true)).toBe('https://waze.com/ul?ll=4.6324,-74.0727&navigate=yes');
+  });
+  it('navegador: mapa web con salida y destino', () => {
+    const url = new URL(wazeUrl(to, from, false));
+    expect(url.origin + url.pathname).toBe('https://www.waze.com/live-map/directions');
+    expect(url.searchParams.get('from')).toBe('ll.4.6281,-74.0736');
+    expect(url.searchParams.get('to')).toBe('ll.4.6324,-74.0727');
   });
 });
 
