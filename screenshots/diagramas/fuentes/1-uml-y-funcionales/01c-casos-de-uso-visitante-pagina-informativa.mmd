@@ -1,0 +1,21 @@
+%% title: Diagrama de casos de uso — Visitante de la página informativa (pública)
+flowchart LR
+  V["«actor»<br/><b>Visitante</b><br/>(sin iniciar sesión)"]:::actor
+  subgraph WEB["Página informativa"]
+    direction TB
+    V1(["Conocer beneficios y funciones"])
+    V2(["Ver capturas de la app y del panel"])
+    V3(["Consultar lo que aún está pendiente"])
+    V4(["Ver cómo funciona una alerta"])
+    V5(["Cambiar tema claro / oscuro"])
+    V6(["Solicitar una demostración<br/>(si está configurado)"])
+    V7(["Ir al panel<br/>(solo si es operador autorizado)"])
+  end
+  V --- V1
+  V --- V2
+  V --- V3
+  V --- V4
+  V --- V5
+  V --- V6
+  V --- V7
+  classDef actor fill:#0b2545,color:#fff,stroke:#0b2545

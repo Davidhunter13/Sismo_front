@@ -1,0 +1,21 @@
+%% title: Diagrama de actividades — Persona usuaria: registro inicial
+flowchart TD
+  S((●)):::ini --> A["Abrir la app<br/>(pantalla de carga)"]
+  A --> B{"¿Ya está registrada<br/>en este teléfono?"}
+  B -- Sí --> Z["Ir a Inicio"]
+  B -- No --> C["Bienvenida: «Comenzar»"]
+  C --> D["Paso 1: nombre de usuario"]
+  D --> E["Paso 2: obtener ubicación (GPS)"]
+  E --> F["Paso 3: agregar puntos de encuentro<br/>(ubicación actual, mapa o dirección)"]
+  F --> G["Paso 4: agregar contactos<br/>(nombre, teléfono, correo, relación)"]
+  G --> H{"¿Datos obligatorios<br/>completos?"}
+  H -- No --> D
+  H -- Sí --> I["Finalizar registro<br/>(guardar en el teléfono)"]
+  I --> J{"¿Hay conexión?"}
+  J -- Sí --> K["Registrar el dispositivo en el servidor<br/>y subir todos los datos"]
+  J -- No --> L["Guardar en la cola sin conexión<br/>(se sube al volver la red)"]
+  K --> Z
+  L --> Z
+  Z --> F1((◉)):::fin
+  classDef ini fill:#0b2545,color:#fff
+  classDef fin fill:#d62828,color:#fff

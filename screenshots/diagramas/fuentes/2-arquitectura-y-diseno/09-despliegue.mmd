@@ -1,0 +1,40 @@
+%% title: Diagrama de despliegue
+flowchart TB
+  subgraph PHONE["«dispositivo» Teléfono Android"]
+    APK["«artefacto» APK SISMO<br/>WebView + plugins Capacitor"]
+    LSA[("localStorage")]
+    APPS["SMS · WhatsApp · Marcador"]
+    APK --- LSA
+    APK --> APPS
+  end
+  subgraph PC["«dispositivo» Computador del operador / visitante"]
+    BR["«entorno» Navegador web<br/>Panel SISMO · Página informativa · build web de la app"]
+  end
+  subgraph SRV["«nodo» Servidor web de producción (HTTPS)"]
+    AP["«entorno» Apache + PHP 7.3"]
+    CI["«artefacto» CodeIgniter 3<br/>Sismo · Sismo_admin · Sismo_info · Sismo_model"]
+    ENV["Variables de entorno<br/>SISMO_LLAVE_CIFRADO · SISMO_CORS_ORIGENES"]
+    CA[("application/cache")]
+    AP --> CI
+    CI --- ENV
+    CI --- CA
+  end
+  subgraph DBN["«nodo» Servidor de base de datos"]
+    MY[("MySQL / MariaDB<br/>esquema sismo_*")]
+  end
+  subgraph MAILN["«nodo» Servidor de correo de alertas"]
+    MSV["«artefacto» Servicio de correo<br/>(POST JSON)"]
+    SMTP["Proveedor de correo"]
+    MSV --> SMTP
+  end
+  subgraph EXTN["«nodo» Servicios de Internet"]
+    US["USGS"]
+    OS["OpenStreetMap / ruteo"]
+    GE["ArcGIS / Photon"]
+  end
+  APK -- "HTTPS :443 (REST + Bearer)" --> AP
+  APK -- "HTTPS :443" --> MSV
+  APK -- HTTPS --> US & OS & GE
+  BR -- "HTTPS :443 (sesión + CSRF)" --> AP
+  CI -- "TCP 3306" --> MY
+  CI -- HTTPS --> US

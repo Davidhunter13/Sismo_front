@@ -1,0 +1,19 @@
+%% title: Diagrama de actividades — Operador: atención de una alerta
+flowchart TD
+  S((●)):::ini --> A["Abrir Panel SISMO"]
+  A --> B{"¿Sesión iniciada y<br/>correo autorizado?"}
+  B -- No --> X["Ir a iniciar sesión /<br/>acceso restringido"] --> F0((◉)):::fin
+  B -- Sí --> C["Cargar indicadores, alertas activas,<br/>mapa, historial y usuarios"]
+  C --> D["Actualización silenciosa cada 1 min"]
+  D --> E{"¿Nueva alerta activa?"}
+  E -- No --> D
+  E -- Sí --> F["Banner SOS, sonido y notificación<br/>(si los avisos están activos)"]
+  F --> G["Ver persona: contactos, ficha médica,<br/>puntos de encuentro y última ubicación"]
+  G --> H["Brindar ayuda: elegir estado<br/>(En atención / Ayuda enviada / Resuelta)<br/>y escribir mensaje"]
+  H --> I["Guardar atención (con token CSRF)"]
+  I --> J["La persona ve el aviso en la app"]
+  J --> K{"¿Resuelta?"}
+  K -- No --> H
+  K -- Sí --> D
+  classDef ini fill:#0b2545,color:#fff
+  classDef fin fill:#d62828,color:#fff

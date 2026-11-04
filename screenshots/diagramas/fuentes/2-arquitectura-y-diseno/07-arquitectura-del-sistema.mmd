@@ -1,0 +1,37 @@
+%% title: Diagrama de arquitectura del sistema SISMO
+flowchart TB
+  subgraph CLI["Clientes"]
+    APP["App SISMO<br/>React 19 + Ionic 8 + TypeScript<br/>Android (Capacitor 8) y web"]
+    PAN["Panel de monitoreo<br/>(navegador del operador)"]
+    INF["Página informativa pública<br/>(navegador del visitante)"]
+  end
+  subgraph BACK["Backend · CodeIgniter 3 · PHP 7.3"]
+    API["API REST Sismo<br/>(JSON, Bearer token, CORS)"]
+    ADM["Sismo_admin<br/>(sesión + CSRF)"]
+    PUB["Sismo_info<br/>(pública)"]
+    MOD["Sismo_model<br/>(reglas, cifrado AES-256-GCM)"]
+    CACHE[("Caché de archivos<br/>USGS 5 min")]
+  end
+  subgraph DATA["Datos"]
+    DB[("MySQL / MariaDB<br/>12 tablas sismo_*")]
+    LS[("localStorage del teléfono<br/>datos + cola sin conexión")]
+  end
+  subgraph EXT["Servicios externos"]
+    MAIL["Servicio de correo de alertas<br/>+ proveedor de correo"]
+    USGS["USGS (sismos)"]
+    OSM["OpenStreetMap (mapas)<br/>routing.openstreetmap.de (rutas)"]
+    GEO["Geocodificación<br/>(ArcGIS / Photon)"]
+    PHONE["Apps del teléfono<br/>SMS · WhatsApp · marcador"]
+  end
+  APP <--> LS
+  APP -- HTTPS JSON --> API
+  APP -- HTTPS POST --> MAIL
+  APP --> USGS & OSM & GEO
+  APP --> PHONE
+  PAN -- HTTPS --> ADM
+  INF -- HTTPS --> PUB
+  API --> MOD
+  ADM --> MOD
+  MOD --> DB
+  MOD --> CACHE
+  MOD -- HTTPS --> USGS

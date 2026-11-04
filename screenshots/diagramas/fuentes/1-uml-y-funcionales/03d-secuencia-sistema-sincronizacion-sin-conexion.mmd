@@ -1,0 +1,28 @@
+%% title: Diagrama de secuencia — Sincronización sin conexión (cola persistente)
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant ST as AppStateProvider
+  participant SY as syncService
+  participant LS as localStorage
+  participant API as API Sismo
+  participant DB as MySQL
+  P->>ST: Agrega un contacto (sin internet)
+  ST->>LS: saveData(AppData)
+  ST->>SY: queueChanges(anterior, nuevo)
+  SY->>SY: diffOperations() y mergeOutbox()
+  SY->>LS: Guarda la cola «sismo:v1:outbox»
+  SY-->>P: Aviso «sus datos se guardarán apenas tenga conexión»
+  Note over SY: Evento «online» o reintento con espera
+  SY->>API: PUT /contactos/{id} (Bearer)
+  alt 200 OK
+    API->>DB: Guardado idempotente por id_cliente
+    API-->>SY: 200
+    SY->>LS: Quita la operación de la cola
+  else 401 (token inválido)
+    SY->>API: POST /registro
+    API-->>SY: Token nuevo
+    SY->>API: Sincronización completa (fullSyncOperations)
+  else Sin red / 5xx
+    SY->>SY: Reintento con espera creciente
+  end

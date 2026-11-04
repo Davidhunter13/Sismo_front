@@ -1,0 +1,85 @@
+%% title: Diagrama de clases — Backend (CodeIgniter 3)
+classDiagram
+  direction TB
+  class CI_Controller { <<framework>> }
+  class CI_Model { <<framework>> }
+  class Sismo {
+    <<API REST de la app>>
+    -execution_id : string
+    +registro()
+    +estado()
+    +ajustes()
+    +contactos(id)
+    +alertas(id)
+    +puntos_encuentro(id)
+    +encuestas(id)
+    +inventario()
+    +ficha_medica()
+    +codigo_recuperacion()
+    +recuperar()
+    +atencion()
+    +catalogos()
+    +eliminar_cuenta()
+  }
+  class Sismo_admin {
+    <<Panel de monitoreo>>
+    +index()
+    +datos()
+    +usuario(id)
+    +atender()
+    +codigo()
+    +sismos()
+    +catalogos()
+    +catalogo_guardar()
+    +guia_guardar()
+    +parametro_guardar()
+  }
+  class Sismo_info {
+    <<Página pública>>
+    +index()
+  }
+  class Sismo_model {
+    +registrar()
+    +usuario_por_token()
+    +guardar_ajustes()
+    +guardar_por_cliente()
+    +desactivar_por_cliente()
+    +guardar_inventario()
+    +guardar_ficha_medica()
+    +estado()
+    +generar_codigo_recuperacion()
+    +recuperar()
+    +eliminar_cuenta()
+    +atencion_vigente()
+    +resumen()
+    +alertas_panel()
+    +usuarios_panel()
+    +registrar_atencion()
+    +catalogos_app()
+    +guardar_catalogo()
+    +guardar_guia()
+    +guardar_parametro()
+    +sismos_recientes()
+    -cifrar() AES-256-GCM
+    -descifrar()
+  }
+  class Sesion_persona {
+    <<librería>>
+    +persona()
+    +nombre()
+    +correo()
+    +es_admin_sismo()
+    +csrf_token()
+  }
+  class ServicioCorreo {
+    <<servicio externo>>
+    +POST alerta(JSON)
+  }
+  CI_Controller <|-- Sismo
+  CI_Controller <|-- Sismo_admin
+  CI_Controller <|-- Sismo_info
+  CI_Model <|-- Sismo_model
+  Sismo --> Sismo_model : usa
+  Sismo_admin --> Sismo_model : usa
+  Sismo_admin --> Sesion_persona : autoriza
+  Sismo_info --> Sesion_persona : muestra «Ir al panel»

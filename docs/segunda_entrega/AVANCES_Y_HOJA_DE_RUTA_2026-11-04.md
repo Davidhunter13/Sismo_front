@@ -444,6 +444,18 @@ screenshots/AAAA-MM-DD/
 
 **Nombres:** `NN-descripcion-corta.png` (número de orden de dos dígitos y descripción en minúsculas separada con guiones). Cada archivo aparece abajo con lo que muestra. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
 
+**Diagramas:** `screenshots/diagramas/` (sin fecha, se actualiza con cada cambio de la base de datos). `BASE_DE_DATOS_SISMO.md` es el diccionario de datos del backend: diagrama entidad-relación (Mermaid; GitHub lo dibuja), las 12 tablas `sismo_*` con cada columna, tipo, si admite nulos, valor por defecto y descripción, índices, valores iniciales de catálogos y parámetros, y dónde quedan los datos personales y cómo se protegen.
+
+**Documentación gráfica:** `screenshots/diagramas/DIAGRAMAS.md` es el índice de **33 diagramas**, cada uno en su propia imagen PNG y construido a partir del código real. Cuando una función la usan roles distintos (persona usuaria, operador del centro de monitoreo, visitante), hay un diagrama por rol.
+- **UML y funcionales:** casos de uso, actividades, secuencia, clases, estados y flujo de procesos.
+- **Arquitectura y diseño:** arquitectura, componentes, despliegue, infraestructura y navegación.
+- **Base de datos:** DER, modelo lógico y modelo físico (este último generado desde el script SQL).
+- **Planificación y tiempos:** Gantt, PERT, ruta crítica y línea de tiempo.
+
+El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). Las fechas de planificación salen de las tres entregas registradas (24/10, 02/11 y 04/11/2026), y la ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
+
+**Documentación técnica y funcional:** `screenshots/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (125) y registro de cambios y versiones (1.0 a 3.1).
+
 ### 7.1 Carpeta `screenshots/2026-10-24/` (primera versión)
 
 | Carpeta | Archivo | Qué muestra |

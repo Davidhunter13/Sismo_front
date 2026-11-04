@@ -1,0 +1,27 @@
+%% title: Diagrama de secuencia — Persona usuaria: código de recuperación y teléfono nuevo
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant A1 as App (teléfono actual)
+  participant API as API Sismo
+  participant MD as Sismo_model
+  participant DB as MySQL
+  participant A2 as App (teléfono nuevo)
+  P->>A1: Configuración → «Crear código de recuperación»
+  A1->>API: POST /codigo_recuperacion (Bearer)
+  API->>MD: generar_codigo_recuperacion()
+  MD->>DB: UPDATE sismo_usuarios (SHA-256 del código)
+  API-->>A1: XXXX-XXXX-XXXX
+  A1-->>P: Muestra el código para guardarlo fuera del teléfono
+  Note over P,A2: Pierde el teléfono (o el operador genera un código temporal de 48 h)
+  P->>A2: Configuración → Respaldo y recuperación → «Recuperar mis datos» + código
+  A2->>API: POST /recuperar {codigo}
+  API->>MD: recuperar()
+  MD->>DB: Valida el código, emite token nuevo y anula el código
+  API-->>A2: uuid_dispositivo + token nuevo
+  A2->>API: GET /estado (Bearer nuevo)
+  API->>MD: estado()
+  MD->>DB: SELECT de todas las tablas del usuario
+  API-->>A2: Contactos, alertas, ficha, puntos, kit, encuestas y ajustes
+  A2-->>P: Datos restaurados
+  Note over A1,API: El teléfono perdido recibe 401: pierde el acceso

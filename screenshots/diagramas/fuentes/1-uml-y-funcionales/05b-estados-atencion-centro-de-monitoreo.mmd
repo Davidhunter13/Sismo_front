@@ -1,0 +1,15 @@
+%% title: Diagrama de estados — Atención de una alerta (centro de monitoreo)
+stateDiagram-v2
+  [*] --> SinAtender : Llega la alerta al panel
+  SinAtender --> EnAtencion : Operador registra «En atención»
+  SinAtender --> AyudaEnviada : Operador registra «Ayuda enviada»
+  EnAtencion --> AyudaEnviada : Registra «Ayuda enviada»
+  EnAtencion --> Resuelta : Registra «Resuelta»
+  AyudaEnviada --> Resuelta : Registra «Resuelta»
+  AyudaEnviada --> EnAtencion : Nuevo mensaje
+  Resuelta --> [*]
+  note right of EnAtencion
+    Cada cambio guarda una fila en
+    sismo_atenciones_alertas y la
+    persona lo ve en la app
+  end note

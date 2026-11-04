@@ -1,0 +1,45 @@
+%% title: Diagrama de casos de uso — Operador del centro de monitoreo (panel)
+flowchart LR
+  O["«actor»<br/><b>Operador del centro<br/>de monitoreo</b>"]:::actor
+  subgraph PANEL["Panel de monitoreo"]
+    direction TB
+    A1(["Iniciar sesión<br/>(cuenta autorizada)"])
+    A2(["Ver alertas activas y mapa en tiempo real"])
+    A3(["Recibir avisos<br/>(banner, sonido, notificación)"])
+    A4(["Brindar ayuda<br/>(estado + mensaje)"])
+    A5(["Ver detalle de la persona<br/>(contactos, ficha médica, puntos, alertas)"])
+    A6(["Consultar historial de alertas"])
+    A7(["Consultar usuarios"])
+    A8(["Ver indicadores"])
+    A9(["Ver sismos recientes (24 h / 7 días)"])
+    A10(["Generar código de recuperación temporal (48 h)"])
+    A11(["Administrar catálogos"])
+    A12(["Editar guía de emergencia"])
+    A13(["Editar parámetros"])
+    A14(["Abrir página informativa"])
+  end
+  P["«actor»<br/><b>Persona usuaria</b>"]:::actor
+  U["«sistema»<br/><b>USGS</b>"]:::sys
+  O --- A2
+  O --- A3
+  O --- A4
+  O --- A5
+  O --- A6
+  O --- A7
+  O --- A8
+  O --- A9
+  O --- A10
+  O --- A11
+  O --- A12
+  O --- A13
+  O --- A14
+  A2 -. «include» .-> A1
+  A4 -. «include» .-> A1
+  A11 -. «include» .-> A1
+  A4 -. «extend» .-> A2
+  A5 -. «extend» .-> A2
+  A4 --- P
+  A10 --- P
+  A9 --- U
+  classDef actor fill:#0b2545,color:#fff,stroke:#0b2545
+  classDef sys fill:#fff3dc,color:#5a3a00,stroke:#8f5300

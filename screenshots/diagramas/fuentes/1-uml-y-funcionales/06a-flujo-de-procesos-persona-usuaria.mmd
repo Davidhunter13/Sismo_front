@@ -1,0 +1,17 @@
+%% title: Diagrama de flujo de procesos — Persona usuaria
+flowchart LR
+  subgraph PREP["Etapa 1 · Preparación"]
+    A1["Registro"] --> A2["Contactos y puntos de encuentro"] --> A3["Ficha médica y QR"] --> A4["Mochila de emergencia"] --> A5["Guía y simulacro"]
+  end
+  subgraph EMER["Etapa 2 · Emergencia"]
+    B1["Activar SOS"] --> B2["Señales locales y ubicación"] --> B3["Correo automático a contactos"] --> B4["SMS / WhatsApp / llamada"] --> B5["Aviso del centro de monitoreo"]
+  end
+  subgraph POST["Etapa 3 · Después"]
+    C1["Finalizar alerta"] --> C2["«Después del sismo»"] --> C3["«Estoy bien» a contactos"] --> C4["Encuesta SUS y estadísticas"]
+  end
+  subgraph CUENTA["Etapa 4 · Cuenta"]
+    D1["Código de recuperación"] --> D2["Recuperar en teléfono nuevo"]
+    D3["Eliminar mi cuenta"]
+  end
+  PREP --> EMER --> POST
+  PREP -.-> CUENTA

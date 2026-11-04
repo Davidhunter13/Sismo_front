@@ -1,0 +1,32 @@
+%% title: Diagrama de navegación — App (persona usuaria)
+flowchart TD
+  ROOT["/ (inicio de la app)"] -->|sin registro| BIE["/bienvenida"]
+  ROOT -->|registrada| INI["/inicio"]
+  BIE --> REG["/registro (4 pasos)"]
+  REG --> INI
+  subgraph NAV["Barra inferior"]
+    INI
+    UBI["/ubicacion<br/>(mapa, brújula, ruta)"]
+    CON["/contactos"]
+    HIS["/historial"]
+    GUI["/guia"]
+  end
+  INI --> ALE["/alerta (SOS)"]
+  INI --> SIS["/sismos"]
+  INI --> FIC["/ficha-medica (QR)"]
+  INI --> MOC["/mochila"]
+  INI --> SIM["/simulacro"]
+  INI --> EST["/estadisticas"]
+  INI --> DES["/despues-del-sismo"]
+  INI --> REG
+  HIS --> DET["/historial/:id"]
+  DET --> ALE
+  ALE --> DES
+  ALE --> ENC["/encuesta (SUS)"]
+  SIM --> ENC
+  SIM --> EST
+  EST --> ENC
+  ENC --> EST
+  DES -->|brújula| UBI
+  HDR["Encabezado (todas)"] --> CFG["/configuracion<br/>(respaldo y recuperación)"]
+  CFG -->|eliminar cuenta| BIE

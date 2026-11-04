@@ -1,0 +1,26 @@
+%% title: Diagrama de clases — Servicios (módulos) de la app
+classDiagram
+  direction LR
+  class AppStateProvider { <<contexto React>> +estado AppData +acciones() }
+  class storageService { <<módulo>> +loadData() +saveData() +clearData() +newId() }
+  class syncService { <<módulo>> +queueChanges() +flush() +startSync() +createRecoveryCode() +recoverAccount() +deleteAccount() +fetchHelpStatus() }
+  class catalogService { <<módulo>> +getCatalogs() +refreshCatalogs() +useCatalogs() }
+  class emailService { <<módulo>> +emailEndpoint() +emailRecipients() +sendAlertEmail() }
+  class smsService { <<módulo>> +buildAlertMessage() +buildSafeMessage() +openSmsComposer() +openWhatsapp() }
+  class locationService { <<módulo>> GPS }
+  class signals { <<módulos>> sirenService · torchService · vibrationService · screenService }
+  class quakeService { <<módulo>> +fetchNearbyQuakes() }
+  class routeService { <<módulo>> ruta y enlaces Waze / Google Maps }
+  class medicalQrService { <<módulo>> +medicalQrText() +medicalQrDataUrl() }
+  class otros { <<módulos>> metrics · sus · kit · fallDetection · trapped · battery · speech · drillReminder }
+  AppStateProvider --> storageService
+  AppStateProvider --> syncService
+  AppStateProvider --> catalogService
+  AppStateProvider --> locationService
+  AppStateProvider --> signals
+  AppStateProvider --> emailService
+  AppStateProvider --> smsService
+  AppStateProvider --> otros
+  AppStateProvider ..> quakeService
+  AppStateProvider ..> routeService
+  AppStateProvider ..> medicalQrService

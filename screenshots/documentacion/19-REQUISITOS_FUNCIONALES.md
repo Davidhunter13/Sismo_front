@@ -1,0 +1,107 @@
+> **Nota de Transparencia:** Este documento fue generado con apoyo de Inteligencia Artificial Generativa (Claude Code) cumpliendo la Política ODTI012 del CCS.
+
+# 19. Documento de requisitos funcionales — SISMO
+
+| Dato | Valor |
+|---|---|
+| Sistema | SISMO: botón de pánico para emergencias sísmicas (app móvil + backend + panel de monitoreo) |
+| Versión del documento | 1.0 · 4 de noviembre de 2026 (versión 3 del sistema) |
+| Roles | Persona usuaria (PU), Operador del centro de monitoreo (OP), Visitante (VI), Sistema (SIS) |
+| Prioridad | **Alta** = indispensable en una emergencia · **Media** = preparación y soporte · **Baja** = comodidad |
+
+Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su prioridad. Las pruebas que lo verifican están en el [plan de pruebas](26-PLAN_Y_CASOS_DE_PRUEBA.md) y los diagramas en [`../diagramas/DIAGRAMAS.md`](../diagramas/DIAGRAMAS.md).
+
+---
+
+## RF-RE · Registro e inicio
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-RE-01 | El sistema debe mostrar una pantalla de carga al abrir la app y llevar a la Bienvenida si la persona no está registrada, o a Inicio si ya lo está. | PU | Media |
+| RF-RE-02 | El sistema debe exigir un registro en 4 pasos antes de usar la app: nombre de usuario, ubicación (GPS), al menos un punto de encuentro y al menos un contacto de emergencia. | PU | Alta |
+| RF-RE-03 | El sistema debe permitir agregar contactos desde la agenda del teléfono (donde el dispositivo lo permita), y editar o eliminar los contactos agregados durante el registro. | PU | Media |
+| RF-RE-04 | El sistema debe marcar en rojo los datos obligatorios que falten y permitir completarlos después. | PU | Media |
+| RF-RE-05 | Al terminar el registro, el sistema debe registrar el dispositivo en el servidor (sin contraseña, con un token) y subir todos los datos; sin conexión, debe dejarlos en cola. | SIS | Alta |
+
+## RF-AL · Alerta SOS
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-AL-01 | El sistema debe permitir activar la alerta SOS desde el botón de la app, el widget de Android (doble toque), el acceso rápido o la detección automática de caídas. | PU | Alta |
+| RF-AL-02 | El sistema debe pedir el tipo de evento (catálogo administrable: sismo, otra emergencia, prueba…) y confirmar antes de activar, para evitar activaciones accidentales. | PU | Alta |
+| RF-AL-03 | Al activarse, el sistema debe emitir sirena (o silbato), destello y linterna en código SOS, vibración en patrón SOS y mantener la pantalla encendida, incluso con la pantalla bloqueada en Android. | SIS | Alta |
+| RF-AL-04 | El sistema debe afinar la ubicación GPS (hasta 10 s) y actualizarla cada 2 minutos (parámetro administrable) mientras la alerta esté activa. | SIS | Alta |
+| RF-AL-05 | El sistema debe ofrecer el botón «Llamar al {número de emergencia}» (parámetro administrable, por defecto 123). | PU | Alta |
+| RF-AL-06 | El sistema debe permitir enviar a los contactos un SMS o WhatsApp con la ubicación, los puntos de encuentro, la ficha médica (si se comparte) y la batería. | PU | Alta |
+| RF-AL-07 | El sistema debe activar el ahorro de batería cuando la carga baje del umbral configurado, y ofrecer el modo atrapado y el silbato de rescate. | PU | Alta |
+| RF-AL-08 | El sistema debe permitir finalizar la alerta y guardarla en el historial con sus métricas (tiempos de confirmación, sirena, linterna, vibración y SMS). | PU | Alta |
+| RF-AL-09 | El sistema debe permitir avisar «Estoy bien» por SMS o WhatsApp con la ubicación actual, el punto de encuentro y la batería. | PU | Alta |
+| RF-AL-10 | El sistema debe mostrar la lista «Después del sismo» (catálogo administrable) y guardar el avance por clave de paso. | PU | Media |
+
+## RF-CO · Correo de alerta a los contactos
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-CO-01 | Al activar una alerta real, el sistema debe preguntar «¿Enviar correo a sus contactos?» con una cuenta regresiva de 20 s. | PU | Alta |
+| RF-CO-02 | Si la persona toca «Sí, enviar ahora» o no responde en 20 s, el sistema debe enviar el correo; con «No enviar», debe cancelarlo y permitir reintentar. | PU | Alta |
+| RF-CO-03 | El correo debe llegar a los contactos reales que tengan correo e incluir el tipo de evento, la hora, la ubicación, los puntos de encuentro, la ficha médica (si se comparte) y la batería. | SIS | Alta |
+| RF-CO-04 | La app debe enviar la solicitud al servicio de correo de alertas (POST JSON, sin credenciales en el teléfono); el servicio valida destinatarios, aplica límites y envía por el proveedor de correo. | SIS | Alta |
+| RF-CO-05 | El sistema debe reintentar 2 veces ante fallos de red o 5xx (espera exponencial) y mostrar el estado: enviado, cancelado, fallido, sin destinatarios o sin servidor. | SIS | Media |
+| RF-CO-06 | El sistema no debe preguntar por el correo en los simulacros ni si ningún contacto real tiene correo. | SIS | Media |
+
+## RF-CT · Contactos y puntos de encuentro
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-CT-01 | El sistema debe permitir crear, editar y eliminar contactos de emergencia con nombre, teléfono, correo (validado) y relación (catálogo administrable). | PU | Alta |
+| RF-CT-02 | El sistema debe permitir hasta N puntos de encuentro (parámetro administrable, por defecto 5) desde la ubicación actual, el mapa o una dirección. | PU | Alta |
+| RF-CT-03 | El sistema debe mostrar la ubicación en un mapa real (OpenStreetMap), la brújula sin internet hacia el punto más cercano y la ruta (a pie, carro/moto o bicicleta), con enlace a Waze o Google Maps. | PU | Media |
+
+## RF-IN · Información y preparación
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-IN-01 | El sistema debe permitir registrar una ficha médica (sangre, alergias, medicamentos, condiciones, notas) y elegir si se comparte en la alerta y el SMS. | PU | Alta |
+| RF-IN-02 | El sistema debe generar un QR médico con la ficha en texto plano, legible por cualquier lector de QR sin internet ni la app. | PU | Alta |
+| RF-IN-03 | El sistema debe mostrar la guía de emergencia (antes, durante, después) con lectura en voz alta; el contenido es administrable. | PU | Media |
+| RF-IN-04 | El sistema debe mostrar los sismos recientes de Colombia (USGS) de las últimas 24 h y 7 días, y los cercanos a la persona. | PU | Media |
+| RF-IN-05 | El sistema debe permitir gestionar la mochila de emergencia (ítems sugeridos del catálogo, vencimientos y revisión periódica). | PU | Media |
+| RF-IN-06 | El sistema debe ofrecer simulacros con cronómetro, la encuesta de usabilidad SUS y estadísticas (con exportación CSV). | PU | Media |
+| RF-IN-07 | El sistema debe recordar hacer un simulacro si nunca se hizo o pasaron 90 días. | SIS | Baja |
+
+## RF-CF · Configuración y cuenta
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-CF-01 | El sistema debe permitir elegir idioma (español / inglés), tema (sistema, claro, oscuro), sonido de alarma, señales, detección de caídas, umbral de ahorro de batería y opciones de accesibilidad (alto contraste, texto grande, reducir movimiento). | PU | Media |
+| RF-CF-02 | El sistema debe permitir crear un código de recuperación (`XXXX-XXXX-XXXX`) y recuperar todos los datos en un teléfono nuevo con ese código; el teléfono anterior pierde el acceso. | PU | Alta |
+| RF-CF-03 | El sistema debe permitir «Eliminar mi cuenta»: borrado lógico en cascada, supresión de datos personales y de salud, y revocación del token y del código; después la persona puede registrarse de nuevo. | PU | Alta |
+
+## RF-SI · Sincronización
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-SI-01 | Todo cambio debe guardarse primero en el teléfono y subirse al servidor por recurso (ajustes, contactos, alertas, puntos, encuestas, kit, ficha médica). | SIS | Alta |
+| RF-SI-02 | Sin conexión, los cambios deben esperar en una cola persistente y subirse solos al volver la red, con reintentos; si el token deja de ser válido, la app debe registrarse de nuevo y subir todo. | SIS | Alta |
+| RF-SI-03 | El sistema debe avisar «Sin conexión: sus datos se guardarán apenas tenga conexión» y mostrar los cambios pendientes. | SIS | Media |
+| RF-SI-04 | La app debe descargar los catálogos al abrirse y usar la última copia (o los valores por defecto) sin conexión. | SIS | Media |
+
+## RF-PA · Panel de monitoreo
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-PA-01 | Solo deben entrar al panel las personas con sesión iniciada y correo autorizado en la configuración del servidor. | OP | Alta |
+| RF-PA-02 | El panel debe mostrar indicadores, alertas activas y un mapa en tiempo real, y actualizarse solo cada minuto (sin loader); cada consulta iniciada por el operador muestra un loader. | OP | Alta |
+| RF-PA-03 | El panel debe avisar las alertas nuevas con banner, sonido y notificación del sistema (si los avisos están activos; la preferencia se recuerda). | OP | Alta |
+| RF-PA-04 | El operador debe poder registrar la ayuda (En atención, Ayuda enviada, Resuelta) con un mensaje; la persona lo ve como aviso fijo en la app (consulta cada 15 s). | OP | Alta |
+| RF-PA-05 | El operador debe poder ver el detalle de la persona: contactos, ficha médica descifrada, puntos de encuentro, alertas, kit, encuestas y bitácora de ayuda. Cada consulta queda en el log. | OP | Alta |
+| RF-PA-06 | El panel debe mostrar el historial de alertas, la lista de usuarios con buscador y los sismos recientes (24 h / 7 días) en tabla y mapa. | OP | Media |
+| RF-PA-07 | El operador debe poder generar un código de recuperación temporal (48 h) para una persona que perdió el teléfono. | OP | Media |
+| RF-PA-08 | El operador debe poder administrar catálogos (tipos de evento, parentescos, kit, pasos post-sismo, tipos de sangre), la guía de emergencia (es/en) y los parámetros. Los tipos de evento `sismo` y `emergencia_general` no se pueden ocultar. | OP | Media |
+
+## RF-PI · Página informativa
+
+| ID | Requisito | Rol | Prioridad |
+|---|---|---|---|
+| RF-PI-01 | El sistema debe publicar una página informativa sin inicio de sesión (`Sismo_info`) con beneficios, funciones, capturas, lo que está pendiente y cómo funciona una alerta. | VI | Baja |
+| RF-PI-02 | La página debe mostrar «Ir al panel» solo a los operadores autorizados y «Solicitar una demostración» solo si está configurada una URL https. | VI | Baja |

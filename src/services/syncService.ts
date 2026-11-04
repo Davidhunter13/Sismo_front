@@ -3,7 +3,7 @@ import type { AppData } from '../types';
 import { createEmptyData } from './storageService';
 
 /**
- * Sincronización con el backend (API REST en CodeIgniter 3, ver docs/BACKEND_Y_SINCRONIZACION.md).
+ * Sincronización con el backend (API REST en CodeIgniter 3, ver docs/segunda_entrega/BACKEND_Y_SINCRONIZACION.md).
  *
  * Offline-first: el teléfono sigue siendo la fuente inmediata (localStorage) y cada cambio se convierte en
  * operaciones por recurso que van a una COLA PERSISTENTE (`sismo:v1:outbox`). La cola sobrevive sin red y al

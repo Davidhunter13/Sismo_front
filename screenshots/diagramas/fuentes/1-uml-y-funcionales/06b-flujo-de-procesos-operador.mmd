@@ -1,0 +1,22 @@
+%% title: Diagrama de flujo de procesos — Operador del centro de monitoreo
+flowchart LR
+  subgraph ACC["Etapa 1 · Acceso"]
+    A1["Iniciar sesión"] --> A2["Validar correo autorizado"] --> A3["Panel SISMO"]
+  end
+  subgraph MON["Etapa 2 · Monitoreo continuo"]
+    B1["Actualización cada 1 min"] --> B2["Detectar alerta activa"] --> B3["Aviso: banner, sonido, notificación"]
+  end
+  subgraph ATE["Etapa 3 · Atención"]
+    C1["Ver persona y ubicación"] --> C2["Registrar estado y mensaje"] --> C3["Seguimiento hasta «Resuelta»"]
+  end
+  subgraph SOP["Etapa 4 · Soporte"]
+    D1["Código de recuperación temporal"]
+    D2["Sismos recientes e indicadores"]
+  end
+  subgraph CON["Etapa 5 · Contenido"]
+    E1["Catálogos"] --> E2["Guía"] --> E3["Parámetros"]
+  end
+  ACC --> MON --> ATE
+  ATE --> MON
+  ACC -.-> SOP
+  ACC -.-> CON

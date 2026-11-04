@@ -1,0 +1,40 @@
+%% title: Diagrama de secuencia — Persona usuaria: alerta SOS, correo y sincronización
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant UI as App (AlertPage)
+  participant ES as emailService
+  participant MS as Servicio de correo
+  participant PR as Proveedor de correo
+  actor C as Contactos
+  participant SY as syncService (cola)
+  participant API as API Sismo (CI3)
+  participant MD as Sismo_model
+  participant DB as MySQL
+  P->>UI: Toca SOS y confirma el tipo de evento
+  UI->>UI: Crea alerta «activa», sirena, linterna, vibración, GPS
+  UI->>SY: queueChanges(alerta)
+  par Correo de alerta
+    UI->>P: «¿Enviar correo?» (cuenta regresiva 20 s)
+    P-->>UI: Sí / silencio
+    UI->>ES: sendAlertEmail(solicitud)
+    ES->>MS: POST VITE_ALERT_EMAIL_URL (JSON)
+    MS->>MS: Valida correos y límites de envío
+    MS->>PR: Envía los correos
+    PR-->>C: Correo con ubicación, punto de encuentro, ficha y batería
+    MS-->>ES: 2xx aceptado
+    ES-->>UI: estado «enviado»
+  and Sincronización
+    SY->>API: PUT /alertas/{id} (Bearer token)
+    API->>MD: usuario_por_token() y guardar_por_cliente()
+    MD->>DB: INSERT … ON DUPLICATE KEY UPDATE
+    DB-->>MD: ok
+    API-->>SY: 200
+  end
+  loop cada 15 s mientras la alerta está activa
+    UI->>API: GET /atencion
+    API->>MD: atencion_vigente()
+    MD->>DB: SELECT sismo_atenciones_alertas
+    API-->>UI: estado y mensaje del operador
+    UI-->>P: Aviso fijo «Ayuda en camino»
+  end

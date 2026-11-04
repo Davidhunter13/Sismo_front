@@ -1,0 +1,17 @@
+%% title: Diagrama de estados — Alerta SOS (app)
+stateDiagram-v2
+  [*] --> Confirmando : Toca SOS
+  Confirmando --> [*] : Cancela
+  Confirmando --> Activa : Confirma tipo de evento
+  state Activa {
+    [*] --> SeñalesActivas
+    SeñalesActivas --> ModoAhorro : Batería ≤ umbral
+    ModoAhorro --> SeñalesActivas : Volver a la señal continua
+    SeñalesActivas --> ModoAtrapado : Activa modo atrapado
+    ModoAtrapado --> SeñalesActivas : Sale del modo atrapado
+  }
+  Activa --> Activa : Actualiza ubicación (cada 2 min)
+  Activa --> Finalizada : Finaliza la alerta
+  Finalizada --> Eliminada : La borra del historial (activo = 0)
+  Finalizada --> [*]
+  Eliminada --> [*]

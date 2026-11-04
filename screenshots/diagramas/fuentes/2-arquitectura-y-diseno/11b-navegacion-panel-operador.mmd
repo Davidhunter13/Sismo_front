@@ -1,0 +1,25 @@
+%% title: Diagrama de navegación — Panel de monitoreo (operador) y página pública
+flowchart TD
+  LOGIN["Inicio de sesión"] --> PANEL["Panel SISMO (Sismo_admin)"]
+  PANEL --> K["Indicadores + banner SOS"]
+  PANEL --> ACT["Alertas activas + mapa en tiempo real"]
+  ACT --> AY["Ventana «Brindar ayuda»"]
+  ACT --> DP["Ventana «Detalle de la persona»"]
+  DP --> CR["Generar código de recuperación"]
+  PANEL --> TABS["Pestañas"]
+  TABS --> T1["Historial de alertas"]
+  TABS --> T2["Usuarios"]
+  TABS --> T3["Sismos recientes (24 h / 7 días)"]
+  T1 --> DP
+  T2 --> DP
+  PANEL --> CAT["Catálogos de la app"]
+  CAT --> CT1["Tipos de evento"]
+  CAT --> CT2["Parentescos"]
+  CAT --> CT3["Kit de emergencia"]
+  CAT --> CT4["Después del sismo"]
+  CAT --> CT5["Tipos de sangre"]
+  CAT --> CT6["Guía de emergencia"]
+  CAT --> CT7["Parámetros"]
+  PANEL -->|"«Qué ofrece SISMO»"| INFO["Página informativa pública (Sismo_info)"]
+  INFO -->|"«Ir al panel» (solo operadores)"| PANEL
+  VIS["Visitante (sin sesión)"] --> INFO

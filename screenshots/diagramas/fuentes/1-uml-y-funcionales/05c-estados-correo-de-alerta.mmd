@@ -1,0 +1,13 @@
+%% title: Diagrama de estados — Correo de alerta a los contactos
+stateDiagram-v2
+  [*] --> SinDestinatarios : Ningún contacto real con correo
+  [*] --> NoSePregunta : Es un simulacro
+  [*] --> Preguntando : Alerta activada
+  Preguntando --> Enviando : «Sí, enviar ahora» o 20 s sin respuesta
+  Preguntando --> Cancelado : «No enviar»
+  Enviando --> Enviado : Servicio de correo responde 2xx
+  Enviando --> Fallido : Error tras 2 reintentos
+  Enviando --> SinServidor : Servicio de correo no configurado
+  Cancelado --> Enviando : Reintentar
+  Fallido --> Enviando : Reintentar
+  Enviado --> [*]

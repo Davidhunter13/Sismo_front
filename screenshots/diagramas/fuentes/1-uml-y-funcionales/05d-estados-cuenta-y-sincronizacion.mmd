@@ -1,0 +1,13 @@
+%% title: Diagrama de estados — Cuenta del dispositivo y sincronización
+stateDiagram-v2
+  [*] --> SinRegistrar
+  SinRegistrar --> RegistradaLocal : Termina el registro
+  RegistradaLocal --> Sincronizada : POST /registro + sincronización completa
+  Sincronizada --> CambiosPendientes : Cambio sin conexión
+  CambiosPendientes --> Sincronizada : Vuelve la red y se vacía la cola
+  Sincronizada --> TokenRevocado : 401
+  TokenRevocado --> Sincronizada : Nuevo registro + sincronización completa
+  Sincronizada --> AccesoPerdido : Se recuperó la cuenta en otro teléfono
+  Sincronizada --> Eliminada : «Eliminar mi cuenta»
+  Eliminada --> SinRegistrar : Datos y token borrados del teléfono
+  AccesoPerdido --> [*]

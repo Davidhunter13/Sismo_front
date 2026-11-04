@@ -136,7 +136,7 @@ Sin URL configurada, la alerta muestra «No se envió: falta conectar el servido
 
 ## Base de datos y sincronización
 
-Los datos se guardan en el teléfono y, si se configura `VITE_SISMO_API_URL`, también en una base de datos MySQL a través del **backend en CodeIgniter 3** (API REST). Sin red, los cambios quedan en una cola persistente y se suben solos apenas vuelve la conexión, incluido todo el historial existente. Si se pierde el teléfono, los datos se recuperan con un código (*Configuración → Respaldo y recuperación*). El backend incluye además un **panel administrativo** de monitoreo en tiempo real para brindar ayuda a quien activa la alerta. Detalle de la API, las tablas `sismo_*` y la configuración en [docs/BACKEND_Y_SINCRONIZACION.md](docs/BACKEND_Y_SINCRONIZACION.md).
+Los datos se guardan en el teléfono y, si se configura `VITE_SISMO_API_URL`, también en una base de datos MySQL a través del **backend en CodeIgniter 3** (API REST). Sin red, los cambios quedan en una cola persistente y se suben solos apenas vuelve la conexión, incluido todo el historial existente. Si se pierde el teléfono, los datos se recuperan con un código (*Configuración → Respaldo y recuperación*). El backend incluye además un **panel administrativo** de monitoreo en tiempo real para brindar ayuda a quien activa la alerta. Detalle de la API, las tablas `sismo_*` y la configuración en [docs/segunda_entrega/BACKEND_Y_SINCRONIZACION.md](docs/segunda_entrega/BACKEND_Y_SINCRONIZACION.md).
 
 ## Idioma y tema
 
@@ -150,7 +150,7 @@ Cada activación guarda sus **tiempos** (SOS → confirmación, confirmación �
 
 **Logo:** cuadrado redondeado (círculo en el ícono redondo) azul marino `#0B2545` con una onda sísmica blanca (el temblor y la señal de vida) y un punto rojo `#D62828` (la alerta, «estoy aquí»). Se usa en la bienvenida (`SismoLogo.tsx`), el ícono de Android y los widgets.
 
-**Paleta principal:** azul SISMO `#0B2545` (marca), rojo `#D62828` (solo SOS, alerta y datos faltantes), verde `#1B7A4B` (listo), amarillo `#8F5300` (revisar), morado `#6B3FA0` (modo de demostración), fondo `#F3F5F9` y tarjetas `#FFFFFF`. En modo oscuro: fondo `#0E141C`, tarjetas `#18212D` y textos aclarados (p. ej. azul `#9CC0F0`). La tabla completa de tokens, claro y oscuro, está en [AVANCES §2.13](docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
+**Paleta principal:** azul SISMO `#0B2545` (marca), rojo `#D62828` (solo SOS, alerta y datos faltantes), verde `#1B7A4B` (listo), amarillo `#8F5300` (revisar), morado `#6B3FA0` (modo de demostración), fondo `#F3F5F9` y tarjetas `#FFFFFF`. En modo oscuro: fondo `#0E141C`, tarjetas `#18212D` y textos aclarados (p. ej. azul `#9CC0F0`). La tabla completa de tokens, claro y oscuro, está en [AVANCES §2.13](docs/segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
 ## Vistas y rutas
 
@@ -221,7 +221,7 @@ capacitor.config.ts  Id de la app (co.edu.poli.sismo), nombre y carpeta web (dis
 
 ## Avances y hoja de ruta
 
-El detalle de lo implementado, las decisiones de diseño, las limitaciones y las mejoras planeadas está en [docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md](docs/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
+El detalle de lo implementado, las decisiones de diseño, las limitaciones y las mejoras planeadas está en [docs/segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md](docs/segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
 ## Pendiente para el equipo (revisión humana, regla 80/20)
 

@@ -1,0 +1,49 @@
+%% title: Diagrama de clases — Modelo de datos de la app (AppData)
+classDiagram
+  direction LR
+  class AppData {
+    +version : 1
+    +activeAlertId : string
+    +locationPermission
+    +postQuakeDone : string[]
+  }
+  class Settings {
+    +userName
+    +soundEnabled / visualSignalEnabled / vibrationEnabled
+    +alarmSound : sirena | silbato
+    +language : es | en
+    +theme : sistema | claro | oscuro
+    +fallDetection
+    +lowBatterySaver
+    +highContrast / largeText / reduceMotion
+    +onboarded
+  }
+  class Contact { +id +name +relationship +phone +email +createdAt }
+  class AlertRecord {
+    +id +eventType
+    +status : activa | finalizada
+    +activatedAt +endedAt
+    +digitalStatus
+    +emailStatus
+    +isDrill +source
+    +locationUpdates
+    +postQuakeDone : string[]
+  }
+  class AlertMetrics { +sosPressedAt +confirmedAt +sirenAt +torchAt +vibrationAt +smsAt +drillSignalAt }
+  class LocationSnapshot { +latitude +longitude +accuracy +timestamp +source }
+  class MedicalInfo { +bloodType +allergies +medications +conditions +notes +showOnAlert }
+  class MeetingPoint { +id +label +latitude +longitude }
+  class SusResponse { +id +answeredAt +answers : number[] +score +drillAlertId }
+  class EmergencyKit { +lastReviewedAt }
+  class KitItem { +id +name +checked +expiresOn +isDefault }
+  AppData *-- "1" Settings
+  AppData *-- "0..*" Contact
+  AppData *-- "0..*" AlertRecord
+  AppData *-- "0..1" MedicalInfo
+  AppData *-- "0..*" MeetingPoint
+  AppData *-- "0..*" SusResponse
+  AppData *-- "0..1" EmergencyKit
+  AppData *-- "0..1" LocationSnapshot : lastLocation
+  AlertRecord *-- "0..1" AlertMetrics
+  AlertRecord *-- "0..1" LocationSnapshot : location
+  EmergencyKit *-- "0..*" KitItem

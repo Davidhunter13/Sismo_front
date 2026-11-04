@@ -1,0 +1,38 @@
+%% title: Diagrama PERT — red de actividades (días desde el 24/10/2026)
+flowchart LR
+  INI((Inicio))
+  FIN((Fin<br/>día 12))
+  A["<b>A</b> · Prototipo web v1<br/>(SOS, guía, contactos, historial)<br/><span>ES 0 · D 1 · EF 1</span><br/><span>LS 0 · H 0 · LF 1</span>"]
+  B["<b>B</b> · App Android (Capacitor),<br/>widget y acceso rápido<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
+  C["<b>C</b> · Alertas avanzadas y comunicación<br/>(señales, 123, SMS, WhatsApp, correo en la app)<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
+  D["<b>D</b> · Ubicación, mapa real, rutas,<br/>brújula y puntos de encuentro<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
+  E["<b>E</b> · Supervivencia y validación<br/>(atrapado, caídas, SUS, mochila, simulacro)<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
+  F["<b>F</b> · Backend: API, base de datos<br/>y sincronización sin conexión<br/><span>ES 10 · D 1 · EF 11</span><br/><span>LS 10 · H 0 · LF 11</span>"]
+  G["<b>G</b> · Panel de monitoreo<br/>en tiempo real<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11 · H 0 · LF 11,5</span>"]
+  H["<b>H</b> · Catálogos administrables,<br/>guía y parámetros<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11 · H 0 · LF 11,5</span>"]
+  I["<b>I</b> · Recuperación y<br/>eliminar cuenta<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11,5 · H 0,5 · LF 12</span>"]
+  K["<b>K</b> · Servicio de correo<br/>de alertas<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11,5 · H 0,5 · LF 12</span>"]
+  J["<b>J</b> · Página informativa<br/>y evidencias<br/><span>ES 11,5 · D 0,5 · EF 12</span><br/><span>LS 11,5 · H 0 · LF 12</span>"]
+  INI --> A
+  A --> B
+  A --> C
+  A --> D
+  A --> E
+  B --> F
+  C --> F
+  D --> F
+  E --> F
+  F --> G
+  F --> H
+  F --> I
+  F --> K
+  C --> K
+  G --> J
+  H --> J
+  I --> FIN
+  K --> FIN
+  J --> FIN
+  classDef crit fill:#fdecec,stroke:#d62828,stroke-width:3px
+  classDef norm fill:#e8f0fa,stroke:#1d4e89
+  class A,B,C,D,E,F,G,H,J crit
+  class I,K norm

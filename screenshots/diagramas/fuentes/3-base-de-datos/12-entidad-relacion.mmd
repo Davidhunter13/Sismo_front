@@ -1,0 +1,93 @@
+%% title: Diagrama entidad-relación (DER) — base de datos SISMO
+erDiagram
+  sismo_usuarios ||--o| sismo_ajustes_usuarios : "configura"
+  sismo_usuarios ||--o{ sismo_contactos_usuarios : "registra"
+  sismo_usuarios ||--o{ sismo_alertas_usuarios : "activa"
+  sismo_usuarios ||--o| sismo_fichas_medicas_usuarios : "tiene"
+  sismo_usuarios ||--o{ sismo_puntos_encuentro_usuarios : "define"
+  sismo_usuarios ||--o{ sismo_encuestas_sus_usuarios : "responde"
+  sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
+  sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe"
+  operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
+  sismo_usuarios {
+    entero id PK
+    texto uuid_dispositivo
+    texto nombre
+    texto plataforma
+  }
+  sismo_ajustes_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto idioma
+    texto tema
+    booleano deteccion_caidas
+  }
+  sismo_contactos_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto nombre
+    texto parentesco
+    texto telefono
+    texto correo
+  }
+  sismo_alertas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto tipo_evento
+    texto estado
+    fecha_hora fecha_activacion
+    texto estado_correo
+  }
+  sismo_fichas_medicas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto datos_cifrados
+    booleano mostrar_en_alerta
+  }
+  sismo_puntos_encuentro_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto etiqueta
+    decimal latitud
+    decimal longitud
+  }
+  sismo_encuestas_sus_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto respuestas
+    decimal puntaje
+  }
+  sismo_inventarios_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto nombre
+    booleano marcado
+    fecha fecha_vencimiento
+  }
+  sismo_atenciones_alertas {
+    entero id PK
+    entero id_alerta FK
+    entero id_persona FK
+    texto estado
+    texto nota
+  }
+  sismo_catalogos {
+    entero id PK
+    texto tipo
+    texto clave
+    texto nombre_es
+  }
+  sismo_guia_tarjetas {
+    entero id PK
+    texto clave
+    texto momento
+    texto titulo_es
+  }
+  sismo_parametros {
+    entero id PK
+    texto clave
+    texto valor
+  }
+  operadores_panel {
+    entero id PK
+  }

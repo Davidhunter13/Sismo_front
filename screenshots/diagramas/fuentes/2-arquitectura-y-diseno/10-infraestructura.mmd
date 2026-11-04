@@ -1,0 +1,33 @@
+%% title: Diagrama de infraestructura
+flowchart LR
+  subgraph DEV["Desarrollo"]
+    GH["GitHub<br/>repositorio de la app y del backend"]
+    GA["GitHub Actions (CI)<br/>lint · tipos · 116 pruebas unitarias<br/>· pruebas e2e Playwright · APK debug"]
+    LOC["Equipo de desarrollo<br/>Vite (app) + Apache/XAMPP (backend)"]
+    GCP["Google Cloud<br/>VM con la base de datos de desarrollo<br/>(acceso por túnel IAP)"]
+    GH --> GA
+    LOC -- push --> GH
+    LOC -- "túnel IAP :3307" --> GCP
+  end
+  subgraph PROD["Producción"]
+    INT((Internet))
+    WEB["Servidor web HTTPS<br/>Apache + PHP 7.3 + CodeIgniter 3"]
+    DBP[("MySQL / MariaDB")]
+    MAIL["Servidor de correo de alertas<br/>→ proveedor de correo"]
+    INT --> WEB --> DBP
+    INT --> MAIL
+  end
+  subgraph USERS["Usuarios"]
+    AND["Teléfonos Android<br/>(APK)"]
+    NAV["Navegadores<br/>(panel y página pública)"]
+  end
+  subgraph EXT["Servicios públicos externos"]
+    USGS["USGS"]
+    OSM["OpenStreetMap"]
+    GEO["ArcGIS / Photon"]
+  end
+  GA -- "artefacto APK" --> AND
+  AND --> INT
+  NAV --> INT
+  AND --> EXT
+  WEB --> USGS

@@ -1,0 +1,28 @@
+%% title: Diagrama de secuencia — Operador: brindar ayuda desde el panel
+sequenceDiagram
+  autonumber
+  actor O as Operador
+  participant PV as Panel (navegador)
+  participant CA as Sismo_admin
+  participant SP as Sesion_persona
+  participant MD as Sismo_model
+  participant DB as MySQL
+  O->>PV: Abre Panel SISMO
+  PV->>CA: GET /Sismo_admin
+  CA->>SP: persona() y es_admin_sismo()
+  SP-->>CA: autorizado
+  CA-->>PV: Página del panel + token CSRF
+  loop cada 60 s (silencioso)
+    PV->>CA: GET datos
+    CA->>MD: resumen(), alertas_panel(), usuarios_panel()
+    MD->>DB: SELECT …
+    CA-->>PV: JSON (indicadores, alertas, usuarios)
+  end
+  PV-->>O: Banner SOS, sonido y notificación
+  O->>PV: «Brindar ayuda»: estado + mensaje
+  PV->>CA: POST atender (X-CSRF-Token)
+  CA->>MD: alerta_por_id() y registrar_atencion()
+  MD->>DB: INSERT sismo_atenciones_alertas
+  CA-->>PV: 200 ok
+  PV-->>O: Lista actualizada y mensaje de confirmación
+  Note over PV,DB: La app de la persona lo recibe en su próxima consulta GET /atencion (cada 15 s)

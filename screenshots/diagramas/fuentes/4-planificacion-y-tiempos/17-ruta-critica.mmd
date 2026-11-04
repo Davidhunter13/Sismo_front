@@ -1,0 +1,39 @@
+%% title: Diagrama de ruta crítica — duración total 12 días (24/10/2026 – 04/11/2026)
+flowchart LR
+  INI((Inicio))
+  FIN((Fin<br/>12 días))
+  A["<b>A</b> · Prototipo web v1<br/>(SOS, guía, contactos, historial)<br/>1 día(s) · holgura 0"]
+  B["<b>B</b> · App Android (Capacitor),<br/>widget y acceso rápido<br/>9 día(s) · holgura 0"]
+  C["<b>C</b> · Alertas avanzadas y comunicación<br/>(señales, 123, SMS, WhatsApp, correo en la app)<br/>9 día(s) · holgura 0"]
+  D["<b>D</b> · Ubicación, mapa real, rutas,<br/>brújula y puntos de encuentro<br/>9 día(s) · holgura 0"]
+  E["<b>E</b> · Supervivencia y validación<br/>(atrapado, caídas, SUS, mochila, simulacro)<br/>9 día(s) · holgura 0"]
+  F["<b>F</b> · Backend: API, base de datos<br/>y sincronización sin conexión<br/>1 día(s) · holgura 0"]
+  G["<b>G</b> · Panel de monitoreo<br/>en tiempo real<br/>0,5 día(s) · holgura 0"]
+  H["<b>H</b> · Catálogos administrables,<br/>guía y parámetros<br/>0,5 día(s) · holgura 0"]
+  I["<b>I</b> · Recuperación y<br/>eliminar cuenta<br/>0,5 día(s) · holgura 0,5"]
+  K["<b>K</b> · Servicio de correo<br/>de alertas<br/>0,5 día(s) · holgura 0,5"]
+  J["<b>J</b> · Página informativa<br/>y evidencias<br/>0,5 día(s) · holgura 0"]
+  INI ==> A
+  A ==> B
+  A ==> C
+  A ==> D
+  A ==> E
+  B ==> F
+  C ==> F
+  D ==> F
+  E ==> F
+  F ==> G
+  F ==> H
+  F -.-> I
+  F -.-> K
+  C -.-> K
+  G ==> J
+  H ==> J
+  I -.-> FIN
+  K -.-> FIN
+  J ==> FIN
+  classDef crit fill:#d62828,color:#fff,stroke:#a61e1e,stroke-width:2px
+  classDef norm fill:#f3f5f9,color:#5b6578,stroke:#c9d2df,stroke-dasharray:4 3
+  class A,B,C,D,E,F,G,H,J crit
+  class I,K norm
+  linkStyle 0,1,2,3,4,5,6,7,8,9,10,14,15,18 stroke:#d62828,stroke-width:4px

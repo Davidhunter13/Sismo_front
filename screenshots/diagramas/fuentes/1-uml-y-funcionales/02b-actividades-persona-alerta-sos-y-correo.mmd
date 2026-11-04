@@ -1,0 +1,25 @@
+%% title: Diagrama de actividades — Persona usuaria: alerta SOS y envío de correo
+flowchart TD
+  S((●)):::ini --> A["Tocar SOS<br/>(app, widget, acceso rápido o detección de caída)"]
+  A --> B["Elegir tipo de evento y confirmar"]
+  B --> C["Crear la alerta «activa»"]
+  C --> D1["Sirena, linterna, vibración<br/>y pantalla encendida"]
+  C --> D2["Afinar GPS (hasta 10 s)<br/>y actualizar cada 2 min"]
+  C --> D3{"¿Simulacro o sin<br/>contactos con correo?"}
+  D3 -- Sí --> NE["No se pregunta por el correo"]
+  D3 -- No --> E["Diálogo «¿Enviar correo a sus contactos?»<br/>cuenta regresiva de 20 s"]
+  E -- "No enviar" --> EC["Correo cancelado<br/>(se puede reintentar)"]
+  E -- "Sí, enviar ahora / silencio 20 s" --> EM["Enviar solicitud al servicio de correo"]
+  EM --> EV{"¿Aceptado (2xx)?"}
+  EV -- Sí --> EOK["Correo «enviado» a los contactos"]
+  EV -- "No (2 reintentos)" --> EF["Correo «fallido»<br/>(se puede reintentar)"]
+  C --> G["Encolar la alerta para el servidor"]
+  G --> G1["El centro de monitoreo la ve en el panel"]
+  G1 --> H["Consultar ayuda cada 15 s"]
+  H --> H1["Mostrar aviso fijo del centro de monitoreo"]
+  D1 & D2 & NE & EC & EOK & EF & H1 --> J["Opcional: enviar SMS / WhatsApp,<br/>llamar a emergencias, modo atrapado"]
+  J --> K["Finalizar la alerta"]
+  K --> L["«Después del sismo» y «Estoy bien»"]
+  L --> F1((◉)):::fin
+  classDef ini fill:#0b2545,color:#fff
+  classDef fin fill:#d62828,color:#fff
