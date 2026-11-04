@@ -1,16 +1,16 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { Activity, AlertOctagon, ChevronRight, FlaskConical } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { getCatalogs, iconOf } from '../services/catalogService';
+import { catalogIcon } from './catalogIcons';
 import { useT } from '../i18n/useT';
 import type { AlertRecord } from '../types';
 import { eventTypeLabel, formatDateTime } from '../utils/format';
 import { ActiveAlertBadge, DemoBadge, StatusBadge } from './StatusBadge';
 import { deliveryBadge } from './statusMaps';
 
-const eventIcon = { sismo: Activity, emergencia_general: AlertOctagon, prueba: FlaskConical };
-
 export function HistoryItem({ alert, onOpen }: { alert: AlertRecord; onOpen: () => void }) {
   const t = useT().history.item;
-  const Icon = eventIcon[alert.eventType];
+  const Icon = catalogIcon(iconOf(getCatalogs().eventTypes, alert.eventType));
   const delivery = deliveryBadge[alert.digitalStatus];
   return (
     <li>

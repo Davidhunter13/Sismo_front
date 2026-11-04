@@ -7,7 +7,7 @@ Resume las funciones agregadas, las decisiones de diseño, las limitaciones cono
 
 Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
-**Última actualización:** 2 de noviembre de 2026 (la fecha también va en el nombre del archivo).
+**Última actualización:** 4 de noviembre de 2026 (la fecha también va en el nombre del archivo). Novedades de esta versión: **backend en CodeIgniter 3 con base de datos y sincronización sin conexión** (§2.14), **panel administrativo de monitoreo en tiempo real** (§2.15) **recuperación de datos si se pierde el teléfono** (§2.16), **catálogos administrables: nada de negocio queda fijo en el código** (§2.17), **sismos recientes en el panel** (§2.18) **modo de demostración solo en desarrollo** (§2.19) **pantalla de carga, loader de solicitudes y aviso de «sin conexión» en la app** (§2.20) y **eliminar mi cuenta** (§2.21).
 
 ---
 
@@ -29,7 +29,12 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
-| Calidad | 18 pruebas e2e | 114 pruebas e2e + 98 pruebas unitarias + integración continua con APK automático |
+| Almacenamiento | Solo en el teléfono | Teléfono + base de datos MySQL vía backend en CodeIgniter 3; sin red los cambios esperan en una cola y se suben solos al volver la conexión |
+| Monitoreo | No existía | Panel administrativo web (backend) con alertas activas en tiempo real, mapa, detalle de la persona y registro de la ayuda brindada, visible en la app |
+| Recuperación | Si se perdía el teléfono se perdía todo | Código de recuperación: en un teléfono nuevo se restauran contactos, historial, ficha médica y demás datos |
+| Contenido | Listas y textos fijos en el código | Tipos de evento, parentescos, kit, pasos post-sismo, tipos de sangre, guía de emergencia y parámetros (número de emergencia, topes, tiempos) editables desde el panel |
+| Modo demostración | Visible siempre | Solo en desarrollo; en producción no aparece y se apaga solo |
+| Calidad | 18 pruebas e2e | 114 pruebas e2e (móvil y escritorio) + 116 pruebas unitarias + integración continua con APK automático |
 
 ---
 
@@ -209,6 +214,99 @@ Dónde se usa: bienvenida (`components/SismoLogo.tsx`, SVG), ícono de la app An
 
 Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarillo** para «revisar»; el **verde** para «listo»; el **morado** para la demostración. En oscuro los colores de texto se aclaran (`--navy`, `--danger`, etc.) para mantener el contraste, y la opción **Alto contraste** de Configuración marca más bordes y textos en ambos temas.
 
+### 2.14 Backend y base de datos: guardado online y offline
+
+Antes todo se guardaba solo en el teléfono (`localStorage`). Ahora también se guarda en una **base de datos MySQL** a través de un **backend en PHP con CodeIgniter 3** (API REST JSON). Detalle técnico completo en [BACKEND_Y_SINCRONIZACION.md](BACKEND_Y_SINCRONIZACION.md).
+
+**Qué hace el backend (CodeIgniter 3):**
+- **Registro del dispositivo sin contraseña:** al primer uso con red entrega un token (el servidor solo guarda su SHA-256); cada petición se autentica con él.
+- **API por recurso:** ajustes, contactos, alertas (con ubicación, estados y métricas de tiempo), puntos de encuentro, encuestas SUS, kit de emergencia y ficha médica; más `GET /estado` para consultar todo lo guardado.
+- **Escrituras idempotentes:** cada registro usa el UUID generado por la app, así reenviar no duplica. Eliminar = `activo = 0` (sin borrado físico).
+- **Ficha médica cifrada** con AES-256-GCM; la llave vive en una variable de entorno del servidor. Sin llave, no se guarda.
+- **Validación estricta** de cada campo, consultas parametrizadas, CORS solo para la app, logs JSON con `execution_id` y sin datos personales.
+- **8 tablas `sismo_*`** con la convención de nombres del CCS: `sismo_usuarios`, `sismo_ajustes_usuarios`, `sismo_contactos_usuarios`, `sismo_alertas_usuarios`, `sismo_fichas_medicas_usuarios`, `sismo_puntos_encuentro_usuarios`, `sismo_encuestas_sus_usuarios` y `sismo_inventarios_usuarios`.
+
+**Online / offline (`src/services/syncService.ts`):**
+- **Con red:** cada cambio se guarda en el teléfono y se sube de inmediato.
+- **Sin red:** la app funciona igual; los cambios quedan en una **cola persistente** (`sismo:v1:outbox`) que sobrevive al cierre de la app y al reinicio del teléfono.
+- **Al volver la red:** la cola se sube sola y en orden apenas hay conexión (evento `online`, al abrir la app, al volver a primer plano y cada minuto). Ante saturación del servidor (429/5xx) reintenta con espera exponencial.
+- **Historial completo:** al registrarse por primera vez se sube todo lo que ya existía en el teléfono: historial de alertas y simulacros con sus métricas, estadísticas, encuestas SUS, contactos, kit, puntos de encuentro, ajustes y ficha médica.
+- Si un dato cambia varias veces sin red, solo se sube su última versión. Los datos del modo de demostración nunca se suben.
+- Sin URL configurada (`VITE_SISMO_API_URL`) la app sigue funcionando solo en el teléfono, como antes.
+- **Aviso «sin conexión» en todas las pantallas:** si no hay internet, la app muestra «Sin conexión. Sus datos se guardan en el teléfono y se subirán apenas haya conexión», con el número de cambios pendientes. Si hay internet pero el servidor no responde (caído o red saturada), dice «Sin conexión con el servidor. Sus datos están guardados en el teléfono y se subirán solos apenas se restablezca». Cuando vuelve la conexión, el aviso desaparece solo y la cola se sube (§2.20).
+- **Token inválido (401):** si el servidor ya no reconoce el teléfono (cuenta eliminada o base de datos reiniciada), la app se vuelve a registrar **de inmediato** y sube todo lo que tiene guardado, sin perder datos ni intervención de la persona. El 401 aparece una vez en la consola del navegador y es normal.
+- **Importante al configurar:** Vite solo lee los archivos `.env` al arrancar. Después de crear o cambiar `VITE_SISMO_API_URL` hay que detener y volver a iniciar `npm run dev` (o recompilar). Si no, la app no se comunica con el backend y no se crea el usuario en la base de datos. Pasó en las pruebas del 4/11/2026: tras reiniciar, el registro, los catálogos y los ajustes llegaron bien. Lo que se llenó antes no se pierde: al registrarse por primera vez la app sube todo lo que ya tenía guardado.
+- **CORS en desarrollo:** si el puerto de Vite está ocupado, Vite usa otro (p. ej. 5181) y el navegador bloqueaba las peticiones. Ahora, con el backend en localhost, se acepta cualquier puerto local. En producción siguen permitidos solo los orígenes de la app.
+
+### 2.15 Panel administrativo de monitoreo (backend)
+
+Se construyó un **panel administrativo web desde el backend (CodeIgniter 3)** para el centro de monitoreo. Solo pueden entrar los administradores autorizados en la configuración del servidor. El diseño usa la **misma identidad visual de la app**: paleta (azul `#0B2545`, rojo SOS `#D62828`, morado para simulacros), logo, tipografía Inter y modo claro u oscuro. Es una página propia, sin menús ni encabezados de otros sistemas.
+
+- **Siempre al día, sin recargar la página:** cada pestaña **consulta al servidor al abrirse** (Historial, Usuarios, Sismos recientes y cada catálogo). Además, el panel se actualiza solo **cada minuto, en silencio**: alertas activas, indicadores, mapa, historial, usuarios y el detalle de una persona abierto. Así, cuando alguien activa una alerta o pide ayuda, la tarjeta aparece sola en «Alertas activas». El detalle se actualiza sin perder la posición del scroll y no interrumpe si hay una ventana abierta. Al registrar una ayuda, la lista se actualiza al instante.
+- **Loader:** cada consulta que inicia el operador (abrir una pestaña o una persona, registrar ayuda, generar un código, guardar un catálogo) muestra un loader de pantalla completa: fondo oscuro translúcido con desenfoque, un anillo que gira con el rojo SOS y la onda sísmica que se dibuja. Las actualizaciones automáticas de cada minuto no lo muestran. Muestra quién activó la alerta, el tipo de evento, hace cuánto, el origen (app, widget, acceso rápido o detección de caída), los contactos y la última ubicación con su precisión. Los simulacros se distinguen en morado.
+- **Mapa en vivo** (Leaflet + OpenStreetMap) con cada alerta activa y su círculo de precisión.
+- **Avisos al operador:** banner rojo y contador en la pestaña del navegador. Con «Activar avisos» (la preferencia se guarda en el navegador): pitido, notificación del sistema y una ventana (SweetAlert2) con «Ver persona» y «Brindar ayuda».
+- **Brindar ayuda:** el operador registra *En atención*, *Ayuda enviada* o *Resuelta* con un mensaje. **La persona lo ve en la app** (consulta cada 15 s mientras la alerta está activa): cada actualización aparece como una **alerta fija arriba de la pantalla**, que se ve aunque esté con el scroll abajo, con el estado (p. ej. «Ayuda en camino: el centro de monitoreo envió ayuda») y el mensaje del operador. Se cierra tocándola o con la ✕ y solo vuelve a aparecer si llega otra actualización (otro estado o mensaje). El último estado también queda en un recuadro dentro de la pantalla de alerta.
+- **Detalle de la persona:** contactos de emergencia con enlaces para llamar o escribir, ficha médica (descifrada solo en el panel), puntos de encuentro, historial de alertas con tiempos de confirmación y reacción, kit de emergencia, encuestas SUS y bitácora de la ayuda.
+- **Indicadores para la tesis:** usuarios, activos en las últimas 24 h, alertas reales, simulacros, tiempo promedio de reacción en simulacros, tiempo de confirmación del SOS y SUS promedio. Historial de alertas y lista de usuarios con buscador.
+- **Trazabilidad y seguridad:** cada consulta del detalle (incluye datos de salud), cada atención registrada y cada código de recuperación generado queda en el log con el operador. Los datos de la app se muestran como texto plano (protección contra XSS) y las acciones exigen token CSRF.
+- Nueva tabla `sismo_atenciones_alertas` (bitácora de ayuda).
+
+### 2.16 Recuperación de datos si se pierde el teléfono
+
+- **Código de recuperación** (`XXXX-XXXX-XXXX`): en *Configuración → Respaldo y recuperación* la persona lo crea y lo guarda fuera del teléfono. No vence y crear otro invalida el anterior. La misma tarjeta muestra si hay cambios pendientes de subir.
+- **Sin código:** el administrador, desde el panel, verifica la identidad de la persona y genera un **código temporal de 48 h**.
+- **En el teléfono nuevo:** *Recuperar mis datos* → se escribe el código (sin importar mayúsculas ni guiones) → se confirma. Se restauran contactos, historial de alertas y métricas, ficha médica, puntos de encuentro, kit, encuestas y ajustes.
+- **Seguridad:** el código es de un solo uso y solo se guarda su SHA-256. Al usarlo, el teléfono perdido **pierde el acceso al instante** (token nuevo). Un código inválido tarda 1 s en responder para frenar intentos de fuerza bruta.
+
+### 2.17 Catálogos administrables (nada de negocio queda fijo en el código)
+
+Todo lo que la app traía escrito en el código ahora se administra desde el panel, pestaña **Catálogos de la app** (backend CodeIgniter 3, tablas `sismo_catalogos`, `sismo_guia_tarjetas` y `sismo_parametros`). La app los descarga con `GET /catalogos`.
+
+| Catálogo | Dónde se ve en la app |
+|---|---|
+| **Tipos de evento** (nombre es/en, ícono, orden) | Diálogo del SOS, historial, detalle, SMS, correo y CSV |
+| **Parentescos** | Formulario de contactos |
+| **Ítems sugeridos del kit** | Mochila de emergencia |
+| **Pasos «Después del sismo»** | Lista de verificación |
+| **Tipos de sangre** | Ficha médica |
+| **Guía de emergencia** (tarjetas Antes/Durante/Después, introducciones y aviso) | Guía |
+| **Parámetros**: número de emergencia, máximo de puntos de encuentro, opciones de ahorro de batería, espera del simulacro, actualización de la ubicación en alerta | Botón «Llamar al…» y todos los textos que mencionan el número, registro, ubicación, configuración, simulacro y alerta |
+
+- **«Después del sismo» se guarda por clave de paso:** antes el avance se guardaba por posición (paso 1, 2, 3…), así que agregar o reordenar pasos lo habría dañado. Ahora cada casilla se guarda con la clave del paso, en el teléfono y en la base de datos, por alerta y en la lista de práctica. Un paso nuevo creado en el panel aparece en la app y se guarda igual. El avance guardado con versiones anteriores se convierte solo.
+- **Funciona sin internet:** la app trae los mismos valores por defecto con los que se sembró la base de datos, descarga los del servidor al abrir con red (solo si cambió la versión) y guarda la última copia. El SOS nunca depende del servidor.
+- **Claves estables:** la app guarda la clave, no el texto: renombrar no rompe los datos guardados. Ocultar un elemento no borra lo que ya lo usa (p. ej. un contacto con un parentesco que se ocultó lo conserva).
+- **Reglas de seguridad:** `sismo` y `emergencia_general` (usados por el widget y la detección de caídas) se pueden renombrar pero no ocultar. Todo se valida en el servidor y los textos se guardan como texto plano.
+- **Número de emergencia:** los textos de la app usan el marcador `{emergencyNumber}` y se reemplaza por el número configurado.
+- **Se deja fijo a propósito:** la encuesta SUS (sus respuestas sí se guardan en la base de datos). Es un instrumento estándar de 10 preguntas y modificarlo invalida el puntaje de la tesis. También quedan fijos los estados técnicos de los que depende la lógica.
+
+### 2.18 Sismos recientes en el panel
+
+Pestaña **Sismos recientes** con las **últimas 24 horas** y los **últimos 7 días**, los mismos periodos que la app. Muestra los sismos de magnitud 2.5 o más en Colombia y alrededores, desde el catálogo público del USGS, que el backend consulta y guarda en caché 5 minutos. La tabla trae fecha, magnitud, lugar, profundidad, cuántas personas lo reportaron y el enlace al detalle. Los sismos también se ven en el mapa (tamaño y color según la magnitud) y al hacer clic en uno el mapa se centra en él.
+
+### 2.19 Modo de demostración solo en desarrollo
+
+- En desarrollo (`npm run dev`) se ve todo lo de demostración: opción en la bienvenida, aviso en el encabezado y tarjeta en Configuración.
+- En producción (`npm run build` y el APK) **no aparece en ninguna pantalla**, el registro es siempre obligatorio y, si el teléfono tenía el modo encendido o datos ficticios, se apaga y se borran solos.
+- Las pruebas e2e lo habilitan solo para su compilación (`VITE_DEMO=true`).
+
+### 2.20 Pantalla de carga, loader de solicitudes y aviso de «sin conexión» (app)
+
+- **Pantalla de carga al abrir:** fondo azul SISMO con el anillo rojo que gira, la onda sísmica que se dibuja y el nombre SISMO. Dura entre 0,6 s y 1,5 s mientras se intentan descargar los catálogos, y **nunca espera a la red más de eso**. **No aparece si la app se abre para una alerta** (widget, acceso rápido, alerta activa o pantalla de alerta): el SOS nunca queda tapado.
+- **Loader en las solicitudes que hace la persona:** crear el código de recuperación, recuperar datos, buscar una dirección y consultar sismos recientes. Usa la misma marca sobre un fondo oscuro translúcido con desenfoque. La sincronización automática no lo muestra: sigue en silencio.
+- **Aviso de guardado sin conexión:** en todas las pantallas (incluidas la bienvenida y el registro) aparece cuando no hay internet o cuando el servidor no responde. Dice que los datos quedan guardados en el teléfono y se suben solos apenas vuelva la conexión, con el número de cambios pendientes. Verificado con el navegador sin conexión en la bienvenida y en el registro. En la bienvenida, con conexión, la consola queda sin errores: registro 201, catálogos 200 y ajustes 200 (los errores de CORS vistos antes eran del puerto 5181, corregido en §2.14).
+- Respeta «reducir movimiento» del sistema (animaciones más lentas o fijas).
+- **Pantalla de error amable:** si algo falla al dibujar la app, en vez de una pantalla en blanco aparece «Algo salió mal» con «Recargar» y el botón para llamar al número de emergencia configurado. Los datos del teléfono no se tocan.
+- **Desarrollo:** el estado de la app sobrevive a la recarga en caliente de Vite, así que ya no aparece el error «useAppState debe usarse dentro de AppStateProvider» al guardar archivos. Los mensajes de CSP, `simulator.js` o «Receiving end does not exist» vienen de las extensiones o del simulador de celular del navegador, no de SISMO: con la página abierta directamente, la consola queda sin errores.
+
+### 2.21 Eliminar mi cuenta (app + backend)
+
+- **En la app:** *Configuración → Eliminar mi cuenta*, con confirmación. Borra la cuenta en el servidor y todo lo del teléfono (datos, cambios pendientes y token) y vuelve a la bienvenida.
+- **Al volver a entrar no estorba nada:** el token anterior queda revocado en el servidor y borrado del teléfono, y el código de recuperación se anula (ya no sirve para recuperar una cuenta eliminada). La app se registra como un usuario nuevo y limpio, con token nuevo. Si la persona quiere un código, crea uno nuevo.
+- **En el backend** (`POST /eliminar_cuenta`, en una sola transacción): borrado lógico en cascada (`activo = 0`, convención CCS) de ajustes, contactos, alertas, puntos de encuentro, encuestas, kit, ficha médica y bitácora de ayuda. Además hay **supresión de datos personales y de salud** (Ley 1581): se vacían el nombre, los contactos, la ficha médica cifrada, las ubicaciones, los puntos de encuentro, las notas y los mensajes de ayuda. Solo quedan métricas anónimas (tiempos de reacción y confirmación, SUS) para la tesis. La persona desaparece del panel.
+- **Sin conexión** no se borra nada (para no dejar datos huérfanos en el servidor) y la app avisa que debe intentarlo con internet.
+- **Verificado de punta a punta:** registro, contacto y código de recuperación; luego eliminar → `ok` y el token anterior queda inválido. Pruebas unitarias: aviso al servidor, borrado del token y la cola, y comportamiento sin red.
+
 ## 3. Decisiones de diseño
 
 | Decisión | Motivo |
@@ -218,7 +316,23 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 | El widget se activa con doble toque; el acceso rápido pide confirmación en el diálogo | El doble toque en el widget evita activaciones accidentales (p. ej. en el bolsillo) sin perder tiempo en diálogos |
 | El SMS no se abre automáticamente | Abrir otra app envía SISMO a segundo plano; se deja al usuario decidir el momento |
 | Estado «SMS abierto», nunca «Enviada» | SISMO no puede comprobar el envío ni la entrega |
-| Ubicación actualizada solo en el dispositivo | El envío automático será por el servidor de correo (pendiente de conectar) |
+| Ubicación de la alerta guardada en el teléfono y en la base de datos, pero no enviada sola a los contactos | El envío automático será por el servidor de correo (pendiente de conectar) |
+| Offline-first: el teléfono es la fuente inmediata y la base de datos se actualiza con una cola | Tras un sismo la red falla o se satura; la app nunca debe esperar al servidor para funcionar ni perder datos |
+| Identidad por dispositivo con token, sin contraseña | No agrega pasos en el registro; el servidor solo guarda el hash del token |
+| Operaciones idempotentes por UUID de la app | Reenviar la cola tras un corte no crea duplicados |
+| Ficha médica cifrada en la base de datos | Es un dato de salud; antes no salía del teléfono. Requiere aprobación del tratamiento de datos (Ley 1581) |
+| Panel en tiempo real por consulta periódica (5 s), no WebSockets | Funciona en cualquier servidor PHP sin infraestructura adicional; 5 s es suficiente para coordinar ayuda |
+| La ayuda registrada se muestra en la app | La persona sabe que alguien atiende su alerta; reduce la angustia y orienta qué hacer |
+| Recuperación con código de un solo uso, sin contraseña | Mantiene el registro sin fricción; el código puede generarlo la persona o, verificando identidad, el administrador |
+| Al recuperar, el teléfono anterior pierde el acceso | Un teléfono robado no debe seguir sincronizando ni recibiendo datos |
+| Catálogos con valores por defecto en la app + copia local | En un sismo puede no haber internet: la app nunca debe quedar sin listas ni sin guía |
+| Se guarda la clave del catálogo, no el texto | Renombrar o traducir no rompe los datos ya guardados |
+| «Después del sismo» por clave de paso y no por posición | Agregar, quitar o reordenar pasos no cambia lo que la persona ya marcó |
+| Encuesta SUS fija | Es un instrumento estandarizado; cambiarla invalida la comparación del puntaje |
+| Modo demostración solo en desarrollo | En producción los datos ficticios podrían confundirse con reales o saltarse el registro obligatorio |
+| Pantalla de carga breve y nunca al abrir para una alerta | En una emergencia cada segundo cuenta: el SOS no puede esperar a la red ni a una animación |
+| Aviso explícito de «sus datos se guardan en el teléfono» | Sin conexión la persona debe saber que no perdió nada y que se subirá solo |
+| Eliminar cuenta = borrado lógico + vaciar datos personales | Cumple la convención de BD del CCS (sin borrado físico) y el derecho de supresión de la Ley 1581; las métricas anónimas siguen sirviendo a la tesis |
 | Ficha médica compartida por defecto en la alerta y el SMS, con opción de desactivarla | En una emergencia es más útil que rescatistas y contactos la conozcan; el usuario conserva el control. El aviso de la página explica qué se comparte |
 | CSV sin datos personales | Permite compartir métricas para la tesis sin exponer a nadie |
 | Sismos: descarga general y filtro local | No revelar la ubicación del usuario a terceros |
@@ -243,7 +357,10 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 - **iPhone:** no hay proyecto iOS; linterna y vibración no están disponibles en Safari.
 - **Escritorio:** sin flash ni vibración; la ubicación se estima por WiFi o IP y puede desviarse cientos de metros o más.
 - **SMS:** no se confirma el envío; no está verificado que todas las apps de mensajes acepten varios destinatarios en un enlace. Con ficha médica el mensaje puede superar 160 caracteres y enviarse en varias partes.
-- **Ubicación durante la alerta:** se actualiza en el dispositivo pero no se envía sola a los contactos.
+- **Ubicación durante la alerta:** se actualiza en el dispositivo y en la base de datos, pero no se envía sola a los contactos.
+- **Base de datos:** para recuperar los datos en otro teléfono hace falta el código de recuperación (propio o generado por el administrador). El registro de dispositivos todavía no tiene límite por IP.
+- **Panel:** la ayuda registrada llega a la app solo mientras la pantalla de alerta está abierta y hay red (no hay notificaciones push).
+- **Sincronización:** solo sube (teléfono → servidor); no hay edición desde otro dispositivo ni resolución de conflictos.
 - **Sismos recientes:** dependen de internet y del catálogo del USGS, que puede tardar minutos en publicar.
 - **Métricas de señales:** si una señal tarda más que el cierre del diálogo de confirmación (unos 200 ms), su tiempo puede quedar sin registrar.
 - **Simulacro:** se cancela si se cierra la app; no se guarda la espera en curso.
@@ -264,8 +381,12 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 |---|---|
 | TypeScript, ESLint y compilación web | Sin errores |
 | Compilación Android (`gradlew assembleDebug`) | Sin errores |
-| Pruebas unitarias (Vitest) | **98 de 98** superadas |
-| Pruebas e2e (Playwright, móvil y escritorio) | **114 de 114** superadas |
+| Pruebas unitarias (Vitest) | **116 de 116** superadas (incluye sincronización sin red → con red, recuperación, catálogos y número de emergencia configurable) |
+| Catálogos | `GET /catalogos` probado contra la base de desarrollo: 3 tipos de evento, 6 parentescos, 13 ítems del kit, 11 pasos post-sismo, 9 tipos de sangre, 11 tarjetas de guía y parámetros. **Pendiente:** probar la edición desde el panel con sesión |
+| Sismos recientes | Consulta al USGS probada (últimas 24 h y 7 días) |
+| Backend (CodeIgniter 3) | Endpoints probados de punta a punta contra la base de datos de desarrollo: registro, ajustes, contactos, alertas, inventario, encuestas, validación, CORS, código de recuperación y recuperación (token anterior invalidado, código de un solo uso). **Pendiente:** ficha médica (falta la llave de cifrado en el servidor) |
+| Panel administrativo | Carga y consulta de usuarios verificadas en desarrollo; **pendiente** probarlo con una alerta real desde el teléfono y con varios operadores |
+| Pruebas e2e (Playwright, móvil y escritorio) | **114 de 114** superadas (4/11/2026). Primera corrida: 110 de 114; las 4 de «Después del sismo» esperaban el avance guardado por posición. Se actualizaron al guardado por clave de paso y pasan |
 | Cubierto por pruebas e2e | Datos faltantes en rojo (aviso en Inicio y bordes), confirmaciones y borrar puntos en el registro, editar y eliminar contactos en el registro, ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
@@ -287,11 +408,28 @@ Reglas de uso: el **rojo** solo para SOS, alerta y datos faltantes; el **amarill
 | 4b | Notificaciones programadas para la mochila | Recordatorios aunque no se abra la app |
 | 5 | Proyecto iOS | Ampliar el alcance a iPhone |
 | 6 | Alertas oficiales del Servicio Geológico Colombiano | Fuente nacional además del USGS |
-| 7 | Funcionamiento sin conexión (PWA / service worker) | La guía y la alerta local disponibles sin red |
+| 7 | Funcionamiento sin conexión (PWA / service worker) | La guía y la alerta local disponibles sin red (los **datos** ya se guardan sin red y se suben al volver la conexión, §2.14) |
+| 8 | **Poner en marcha la base de datos:** ejecutar el SQL de las tablas `sismo_*`, definir `SISMO_LLAVE_CIFRADO` y `SISMO_CORS_ORIGENES` en el servidor y `VITE_SISMO_API_URL` en la app | Los datos empiezan a guardarse en la base de datos |
+| 9 | Aprobación del tratamiento de datos de salud y de contactos (Ley 1581) | Requisito legal antes de usar la ficha médica en el servidor con usuarios reales |
+| 10 | Notificaciones push a la app cuando el centro de monitoreo registra ayuda | La persona se entera aunque no tenga la pantalla de alerta abierta |
+| 10b | Protocolo de atención con el equipo de emergencias y prueba del panel con varios operadores | Uso real del centro de monitoreo |
+| 11 | Estadísticas de la tesis consultando la base de datos (tiempos de reacción, SUS) | Análisis con todos los participantes, no teléfono por teléfono |
 
 ## 7. Evidencias: capturas de pantalla y de código
 
-Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screenshots/AAAA-MM-DD/`), para conservar el historial del prototipo. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
+Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screenshots/AAAA-MM-DD/`), para conservar el historial del prototipo. Desde el 2/11/2026 cada fecha se organiza así:
+
+```
+screenshots/AAAA-MM-DD/
+├── codigo/
+│   ├── codigo_front/   código nuevo o modificado de la app
+│   └── codigo_back/    código nuevo o modificado del backend
+└── visual/
+    ├── visual_front/   pantallazos de los cambios visuales de la app
+    └── visual_back/    pantallazos de los cambios visuales del backend (panel), cuando aplica
+```
+
+**Nombres:** `NN-descripcion-corta.png` (número de orden de dos dígitos y descripción en minúsculas separada con guiones). Cada archivo aparece abajo con lo que muestra. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
 
 ### 7.1 Carpeta `screenshots/2026-10-24/` (primera versión)
 
@@ -314,9 +452,9 @@ Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screens
 | `codigo/` | `16-componente-boton-panico.png` | Componente del botón de pánico |
 | `codigo/` | `17-logica-alertas.png` | Lógica de alertas |
 
-### 7.2 Carpeta `screenshots/2026-11-02/` (esta versión)
+### 7.2 Carpeta `screenshots/2026-11-02/` (versión anterior)
 
-**`visual/`** (vista móvil 390×844, español):
+**`visual/visual_front/`** (vista móvil 390×844, español):
 
 | Archivo | Qué muestra |
 |---|---|
@@ -358,7 +496,7 @@ Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screens
 | `36-inicio-ingles.png` | Interfaz en inglés |
 | `37-vista-escritorio.png` | Vista de escritorio |
 
-**`codigo/`**:
+**`codigo/codigo_front/`**:
 
 | Archivo | Qué muestra |
 |---|---|
@@ -386,4 +524,74 @@ Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screens
 | `04-widget-2x2-primer-toque.png` | Widget 2×2 tras el primer toque: «¿ACTIVAR?» con borde amarillo |
 | `05-alerta-activada-desde-el-widget.png` | Segundo toque: SISMO abre la alerta activa (app recién instalada, sin registro) |
 | `06-notificacion-alerta-activa.png` | Notificación «Alerta SISMO activa · Sirena · Linterna SOS · Vibración» con «Silenciar sonido» |
+
+### 7.3 Carpeta `screenshots/2026-11-04/` (esta versión: backend, sincronización, panel y catálogos)
+
+Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y correos `@example.com`). En las de la app, las respuestas del servidor se simularon para no escribir en la base de datos. Las del panel se tomaron con la vista real alimentada con datos de prueba.
+
+**`visual/visual_front/`** (app, vista móvil 390×844, español):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-pantalla-de-carga.png` | Pantalla de carga al abrir la app: anillo rojo, onda sísmica y «SISMO» (§2.20) |
+| `02-bienvenida-sin-conexion.png` | Bienvenida sin internet: «Sus datos se guardan en el teléfono y se subirán apenas haya conexión» (§2.20) |
+| `03-registro-sin-conexion.png` | Registro sin internet con el mismo aviso (§2.20) |
+| `04-inicio-sin-conexion-cambios-pendientes.png` | Inicio sin internet con el número de cambios pendientes de subir (§2.14) |
+| `05-alerta-ayuda-del-centro-de-monitoreo.png` | Alerta activa con el aviso fijo del centro de monitoreo («Ayuda en camino» y el mensaje del operador) (§2.15) |
+| `06-configuracion-respaldo-y-recuperacion.png` | Configuración → Respaldo y recuperación: crear código y recuperar datos (§2.16) |
+| `07-loader-de-solicitud.png` | Loader de pantalla completa mientras se crea el código de recuperación (§2.20) |
+| `08-codigo-de-recuperacion.png` | Código de recuperación generado, para guardarlo fuera del teléfono (§2.16) |
+| `09-configuracion-eliminar-cuenta.png` | Configuración → Eliminar mi cuenta (§2.21) |
+| `10-confirmar-eliminar-cuenta.png` | Confirmación antes de eliminar la cuenta (§2.21) |
+| `11-guia-desde-catalogo.png` | Guía de emergencia leída del catálogo administrable (§2.17) |
+| `12-despues-del-sismo-por-clave.png` | «Después del sismo» con pasos del catálogo y avance guardado por clave de paso (§2.17) |
+
+**`visual/visual_back/`** (panel administrativo, 1440×900, tema oscuro):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-panel-alertas-activas-y-mapa.png` | Indicadores, banner SOS, alertas activas con su estado de atención y mapa en tiempo real (§2.15) |
+| `02-panel-brindar-ayuda.png` | Ventana «Brindar ayuda»: estado de la atención y mensaje para la persona (§2.15) |
+| `03-panel-detalle-de-la-persona.png` | Detalle de la persona: contactos, ficha médica, puntos de encuentro, alertas y bitácora de ayuda (§2.15) |
+| `04-panel-sismos-recientes.png` | Sismos recientes del USGS (últimas 24 h / 7 días) en tabla y mapa (§2.18) |
+| `05-panel-usuarios.png` | Lista de usuarios con plataforma, última sincronización y alertas (§2.15) |
+| `06-panel-catalogos-tipos-de-evento.png` | Catálogos de la app: tipos de evento (§2.17) |
+| `07-panel-catalogos-guia.png` | Catálogos de la app: tarjetas de la guía de emergencia (§2.17) |
+| `08-panel-editar-tarjeta-de-la-guia.png` | Edición de una tarjeta de la guía (título y pasos en español e inglés, ícono, orden) (§2.17) |
+| `09-panel-parametros.png` | Parámetros: número de emergencia, topes, tiempos y textos de la guía (§2.17) |
+| `10-panel-loader.png` | Loader del panel durante una consulta iniciada por el operador (§2.15) |
+
+**`codigo/codigo_front/`** (código real del repositorio de la app):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-cola-sin-conexion.png` | `syncService.ts`: diferencias del estado → operaciones por recurso para la cola persistente |
+| `02-envio-y-reintentos.png` | `syncService.ts`: envío al volver la red, reintentos y nuevo registro inmediato tras un 401 |
+| `03-recuperar-datos.png` | `syncService.ts`: código de recuperación y restaurar en un teléfono nuevo |
+| `04-eliminar-cuenta.png` | `syncService.ts`: eliminar cuenta en el servidor y olvidar token y cola |
+| `05-catalogos-administrables.png` | `catalogService.ts`: catálogos con valores por defecto y copia local sin red |
+| `06-despues-del-sismo-por-clave.png` | `PostQuakePage.tsx`: avance guardado por clave de paso |
+| `07-numero-emergencia-configurable.png` | `i18n/index.ts`: número de emergencia configurable en todos los textos |
+| `08-pantalla-de-carga-y-loader.png` | `AppLoader.tsx`: pantalla de carga que nunca tapa el SOS |
+| `09-aviso-sin-conexion.png` | `SyncStatusBanner.tsx`: aviso «sus datos se guardan en el teléfono» |
+| `10-alerta-ayuda-fija.png` | `HelpStatusBanner.tsx`: aviso fijo del centro de monitoreo que se cierra tocándolo |
+| `11-modo-demo-solo-desarrollo.png` | `env.ts` y `AppStateProvider.tsx`: modo de demostración solo en desarrollo |
+| `12-backend-en-la-app.png` | `AppStateProvider.tsx`: sincronización y descarga de catálogos al abrir |
+
+**`codigo/codigo_back/`** (backend en CodeIgniter 3 y scripts SQL):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-tablas-sismo.png` | SQL: tablas de usuarios y alertas con la convención de BD del CCS |
+| `02-tablas-catalogos.png` | SQL: tablas de catálogos y de la guía de emergencia |
+| `03-api-rutas.png` | Controlador de la API: rutas REST de la app |
+| `04-api-cors-y-validacion.png` | Controlador de la API: validación central, CORS y logs JSON con `execution_id` |
+| `05-escritura-idempotente.png` | Modelo: escrituras idempotentes por el UUID de la app |
+| `06-ficha-medica-cifrada.png` | Modelo: ficha médica cifrada AES-256-GCM con llave en variable de entorno |
+| `07-recuperacion-de-cuenta.png` | Modelo: código de recuperación y token nuevo |
+| `08-eliminar-cuenta.png` | Modelo: eliminar cuenta (borrado lógico en cascada + supresión de datos personales) |
+| `09-catalogos-para-la-app.png` | Modelo: catálogos activos con versión para la app |
+| `10-sismos-recientes-usgs.png` | Modelo: sismos de 24 h y 7 días desde el USGS con caché de 5 minutos |
+| `11-panel-endpoints.png` | Controlador del panel: datos, detalle de la persona, ayuda y código de recuperación |
+| `12-panel-tiempo-real-y-loader.png` | Vista del panel: consultas con loader y actualización silenciosa |
 

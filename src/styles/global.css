@@ -607,3 +607,39 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 .card--missing .card__title { color: var(--danger); }
 .quick-tile--missing { border-color: var(--danger); box-shadow: inset 0 0 0 1px var(--danger); }
 .quick-tile--missing small { color: var(--danger); font-weight: 700; }
+
+/* Loader de SISMO: pantalla de carga al abrir y loader de solicitudes (components/AppLoader.tsx). */
+.app-loader { position: fixed; inset: 0; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.app-loader--overlay { background: rgba(8, 20, 38, .62); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: app-loader-in .15s ease-out; }
+.app-loader--splash { background: #0b2545; transition: opacity .25s ease; }
+.app-loader--out { opacity: 0; pointer-events: none; }
+.app-loader__arc { transform-origin: 48px 48px; animation: app-loader-spin 1.1s linear infinite; }
+.app-loader__wave { stroke-dasharray: 80; stroke-dashoffset: 80; animation: app-loader-wave 1.6s ease-in-out infinite; }
+.app-loader__brand { color: #fff; font-size: 26px; font-weight: 800; letter-spacing: 2px; }
+.app-loader__text { color: rgba(255, 255, 255, .88); font-size: 14px; font-weight: 600; letter-spacing: .6px; }
+@keyframes app-loader-spin { to { transform: rotate(360deg); } }
+@keyframes app-loader-wave { 0% { stroke-dashoffset: 80; } 50% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -80; } }
+@keyframes app-loader-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .app-loader__arc { animation-duration: 3s; }
+  .app-loader__wave { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Aviso fijo del centro de monitoreo (components/HelpStatusBanner.tsx): visible sin importar el scroll. */
+.help-toast {
+  position: fixed; left: 12px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 10px); z-index: 99990;
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 14px 16px; border-radius: 16px;
+  background: #0b2545; color: #fff; border-left: 6px solid #f2b55c; box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+  cursor: pointer; animation: help-toast-in .25s ease-out; max-width: 560px; margin: 0 auto;
+}
+.help-toast--sent { border-left-color: #9cc0f0; }
+.help-toast--ok { border-left-color: #5fcf96; }
+.help-toast__icon { flex-shrink: 0; margin-top: 2px; }
+.help-toast__body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.help-toast__body strong { font-size: 16px; line-height: 1.3; }
+.help-toast__body p { margin: 0; font-size: 15px; opacity: .95; }
+.help-toast__title { text-transform: uppercase; letter-spacing: .6px; font-size: 11px; opacity: .75; }
+.help-toast__hint { font-size: 12px; opacity: .65; }
+.help-toast__close { background: rgba(255, 255, 255, .14); border: 0; color: #fff; border-radius: 10px; width: 36px; height: 36px; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; }
+@keyframes help-toast-in { from { transform: translateY(-16px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .help-toast { animation: none; } }

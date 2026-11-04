@@ -9,7 +9,7 @@ const es = {
   viewStats: 'Ver estadísticas',
   drillThanks: 'Gracias por hacer el simulacro. ',
   intro:
-    'Indique qué tan de acuerdo está con cada afirmación (1 = totalmente en desacuerdo, 5 = totalmente de acuerdo). Las respuestas son anónimas y se guardan solo en este dispositivo.',
+    'Indique qué tan de acuerdo está con cada afirmación (1 = totalmente en desacuerdo, 5 = totalmente de acuerdo). Las respuestas se guardan en este dispositivo y en el servidor de SISMO para el estudio de usabilidad.',
   item: (n: number) => `Afirmación ${n}`,
   disagree: 'Desacuerdo',
   agree: 'Acuerdo',
@@ -24,7 +24,7 @@ const en: typeof es = {
   viewStats: 'View statistics',
   drillThanks: 'Thank you for doing the drill. ',
   intro:
-    'Indicate how much you agree with each statement (1 = strongly disagree, 5 = strongly agree). Answers are anonymous and stored only on this device.',
+    'Indicate how much you agree with each statement (1 = strongly disagree, 5 = strongly agree). Answers are stored on this device and on the SISMO server for the usability study.',
   item: (n: number) => `Statement ${n}`,
   disagree: 'Disagree',
   agree: 'Agree',

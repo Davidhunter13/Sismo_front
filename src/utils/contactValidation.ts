@@ -1,9 +1,10 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { getT } from '../i18n';
+import { getCatalogs } from '../services/catalogService';
 import type { ContactInput } from '../types';
 
-/** Valores guardados con cada contacto (no se traducen aquí; la interfaz los rotula). */
-export const RELATIONSHIPS = ['Familiar', 'Pareja', 'Amigo/a', 'Vecino/a', 'Compañero/a de trabajo', 'Otro'];
+/** Claves de parentesco (catálogo administrable). Se guarda la clave; la interfaz muestra su etiqueta. */
+export const relationshipIds = (): string[] => getCatalogs().relationships.map((r) => r.id);
 
 type Errors = Partial<Record<keyof ContactInput, string>>;
 
@@ -16,7 +17,9 @@ export function validateContact(input: ContactInput): Errors {
   else if (name.length > 50) errors.name = t.nameTooLong;
   else if (!/^[\p{L}\s.'()-]+$/u.test(name)) errors.name = t.nameChars;
 
-  if (!RELATIONSHIPS.includes(input.relationship)) errors.relationship = t.relationship;
+  // Un contacto antiguo puede tener un parentesco que ya no está en el catálogo: se acepta tal cual.
+  const rel = input.relationship.trim();
+  if (!rel || rel.length > 60) errors.relationship = t.relationship;
 
   const digits = input.phone.replace(/[\s()-]/g, '');
   if (!digits) errors.phone = t.phoneRequired;

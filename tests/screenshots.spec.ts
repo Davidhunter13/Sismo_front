@@ -1,6 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 // Genera las evidencias visuales (app real en producción) y de código fuente (archivos reales del repositorio).
-// Cada ejecución guarda en screenshots/<AAAA-MM-DD>/{visual,codigo}: las capturas de otras fechas se conservan.
+// Cada ejecución guarda en screenshots/<AAAA-MM-DD>/visual/visual_front y codigo/codigo_front (las de otras fechas se conservan).
+// Las del backend (panel) van en visual/visual_back y codigo/codigo_back.
 // Los datos son ficticios (nombres «demo», teléfonos de prueba y correos @example.com).
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import hljs from 'highlight.js';
@@ -11,8 +12,8 @@ import { view } from './helpers';
 const ROOT = process.cwd();
 /** Fecha local de Colombia (AAAA-MM-DD); se puede fijar con SCREENSHOT_DATE. */
 const DATE = process.env.SCREENSHOT_DATE ?? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
-const VISUAL = join(ROOT, 'screenshots', DATE, 'visual');
-const CODE = join(ROOT, 'screenshots', DATE, 'codigo');
+const VISUAL = join(ROOT, 'screenshots', DATE, 'visual', 'visual_front');
+const CODE = join(ROOT, 'screenshots', DATE, 'codigo', 'codigo_front');
 mkdirSync(VISUAL, { recursive: true });
 mkdirSync(CODE, { recursive: true });
 

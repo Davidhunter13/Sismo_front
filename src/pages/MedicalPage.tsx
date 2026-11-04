@@ -6,12 +6,11 @@ import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { MedicalQr } from '../components/MedicalQr';
 import { useAppState } from '../context/appContext';
+import { getLang } from '../i18n';
 import { useT } from '../i18n/useT';
+import { labelOf, useCatalogs } from '../services/catalogService';
 import type { MedicalInfo } from '../types';
 
-// «No sé» es el valor guardado; solo su texto visible se traduce.
-const BLOOD_UNKNOWN = 'No sé';
-const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', BLOOD_UNKNOWN];
 const MAX_TEXT = 200;
 
 // Compartir viene activado: en una emergencia es más útil que los rescatistas y contactos la vean. El usuario puede desactivarlo.
@@ -21,6 +20,8 @@ const empty: MedicalInfo = { bloodType: '', allergies: '', medications: '', cond
 export default function MedicalPage() {
   const [presentToast] = useIonToast();
   const { data, setMedical } = useAppState();
+  // Tipos de sangre del catálogo administrable (se guarda la clave; «No sé» se muestra traducido).
+  const bloodTypes = useCatalogs().bloodTypes;
   const { features: tf, medical: t } = useT();
   const [form, setForm] = useState<MedicalInfo>(data.medical ?? empty);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -62,7 +63,7 @@ export default function MedicalPage() {
           value={form.bloodType}
           onIonChange={(e) => set('bloodType', String(e.detail.value ?? ''))}
         >
-          {BLOOD_TYPES.map((b) => <IonSelectOption key={b} value={b}>{b === BLOOD_UNKNOWN ? t.bloodUnknown : b}</IonSelectOption>)}
+          {bloodTypes.map((b) => <IonSelectOption key={b.id} value={b.id}>{labelOf(bloodTypes, b.id, getLang())}</IonSelectOption>)}
         </IonSelect>
         <IonInput label={t.allergies} labelPlacement="stacked" fill="outline" maxlength={MAX_TEXT} value={form.allergies}
           placeholder={t.allergiesPh} onIonInput={(e) => set('allergies', text(e.detail.value))} />

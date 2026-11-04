@@ -2,6 +2,13 @@
 // Componentes compartidos: tarjetas de estado, mapas, insignias, botón de pánico, detector de caídas y logotipo.
 
 const es = {
+  sync: {
+    offlineTitle: 'Sin conexión.',
+    offline: 'Sus datos se guardan en el teléfono y se subirán apenas haya conexión.',
+    serverTitle: 'Sin conexión con el servidor.',
+    server: 'Sus datos están guardados en el teléfono y se subirán solos apenas se restablezca.',
+    pending: (n: number) => (n === 1 ? '1 cambio pendiente.' : `${n} cambios pendientes.`),
+  },
   alertStatus: {
     noneTitle: 'Sin alertas activas',
     noneText: 'Mantenga la calma. Pulse el botón SOS solo si necesita ayuda.',
@@ -65,6 +72,13 @@ const es = {
 };
 
 const en: typeof es = {
+  sync: {
+    offlineTitle: 'No connection.',
+    offline: 'Your data is saved on the phone and will upload as soon as you are back online.',
+    serverTitle: 'Cannot reach the server.',
+    server: 'Your data is saved on the phone and will upload automatically as soon as the connection is restored.',
+    pending: (n: number) => (n === 1 ? '1 pending change.' : `${n} pending changes.`),
+  },
   alertStatus: {
     noneTitle: 'No active alerts',
     noneText: 'Stay calm. Press the SOS button only if you need help.',

@@ -20,6 +20,9 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: true,
     timeout: 180_000,
+    // Las pruebas usan el modo de demostración, que en producción está oculto: se habilita solo para esta compilación.
+    // Sin servidor de sincronización: las pruebas no dependen del backend.
+    env: { VITE_DEMO: 'true', VITE_SISMO_API_URL: '' },
   },
   projects: [
     {

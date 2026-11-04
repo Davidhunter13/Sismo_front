@@ -1,6 +1,8 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { Mail, Pencil, Phone, Trash2 } from 'lucide-react';
+import { getLang } from '../i18n';
 import { useT } from '../i18n/useT';
+import { labelOf, useCatalogs } from '../services/catalogService';
 import type { Contact } from '../types';
 import { DemoBadge } from './StatusBadge';
 
@@ -12,6 +14,7 @@ interface ContactCardProps {
 
 export function ContactCard({ contact, onEdit, onDelete }: ContactCardProps) {
   const t = useT().contacts;
+  const catalogs = useCatalogs();
   const initials = contact.name.replace(/\(.*?\)/g, '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('');
   return (
     <li className="card contact-card">
@@ -21,7 +24,7 @@ export function ContactCard({ contact, onEdit, onDelete }: ContactCardProps) {
           <strong>{contact.name}</strong>
           {contact.isSeed && <DemoBadge label={t.card.fictitious} />}
         </div>
-        <small>{t.relationships[contact.relationship] ?? contact.relationship}</small>
+        <small>{labelOf(catalogs.relationships, contact.relationship, getLang())}</small>
         <span className="contact-card__phone"><Phone size={14} aria-hidden="true" /> {contact.phone}</span>
         {contact.email ? (
           <span className="contact-card__phone"><Mail size={14} aria-hidden="true" /> {contact.email}</span>

@@ -13,7 +13,7 @@ const es = {
         { title: 'Plan familiar de emergencia', steps: [
           'Acuerde un punto de encuentro seguro fuera de casa.',
           'Defina quién recoge a niños, personas mayores o con discapacidad.',
-          'Tenga a mano los números de emergencia (línea 123).',
+          'Tenga a mano los números de emergencia (línea {emergencyNumber}).',
         ] },
         { title: 'Kit de emergencia', steps: [
           'Agua potable y alimentos no perecederos.',
@@ -65,7 +65,7 @@ const es = {
           'Reporte daños a las autoridades.',
         ] },
         { title: 'Personas lesionadas', steps: [
-          'Solicite ayuda a la línea 123 o al personal de socorro.',
+          'Solicite ayuda a la línea {emergencyNumber} o al personal de socorro.',
           'No mueva a personas heridas salvo peligro inminente; espere a personal capacitado.',
         ] },
         { title: 'Comunicación', steps: [
@@ -92,7 +92,7 @@ const en: typeof es = {
         { title: 'Family emergency plan', steps: [
           'Agree on a safe meeting point outside the home.',
           'Decide who will pick up children, older adults or people with disabilities.',
-          'Keep emergency numbers at hand (dial 123).',
+          'Keep emergency numbers at hand (dial {emergencyNumber}).',
         ] },
         { title: 'Emergency kit', steps: [
           'Drinking water and non-perishable food.',
@@ -144,7 +144,7 @@ const en: typeof es = {
           'Report damage to the authorities.',
         ] },
         { title: 'Injured people', steps: [
-          'Call for help by dialing 123 or ask rescue personnel.',
+          'Call for help by dialing {emergencyNumber} or ask rescue personnel.',
           'Do not move injured people unless they are in imminent danger; wait for trained personnel.',
         ] },
         { title: 'Communication', steps: [

@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonHeader, IonToolbar, useIonRouter } from '@ionic/react';
+import { DEMO_ENABLED } from '../utils/env';
 import { ArrowLeft, FlaskConical, Moon, Settings, Sun } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useAppState } from '../context/appContext';
@@ -44,7 +45,7 @@ export function Header({ title, backTo, showSettings = true, extra }: HeaderProp
             <span className="app-header__brand">SISMO</span>
             {title && <span className="app-header__subtitle">{title}</span>}
           </div>
-          {data.settings.demoMode && (
+          {DEMO_ENABLED && data.settings.demoMode && (
             <span className="demo-chip" title={t.demoHint}>
               <FlaskConical size={13} aria-hidden="true" /> {t.demo}
             </span>

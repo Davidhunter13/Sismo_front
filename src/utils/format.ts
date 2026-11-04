@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { getLocale, getT } from '../i18n';
-import type { EventType } from '../types';
+import { getLang, getLocale } from '../i18n';
+import { getCatalogs, labelOf } from '../services/catalogService';
 
 // Formatos según el idioma activo (es-CO o en-US).
 export const formatDateTime = (iso: string) =>
@@ -11,9 +11,9 @@ export const formatLongDate = (d = new Date()) =>
   new Intl.DateTimeFormat(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
 export const formatCoord = (n: number) => n.toFixed(5);
 
-/** Nombre del tipo de evento en el idioma activo (se lee en el momento de usarse). */
-export const eventTypeLabel = new Proxy({} as Record<EventType, string>, {
-  get: (_, key) => getT().labels.eventType[key as EventType],
+/** Nombre del tipo de evento (catálogo) en el idioma activo; se lee en el momento de usarse. */
+export const eventTypeLabel = new Proxy({} as Record<string, string>, {
+  get: (_, key) => labelOf(getCatalogs().eventTypes, String(key), getLang()),
 });
 
 export function formatDuration(fromIso: string, toIso?: string): string {

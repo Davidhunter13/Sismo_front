@@ -18,6 +18,7 @@ import type { BadgeTone } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
+import { useCatalogs } from '../services/catalogService';
 import { drillReminder } from '../services/drillReminderService';
 import { kitStatus } from '../services/kitService';
 import { beginTrace, mark } from '../services/metricsService';
@@ -35,6 +36,8 @@ export default function HomePage() {
   const all = useT();
   const t = all.home;
   const { data, activeAlert, activateAlert, drill, cancelDrill } = useAppState();
+  // Tipos de evento del catálogo administrable (el primero queda seleccionado).
+  const eventTypes = useCatalogs().eventTypes;
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Al hacer scroll y perder de vista la mini brújula, aparece una en el encabezado.
   const [compassVisible, setCompassVisible] = useState(true);
@@ -248,11 +251,7 @@ export default function HomePage() {
         confirmText={t.confirm.action}
         cancelText={all.common.cancel}
         destructive
-        inputs={[
-          { type: 'radio', label: eventTypeLabel.sismo, value: 'sismo', checked: true },
-          { type: 'radio', label: eventTypeLabel.emergencia_general, value: 'emergencia_general' },
-          { type: 'radio', label: eventTypeLabel.prueba, value: 'prueba' },
-        ]}
+        inputs={eventTypes.map((e, i) => ({ type: 'radio' as const, label: eventTypeLabel[e.id], value: e.id, checked: i === 0 }))}
         onConfirm={onConfirm}
         onConfirmPress={onConfirmPress}
         onClose={() => setConfirmOpen(false)}

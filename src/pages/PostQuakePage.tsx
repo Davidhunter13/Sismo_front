@@ -7,7 +7,9 @@ import { MeetingCompass } from '../components/MeetingCompass';
 import { MeetingRoute } from '../components/MeetingRoute';
 import { useMeetingTarget } from '../components/useMeetingTarget';
 import { useAppState } from '../context/appContext';
+import { getLang } from '../i18n';
 import { useT } from '../i18n/useT';
+import { text, useCatalogs } from '../services/catalogService';
 import { formatDateTime } from '../utils/format';
 
 /**
@@ -27,26 +29,31 @@ export default function PostQuakePage() {
   const requestedId = new URLSearchParams(search).get('alerta');
   const realAlerts = data.alerts.filter((a) => !a.isSeed && !a.isDrill);
   const alert = (requestedId ? data.alerts.find((a) => a.id === requestedId) : undefined) ?? realAlerts[0] ?? null;
-  const done = new Set(alert ? alert.postQuakeDone ?? [] : data.postQuakeDone);
+  // Pasos del catálogo administrable: el avance se guarda por clave de paso, así agregar, quitar o reordenar
+  // pasos desde el panel no cambia lo que ya se marcó; un paso nuevo aparece y se guarda igual que los demás.
+  const steps = useCatalogs().postQuakeSteps;
+  const lang = getLang();
+  const stepIds = new Set(steps.map((s) => s.id));
+  const done = new Set((alert ? alert.postQuakeDone ?? [] : data.postQuakeDone).filter((id) => stepIds.has(id)));
   // Brújula y ruta hacia el punto de encuentro más cercano (se puede elegir otro).
   const from = alert?.location ?? data.lastLocation;
   const meeting = useMeetingTarget(from);
 
-  const save = (next: number[]) => setPostQuakeDone(next, alert?.id);
+  const save = (next: string[]) => setPostQuakeDone(next, alert?.id);
 
-  const toggle = (i: number, checked: boolean) => {
+  const toggle = (id: string, checked: boolean) => {
     const next = new Set(done);
-    if (checked) next.add(i);
-    else next.delete(i);
-    save([...next].sort((a, b) => a - b));
+    if (checked) next.add(id);
+    else next.delete(id);
+    save(steps.map((s) => s.id).filter((s) => next.has(s)));
   };
 
   return (
     <AppLayout title={t.title} backTo="/inicio">
       <section className="card stack">
-        <h2 className="card__title"><ClipboardCheck size={18} aria-hidden="true" /> {t.progress(done.size, t.steps.length)}</h2>
-        <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={t.steps.length} aria-valuenow={done.size}>
-          <span style={{ width: `${(done.size / t.steps.length) * 100}%` }} />
+        <h2 className="card__title"><ClipboardCheck size={18} aria-hidden="true" /> {t.progress(done.size, steps.length)}</h2>
+        <div className="progress" role="progressbar" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={done.size}>
+          <span style={{ width: `${(done.size / Math.max(1, steps.length)) * 100}%` }} />
         </div>
         <p className="small muted">{alert ? t.forAlert(formatDateTime(alert.activatedAt)) : t.practice}</p>
         <p className="small muted">{t.subtitle}</p>
@@ -75,14 +82,17 @@ export default function PostQuakePage() {
 
       <section className="card">
         <ol className="kit-list">
-          {t.steps.map((step, i) => (
-            <li key={step} className="kit-item">
-              <IonCheckbox checked={done.has(i)} onIonChange={(e) => toggle(i, e.detail.checked)} aria-label={step} />
-              <span className={done.has(i) ? 'kit-item__name kit-item__name--done' : 'kit-item__name'}>
-                <strong>{i + 1}.</strong> {step}
-              </span>
-            </li>
-          ))}
+          {steps.map((step, i) => {
+            const label = text(step.label, lang);
+            return (
+              <li key={step.id} className="kit-item">
+                <IonCheckbox checked={done.has(step.id)} onIonChange={(e) => toggle(step.id, e.detail.checked)} aria-label={label} />
+                <span className={done.has(step.id) ? 'kit-item__name kit-item__name--done' : 'kit-item__name'}>
+                  <strong>{i + 1}.</strong> {label}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </section>
 

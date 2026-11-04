@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { getT } from '../i18n';
+import { getLang } from '../i18n';
+import { getCatalogs, text } from './catalogService';
 import type { EmergencyKit, KitItem } from '../types';
 import { newId } from './storageService';
 
@@ -8,10 +9,10 @@ import { newId } from './storageService';
  * y recordatorios dentro de la app para elementos que vencen y para la revisión periódica.
  */
 /**
- * Lista base en el idioma activo: se lee al acceder, no al importar el módulo.
+ * Lista base (catálogo administrable) en el idioma activo: se lee al acceder, no al importar el módulo.
  * Reenvía también `has`/`ownKeys`/descriptores porque map, filter, etc. consultan si existe cada índice.
  */
-const kitItems = () => getT().services.kit.defaultItems;
+const kitItems = () => getCatalogs().kitItems.map((i) => text(i.label, getLang()));
 export const DEFAULT_KIT_ITEMS: readonly string[] = new Proxy([] as string[], {
   get: (_, key) => Reflect.get(kitItems(), key),
   has: (_, key) => Reflect.has(kitItems(), key),
@@ -25,7 +26,7 @@ export const REVIEW_EVERY_DAYS = 180;
 export const EXPIRY_WARNING_DAYS = 30;
 
 export function createDefaultKit(): EmergencyKit {
-  return { items: getT().services.kit.defaultItems.map((name): KitItem => ({ id: newId(), name, checked: false, isDefault: true })) };
+  return { items: kitItems().map((name): KitItem => ({ id: newId(), name, checked: false, isDefault: true })) };
 }
 
 const DAY = 86_400_000;

@@ -12,7 +12,11 @@ export type AlertLifecycle = 'activa' | 'finalizada';
  */
 export type DeliveryStatus = 'pendiente' | 'enviada' | 'fallida' | 'no_disponible' | 'sms_abierto';
 
-export type EventType = 'sismo' | 'emergencia_general' | 'prueba';
+/**
+ * Clave del tipo de evento. Los tipos se administran en el catálogo (panel administrativo; ver catalogService).
+ * 'sismo' y 'emergencia_general' son claves reservadas que usa la lógica (widget, detección de caídas).
+ */
+export type EventType = string;
 
 export type LocationPermission = 'concedido' | 'denegado' | 'no_disponible' | 'sin_solicitar';
 
@@ -114,7 +118,7 @@ export interface AlertRecord {
    * Pasos marcados de la lista «Después del sismo» para ESTA alerta. Cada SOS empieza con la lista vacía y
    * las anteriores se conservan con su alerta (listas para migrar a una base de datos).
    */
-  postQuakeDone?: number[];
+  postQuakeDone?: string[];
 }
 
 /**
@@ -172,14 +176,14 @@ export interface AppData {
   activeAlertId: string | null;
   lastLocation: LocationSnapshot | null;
   locationPermission: LocationPermission;
-  /** Ficha médica opcional; se guarda solo en este dispositivo y nunca se envía. */
+  /** Ficha médica opcional; se guarda en el dispositivo y, cifrada, en el servidor (syncService). */
   medical: MedicalInfo | null;
   /** Puntos de encuentro acordados (puede haber varios: casa, trabajo, colegio…). */
   meetingPoints: MeetingPoint[];
   susResponses: SusResponse[];
   kit: EmergencyKit | null;
   /** Lista «Después del sismo» de práctica, usada solo mientras no se ha activado ninguna alerta real. */
-  postQuakeDone: number[];
+  postQuakeDone: string[];
 }
 
 export type ContactInput = Pick<Contact, 'name' | 'relationship' | 'phone'> & { email: string };

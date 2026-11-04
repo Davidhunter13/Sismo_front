@@ -6,21 +6,21 @@ import type {
 } from '../types';
 import { setLang } from '../i18n';
 import { clearData, createEmptyData, loadData, newId, saveData } from '../services/storageService';
+import { queueChanges, startSync, type ServerState } from '../services/syncService';
+import { ensureFirstRefresh, getCatalogs, normalizePostQuake, refreshCatalogs, useCatalogs } from '../services/catalogService';
+import { DEMO_ENABLED } from '../utils/env';
 import { demoAlerts, demoContacts } from '../services/demoData';
 import { requestDeviceLocation } from '../services/locationService';
 import { takeTrace } from '../services/metricsService';
-import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
+import { maxMeetingPoints } from '../utils/meetingPoints';
 import { keepScreenOn, showOverLockScreen } from '../services/screenService';
 import { stopAlertSignals } from '../services/signalsService';
 import { AppStateContext, type AppStateValue, type DrillState } from './appContext';
 
 /** Tiempo de la entrega SIMULADA del canal digital en modo de demostración. */
 const SIMULATED_DELIVERY_MS = 3500;
-/** Cada cuánto se actualiza la ubicación durante una alerta activa. */
-const LOCATION_REFRESH_MS = 2 * 60_000;
-/** Espera aleatoria del simulacro antes de dar la señal. */
-const DRILL_MIN_DELAY_MS = 3_000;
-const DRILL_MAX_DELAY_MS = 10_000;
+// Cada cuánto se actualiza la ubicación durante una alerta y la espera aleatoria del simulacro: son
+// parámetros administrables (catálogo `params`), se leen al usarse.
 
 function withDemoSeeds(data: AppData): AppData {
   const contacts = data.contacts.filter((c) => !c.isSeed);
@@ -32,8 +32,16 @@ function withoutDemoSeeds(data: AppData): AppData {
   return { ...data, contacts: data.contacts.filter((c) => !c.isSeed), alerts: data.alerts.filter((a) => !a.isSeed) };
 }
 
+/** En producción no existe el modo de demostración: se apaga y se quitan los datos ficticios que hubiera. */
+function loadInitialData(): AppData {
+  const loaded = loadData();
+  if (DEMO_ENABLED || (!loaded.settings.demoMode && !loaded.contacts.some((c) => c.isSeed) && !loaded.alerts.some((a) => a.isSeed))) return loaded;
+  const clean = withoutDemoSeeds(loaded);
+  return { ...clean, settings: { ...clean.settings, demoMode: false } };
+}
+
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData>(loadData);
+  const [data, setData] = useState<AppData>(loadInitialData);
   // El simulacro no se guarda: si se cierra la app, se cancela.
   const [drill, setDrill] = useState<DrillState | null>(null);
   // Copia siempre actualizada: activateAlert puede ejecutarse desde una vista con un cierre antiguo
@@ -44,6 +52,29 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [drill]);
 
   useEffect(() => saveData(data), [data]);
+
+  // Sincronización con el backend: cada cambio se encola (cola persistente) y se sube apenas haya red.
+  const prevDataRef = useRef(data);
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  // Tras restaurar desde el servidor no se vuelve a subir lo que se acaba de descargar.
+  const skipSyncRef = useRef(false);
+  useEffect(() => {
+    if (skipSyncRef.current) skipSyncRef.current = false;
+    else queueChanges(prevDataRef.current, data);
+    prevDataRef.current = data;
+  }, [data]);
+  useEffect(() => startSync(() => dataRef.current), []);
+
+  // Catálogos administrables: se descargan al abrir y al recuperar la red; sin red se usa la última copia.
+  // Suscribirse aquí vuelve a dibujar toda la app cuando llegan catálogos nuevos.
+  const catalogs = useCatalogs();
+  useEffect(() => {
+    void ensureFirstRefresh();
+    const onOnline = () => void refreshCatalogs();
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, []);
 
   // Idioma activo para los servicios (SMS, etiquetas, fechas). Se fija durante el render para que
   // los textos calculados en este mismo render ya salgan en el idioma nuevo.
@@ -170,17 +201,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }));
     };
     void refresh();
-    const timer = window.setInterval(refresh, LOCATION_REFRESH_MS);
+    const timer = window.setInterval(refresh, catalogs.params.alertLocationRefreshMin * 60_000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [activeAlertId, canLocate]);
+  }, [activeAlertId, canLocate, catalogs.params.alertLocationRefreshMin]);
 
   const startDrill = useCallback(() => {
     setDrill({ phase: 'esperando' });
     // Espera aleatoria para que la señal no sea predecible.
-    const delay = DRILL_MIN_DELAY_MS + Math.random() * (DRILL_MAX_DELAY_MS - DRILL_MIN_DELAY_MS);
+    const { drillDelayMinS, drillDelayMaxS } = getCatalogs().params;
+    const delay = (drillDelayMinS + Math.random() * (drillDelayMaxS - drillDelayMinS)) * 1000;
     window.setTimeout(() => {
       setDrill((current) => (current?.phase === 'esperando' ? { phase: 'senal', signalAt: Date.now() } : current));
     }, delay);
@@ -217,7 +249,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const addMeetingPoint = useCallback((input: Omit<MeetingPoint, 'id'>) => {
     const point: MeetingPoint = { ...input, id: newId() };
-    setData((d) => ({ ...d, meetingPoints: [...d.meetingPoints, point].slice(-MAX_MEETING_POINTS) }));
+    setData((d) => ({ ...d, meetingPoints: [...d.meetingPoints, point].slice(-maxMeetingPoints()) }));
     return point;
   }, []);
 
@@ -238,7 +270,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /** Con alertId guarda el avance en esa alerta; sin él, en la lista de práctica (sin alertas). */
-  const setPostQuakeDone = useCallback((postQuakeDone: number[], alertId?: string) => {
+  const setPostQuakeDone = useCallback((postQuakeDone: string[], alertId?: string) => {
     setData((d) =>
       alertId
         ? { ...d, alerts: d.alerts.map((a) => (a.id === alertId ? { ...a, postQuakeDone } : a)) }
@@ -255,6 +287,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setDemoMode = useCallback((enabled: boolean) => {
+    if (enabled && !DEMO_ENABLED) return;
     setData((d) => {
       const base = enabled ? withDemoSeeds(d) : withoutDemoSeeds(d);
       return { ...base, settings: { ...base.settings, demoMode: enabled } };
@@ -262,12 +295,45 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetDemoData = useCallback(() => {
+    if (!DEMO_ENABLED) return;
     stopAlertSignals();
     setData((d) => {
       const fresh = createEmptyData();
       const settings: Settings = { ...d.settings, demoMode: true };
       return withDemoSeeds({ ...fresh, settings, locationPermission: d.locationPermission });
     });
+  }, []);
+
+  /** Reemplaza los datos del teléfono por los recuperados del servidor (teléfono perdido o nuevo). */
+  const restoreFromServer = useCallback((server: ServerState) => {
+    stopAlertSignals();
+    skipSyncRef.current = true;
+    setData((d) => {
+      const empty = createEmptyData();
+      const alerts = (Array.isArray(server.alerts) ? server.alerts : []).map((a) =>
+        a.postQuakeDone ? { ...a, postQuakeDone: normalizePostQuake(a.postQuakeDone) } : a);
+      return {
+        ...empty,
+        settings: server.settings ? { ...empty.settings, ...server.settings } : d.settings,
+        contacts: Array.isArray(server.contacts) ? server.contacts : [],
+        alerts,
+        activeAlertId: alerts.find((a) => a.status === 'activa')?.id ?? null,
+        lastLocation: server.lastLocation ?? null,
+        locationPermission: d.locationPermission,
+        medical: server.medical ?? null,
+        meetingPoints: Array.isArray(server.meetingPoints) ? server.meetingPoints : [],
+        susResponses: Array.isArray(server.susResponses) ? server.susResponses : [],
+        kit: server.kit ?? null,
+        postQuakeDone: normalizePostQuake(server.postQuakeDone),
+      };
+    });
+  }, []);
+
+  const wipeAfterAccountDeletion = useCallback(() => {
+    stopAlertSignals();
+    skipSyncRef.current = true; // la cuenta ya se borró en el servidor: no se encolan cambios
+    clearData();
+    setData(createEmptyData());
   }, []);
 
   const resetAll = useCallback(() => {
@@ -301,6 +367,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setDemoMode,
     resetDemoData,
     resetAll,
+    wipeAfterAccountDeletion,
+    restoreFromServer,
   };
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

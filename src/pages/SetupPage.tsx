@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonContent, IonInput, IonPage, useIonRouter, useIonToast } from '@ionic/react';
+import { SyncStatusBanner } from '../components/SyncStatusBanner';
 import { ArrowLeft, ArrowRight, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Pencil, Search, Siren, Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
@@ -12,7 +13,7 @@ import { isContactPickerSupported, pickContact } from '../services/contactPicker
 import { requestSosDialog } from '../services/sosRequestService';
 import { defaultSettings } from '../services/storageService';
 import type { Contact, ContactInput } from '../types';
-import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
+import { maxMeetingPoints } from '../utils/meetingPoints';
 import { goToRoot } from '../utils/navigation';
 
 const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
@@ -79,7 +80,7 @@ export default function SetupPage() {
 
   // Se pueden guardar varios; el nombre vuelve al de por defecto para el siguiente.
   const saveMeeting = (latitude: number, longitude: number, pointLabel = label.trim()) => {
-    if (meetingPoints.length >= MAX_MEETING_POINTS) return;
+    if (meetingPoints.length >= maxMeetingPoints()) return;
     addMeetingPoint({ label: pointLabel, latitude, longitude });
     setLabel(tl.meeting.defaultLabel);
     toast(tl.meeting.saved);
@@ -165,6 +166,7 @@ export default function SetupPage() {
             <small className="muted">{t.sosHint}</small>
           </header>
 
+          <SyncStatusBanner />
           <ol className="setup__progress" aria-label={t.stepOf(step + 1, STEPS.length)}>
             {STEPS.map((s, i) => (
               <li key={s} className={i === step ? 'is-current' : done[i] ? 'is-done' : ''} aria-current={i === step ? 'step' : undefined}>
@@ -273,8 +275,8 @@ export default function SetupPage() {
                     <p className="small" role="status">
                       <CheckCircle2 size={16} aria-hidden="true" /> {t.meetingSaved(meetingPoints.map((p) => p.label).join(' · '))}
                     </p>
-                    {/* Varios puntos (hasta MAX_MEETING_POINTS), con opción de borrar si hubo un error. */}
-                    <strong className="small">{tl.meeting.listTitle(meetingPoints.length, MAX_MEETING_POINTS)}</strong>
+                    {/* Varios puntos (hasta maxMeetingPoints()), con opción de borrar si hubo un error. */}
+                    <strong className="small">{tl.meeting.listTitle(meetingPoints.length, maxMeetingPoints())}</strong>
                     <ul className="meeting-list">
                       {meetingPoints.map((p) => (
                         <li key={p.id}>

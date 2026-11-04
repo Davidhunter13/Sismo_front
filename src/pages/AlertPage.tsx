@@ -12,7 +12,9 @@ import { LocationStatusCard } from '../components/LocationStatusCard';
 import { MedicalQr } from '../components/MedicalQr';
 import { MeetingCompass } from '../components/MeetingCompass';
 import { NetworkBanner } from '../components/NetworkBanner';
+import { HelpStatusBanner } from '../components/HelpStatusBanner';
 import { useT } from '../i18n/useT';
+import { getEmergencyNumber } from '../i18n';
 import { DemoBadge, LocalBadge, StatusBadge } from '../components/StatusBadge';
 import { deliveryBadge } from '../components/statusMaps';
 import { useAppState } from '../context/appContext';
@@ -239,9 +241,11 @@ export default function AlertPage() {
         )}
       </section>
 
+      <HelpStatusBanner alertId={activeAlert.id} />
+
       <NetworkBanner />
 
-      <a className="btn btn--danger btn--lg btn--block" href="tel:123">
+      <a className="btn btn--danger btn--lg btn--block" href={`tel:${getEmergencyNumber()}`}>
         <Phone size={20} aria-hidden="true" /> {ta.call123}
       </a>
 

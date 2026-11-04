@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import type { AppData, MeetingPoint, Settings } from '../types';
+import type { AlertRecord, AppData, MeetingPoint, Settings } from '../types';
+import { normalizePostQuake } from './catalogService';
 
 const STORAGE_KEY = 'sismo:v1:data';
 
@@ -54,9 +55,12 @@ export function loadData(): AppData {
       settings: { ...empty.settings, ...parsed.settings },
       meetingPoints: Array.isArray(rest.meetingPoints) ? rest.meetingPoints : legacyPoint ? [{ ...legacyPoint, id: newId() }] : [],
       contacts: Array.isArray(parsed.contacts) ? parsed.contacts : [],
-      alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
+      // El avance de «Después del sismo» se guardaba por posición: se pasa a claves estables de paso.
+      alerts: Array.isArray(parsed.alerts)
+        ? parsed.alerts.map((a: AlertRecord) => (a.postQuakeDone ? { ...a, postQuakeDone: normalizePostQuake(a.postQuakeDone) } : a))
+        : [],
       susResponses: Array.isArray(parsed.susResponses) ? parsed.susResponses : [],
-      postQuakeDone: Array.isArray(parsed.postQuakeDone) ? parsed.postQuakeDone : [],
+      postQuakeDone: normalizePostQuake(parsed.postQuakeDone),
     };
   } catch {
     return createEmptyData();

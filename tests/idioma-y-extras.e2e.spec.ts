@@ -71,7 +71,8 @@ test('después del sismo: marcar pasos guarda el avance', async ({ page }) => {
   await v.locator('.kit-item ion-checkbox').nth(0).click();
   await v.locator('.kit-item ion-checkbox').nth(2).click();
   await expect(v.getByText('2 de 11 pasos')).toBeVisible();
-  await expect.poll(async () => (await readStorage(page)).postQuakeDone).toEqual([0, 2]);
+  // El avance se guarda por clave de paso del catálogo (antes por posición).
+  await expect.poll(async () => (await readStorage(page)).postQuakeDone).toEqual(['paso_01', 'paso_03']);
   await v.getByRole('button', { name: 'Reiniciar lista' }).click();
   await expect(v.getByText('0 de 11 pasos')).toBeVisible();
 });
@@ -98,7 +99,7 @@ test('después del sismo: cada SOS empieza con la lista vacía y la anterior se 
 
   const alerts = (await readStorage(page)).alerts;
   expect(alerts[0].postQuakeDone ?? []).toEqual([]);
-  expect(alerts[1].postQuakeDone).toEqual([0]);
+  expect(alerts[1].postQuakeDone).toEqual(['paso_01']);
 });
 
 test('después de «Estoy a salvo»: sin punto de encuentro invita a configurarlo; con uno muestra la brújula', async ({ page, context }) => {

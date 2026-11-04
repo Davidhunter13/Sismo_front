@@ -1,32 +1,29 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
-import {
-  Backpack, Building2, Car, ClipboardList, DoorOpen, HeartHandshake, Home, Landmark, MessageSquareText, ShieldAlert, Trees, Wrench,
-  type LucideIcon,
-} from 'lucide-react';
+import { Landmark } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { EmergencyInstructionCard } from '../components/EmergencyInstructionCard';
+import { catalogIcon } from '../components/catalogIcons';
+import { getLang } from '../i18n';
 import { useT } from '../i18n/useT';
+import { MOMENTS, text, useCatalogs, type Moment } from '../services/catalogService';
 import { isSpeechSupported, speak, stopSpeaking } from '../services/speechService';
 
-type Moment = 'antes' | 'durante' | 'despues';
-
-/** Íconos de cada tarjeta, en el mismo orden que los textos de src/i18n/ns/guide.ts. */
-const icons: Record<Moment, LucideIcon[]> = {
-  antes: [ClipboardList, Backpack, Wrench],
-  durante: [ShieldAlert, Building2, Trees, Car],
-  despues: [DoorOpen, Home, HeartHandshake, MessageSquareText],
-};
-
-const moments: Moment[] = ['antes', 'durante', 'despues'];
+/** Guía de emergencia: tarjetas, introducciones y aviso vienen del catálogo administrable (con copia local sin red). */
+const moments = MOMENTS;
 
 export default function EmergencyGuidePage() {
   const t = useT().guide;
   const [moment, setMoment] = useState<Moment>('durante');
   const [speaking, setSpeaking] = useState<string | null>(null);
-  const section = t.sections[moment];
-  const cards = section.cards.map((c, i) => ({ ...c, icon: icons[moment][i] }));
+  const guide = useCatalogs().guide;
+  const lang = getLang();
+  const cards = guide.cards.filter((c) => c.moment === moment).map((c) => ({
+    title: text(c.title, lang),
+    steps: (lang === 'en' ? c.steps.en : c.steps.es).map((st) => text({ es: st, en: st }, lang)),
+    icon: catalogIcon(c.icon),
+  }));
 
   // Al salir de la página o cambiar de pestaña se detiene la lectura.
   useEffect(() => stopSpeaking, []);
@@ -57,7 +54,7 @@ export default function EmergencyGuidePage() {
         ))}
       </IonSegment>
 
-      <p className="muted">{section.intro}</p>
+      <p className="muted">{text(guide.intro[moment], lang)}</p>
       <div className="list">
         {cards.map((c) => (
           <EmergencyInstructionCard
@@ -71,9 +68,7 @@ export default function EmergencyGuidePage() {
 
       <div className="callout callout--info">
         <Landmark size={20} aria-hidden="true" />
-        <p>
-          {t.disclaimerPre}<strong>{t.disclaimerStrong}</strong>{t.disclaimerPost}
-        </p>
+        <p>{text(guide.disclaimer, lang)}</p>
       </div>
     </AppLayout>
   );

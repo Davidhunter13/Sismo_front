@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonContent, IonPage } from '@ionic/react';
+import { SyncStatusBanner } from './SyncStatusBanner';
 import type { ReactNode } from 'react';
 import { BottomNavigation } from './BottomNavigation';
 import { Header } from './Header';
@@ -21,7 +22,10 @@ export function AppLayout({ title, backTo, hideNav, showSettings, className, hea
     <IonPage className={className}>
       <Header title={title} backTo={backTo} showSettings={showSettings} extra={headerExtra} />
       <IonContent className="app-content">
-        <main className={`page${hideNav ? ' page--no-nav' : ''}`}>{children}</main>
+        <main className={`page${hideNav ? ' page--no-nav' : ''}`}>
+          <SyncStatusBanner />
+          {children}
+        </main>
       </IonContent>
       {!hideNav && <BottomNavigation />}
     </IonPage>

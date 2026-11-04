@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
+import { withLoader } from '../services/loaderService';
 import { Activity, ExternalLink, Info, Loader2, RefreshCw, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
@@ -27,7 +28,7 @@ export default function QuakesPage() {
   const load = useCallback(async () => {
     setStatus('cargando');
     try {
-      setQuakes(await fetchNearbyQuakes(period, origin));
+      setQuakes(await withLoader(fetchNearbyQuakes(period, origin)));
       setStatus('listo');
     } catch {
       setStatus('error');

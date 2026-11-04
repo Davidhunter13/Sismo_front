@@ -5,7 +5,7 @@ const es = {
   title: 'Ficha médica',
   sensitiveTitle: 'Datos sensibles.',
   sensitive:
-    ' Se guardan en este teléfono y puede borrarlos cuando quiera. Con «Compartir en la alerta y en el SMS» activado (opción predeterminada), se muestran en la pantalla de alerta y se incluyen en el SMS que envía a sus contactos. Desactívelo si no desea compartirlos.',
+    ' Se guardan en este teléfono y, cifrados, en el servidor de SISMO; puede borrarlos cuando quiera. Con «Compartir en la alerta y en el SMS» activado (opción predeterminada), se muestran en la pantalla de alerta y se incluyen en el SMS que envía a sus contactos. Desactívelo si no desea compartirlos.',
   formTitle: 'Información para rescatistas',
   blood: 'Tipo de sangre',
   /** Texto visible de la opción «No sé» (el valor guardado no cambia). */
@@ -34,7 +34,7 @@ const en: typeof es = {
   title: 'Medical record',
   sensitiveTitle: 'Sensitive data.',
   sensitive:
-    ' It is stored on this phone and you can delete it whenever you want. With “Share in the alert and SMS” on (the default), it is shown on the alert screen and included in the SMS you send to your contacts. Turn it off if you do not want to share it.',
+    ' It is stored on this phone and, encrypted, on the SISMO server; you can delete it whenever you want. With “Share in the alert and SMS” on (the default), it is shown on the alert screen and included in the SMS you send to your contacts. Turn it off if you do not want to share it.',
   formTitle: 'Information for rescuers',
   blood: 'Blood type',
   bloodUnknown: 'I don’t know',

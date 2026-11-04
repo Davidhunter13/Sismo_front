@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type Context } from 'react';
+import type { ServerState } from '../services/syncService';
 import type {
   AlertRecord, AlertSource, AppData, Contact, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
   MeetingPoint, Settings, SusResponse,
@@ -28,16 +29,27 @@ export interface AppStateValue {
   removeMeetingPoint: (id: string) => void;
   addSusResponse: (response: SusResponse) => void;
   setKit: (kit: EmergencyKit | null) => void;
-  setPostQuakeDone: (done: number[], alertId?: string) => void;
+  /** Claves de los pasos marcados de «Después del sismo» (catálogo). */
+  setPostQuakeDone: (done: string[], alertId?: string) => void;
   setEmailStatus: (alertId: string, status: EmailStatus) => void;
   setLocation: (snapshot: LocationSnapshot | null, permission?: LocationPermission) => void;
   setLocationPermission: (permission: LocationPermission) => void;
   setDemoMode: (enabled: boolean) => void;
   resetDemoData: () => void;
   resetAll: () => void;
+  /** Tras eliminar la cuenta: borra todo en el teléfono sin enviar nada al servidor. */
+  wipeAfterAccountDeletion: () => void;
+  /** Reemplaza los datos locales por los recuperados del servidor. */
+  restoreFromServer: (server: ServerState) => void;
 }
 
-export const AppStateContext = createContext<AppStateValue | null>(null);
+/**
+ * El contexto se guarda en globalThis para que sobreviva a la recarga en caliente de Vite (Fast Refresh): al
+ * reevaluarse este módulo no se crea un contexto nuevo distinto del que usa el proveedor ya montado.
+ */
+const globalScope = globalThis as typeof globalThis & { __sismoAppStateContext?: Context<AppStateValue | null> };
+export const AppStateContext: Context<AppStateValue | null> =
+  globalScope.__sismoAppStateContext ?? (globalScope.__sismoAppStateContext = createContext<AppStateValue | null>(null));
 
 export function useAppState(): AppStateValue {
   const value = useContext(AppStateContext);

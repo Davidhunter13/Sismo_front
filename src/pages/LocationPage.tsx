@@ -13,9 +13,10 @@ import { useAppState } from '../context/appContext';
 import { setupGaps } from '../utils/setupGaps';
 import { testLocation } from '../services/demoData';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
+import { withLoader } from '../services/loaderService';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
 import { formatCoord } from '../utils/format';
-import { MAX_MEETING_POINTS } from '../utils/meetingPoints';
+import { maxMeetingPoints } from '../utils/meetingPoints';
 import { useMeetingTarget } from '../components/useMeetingTarget';
 
 // Leaflet solo se descarga cuando se abre la pestaña «Mapa real».
@@ -33,7 +34,7 @@ export default function LocationPage() {
   const [label, setLabel] = useState(t.meeting.defaultLabel);
   const [picking, setPicking] = useState(false);
   const labelError = label.trim().length < 2 ? t.meeting.min : '';
-  const full = meetingPoints.length >= MAX_MEETING_POINTS;
+  const full = meetingPoints.length >= maxMeetingPoints();
   const gaps = setupGaps(data);
   // Brújula y ruta: hacia el punto más cercano a la ubicación actual (se puede elegir otro).
   const meeting = useMeetingTarget(lastLocation);
@@ -96,7 +97,7 @@ export default function LocationPage() {
     setSearchMessage('');
     setResults([]);
     try {
-      const found = await searchAddress(address, lastLocation?.source === 'dispositivo' ? lastLocation : null);
+      const found = await withLoader(searchAddress(address, lastLocation?.source === 'dispositivo' ? lastLocation : null));
       setResults(found);
       if (found.length === 0) setSearchMessage(t.meeting.noResults);
     } catch {
@@ -181,7 +182,7 @@ export default function LocationPage() {
         <p className="small muted">{meetingPoints.length ? t.meeting.manyHint : t.meeting.empty}</p>
         {meetingPoints.length > 0 && (
           <>
-            <strong className="small">{t.meeting.listTitle(meetingPoints.length, MAX_MEETING_POINTS)}</strong>
+            <strong className="small">{t.meeting.listTitle(meetingPoints.length, maxMeetingPoints())}</strong>
             <ul className="meeting-list">
               {meetingPoints.map((p) => (
                 <li key={p.id}>
@@ -198,7 +199,7 @@ export default function LocationPage() {
             </ul>
           </>
         )}
-        {full && <p className="callout callout--warning small" role="note">{t.meeting.full(MAX_MEETING_POINTS)}</p>}
+        {full && <p className="callout callout--warning small" role="note">{t.meeting.full(maxMeetingPoints())}</p>}
         <IonInput
           className={labelError ? 'ion-invalid ion-touched' : ''}
           label={t.meeting.nameLabel}

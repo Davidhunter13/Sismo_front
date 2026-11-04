@@ -1,5 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonContent, IonLabel, IonPage, IonSegment, IonSegmentButton, IonToggle, useIonRouter } from '@ionic/react';
+import { SyncStatusBanner } from '../components/SyncStatusBanner';
+import { DEMO_ENABLED } from '../utils/env';
 import { ArrowRight, BellRing, Info, MapPin, Users } from 'lucide-react';
 import { useState } from 'react';
 import { SismoLogo } from '../components/SismoLogo';
@@ -17,11 +19,12 @@ export default function WelcomePage() {
   const router = useIonRouter();
   const { data, updateSettings, setDemoMode } = useAppState();
   const { common: tc, welcome: t } = useT();
-  const [loadDemo, setLoadDemo] = useState(true);
+  // En producción no hay datos de demostración: el registro es siempre obligatorio.
+  const [loadDemo, setLoadDemo] = useState(DEMO_ENABLED);
 
   // Sin modo de demostración, el registro (nombre, ubicación, punto de encuentro y contacto) es obligatorio.
   const start = () => {
-    if (!loadDemo) {
+    if (!DEMO_ENABLED || !loadDemo) {
       router.push('/registro', 'forward', 'push');
       return;
     }
@@ -34,6 +37,7 @@ export default function WelcomePage() {
     <IonPage>
       <IonContent className="welcome">
         <main className="welcome__inner">
+          <SyncStatusBanner />
           <div className="welcome__hero">
             <SismoLogo size={88} />
             <h1>SISMO</h1>
@@ -65,13 +69,15 @@ export default function WelcomePage() {
             </IonSegment>
           </div>
 
-          <div className="card toggle-row">
-            <span>
-              <strong>{t.demoTitle}</strong>
-              <small>{t.demoHint}</small>
-            </span>
-            <IonToggle checked={loadDemo} onIonChange={(e) => setLoadDemo(e.detail.checked)} aria-label={t.demoToggle} />
-          </div>
+          {DEMO_ENABLED && (
+            <div className="card toggle-row">
+              <span>
+                <strong>{t.demoTitle}</strong>
+                <small>{t.demoHint}</small>
+              </span>
+              <IonToggle checked={loadDemo} onIonChange={(e) => setLoadDemo(e.detail.checked)} aria-label={t.demoToggle} />
+            </div>
+          )}
 
           <button className="btn btn--primary btn--lg btn--block" onClick={start}>
             {t.start} <ArrowRight size={20} aria-hidden="true" />

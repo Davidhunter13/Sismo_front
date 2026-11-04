@@ -4,7 +4,9 @@ import { Save, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useT } from '../i18n/useT';
 import type { Contact, ContactInput } from '../types';
-import { RELATIONSHIPS, validateContact } from '../utils/contactValidation';
+import { getLang } from '../i18n';
+import { labelOf, useCatalogs } from '../services/catalogService';
+import { validateContact } from '../utils/contactValidation';
 
 
 interface ContactFormModalProps {
@@ -20,6 +22,9 @@ const empty: ContactInput = { name: '', relationship: '', phone: '', email: '' }
 
 export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: ContactFormModalProps) {
   const tc = useT().contacts;
+  const catalogs = useCatalogs();
+  // Parentescos del catálogo; si el contacto tiene uno que ya no existe, se conserva como opción.
+  const relationships = catalogs.relationships.map((r) => r.id);
   const t = tc.form;
   const [form, setForm] = useState<ContactInput>(empty);
   const [touched, setTouched] = useState(false);
@@ -67,7 +72,7 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
         <fieldset className={`chip-field${touched && errors.relationship ? ' chip-field--invalid' : ''}`}>
           <legend>{t.relationship}</legend>
           <div className="chip-field__options" role="radiogroup" aria-label={t.relationship}>
-            {RELATIONSHIPS.map((r) => (
+            {(form.relationship && !relationships.includes(form.relationship) ? [...relationships, form.relationship] : relationships).map((r) => (
               <button
                 key={r}
                 type="button"
@@ -76,7 +81,7 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
                 className={`chip${form.relationship === r ? ' chip--active' : ''}`}
                 onClick={() => setForm((f) => ({ ...f, relationship: r }))}
               >
-                {tc.relationships[r] ?? r}
+                {labelOf(catalogs.relationships, r, getLang())}
               </button>
             ))}
           </div>

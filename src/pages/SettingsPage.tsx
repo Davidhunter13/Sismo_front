@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
+import { BackupCard } from '../components/BackupCard';
+import { DeleteAccountCard } from '../components/DeleteAccountCard';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { StatusBadge } from '../components/StatusBadge';
 import { permissionBadge } from '../components/statusMaps';
@@ -14,20 +16,22 @@ import { FALL_COUNTDOWN_S, isMotionSupported } from '../services/fallDetectionSe
 import { isSirenSupported, previewSound, stopPreview } from '../services/sirenService';
 import { LANGS, type Lang } from '../i18n';
 import { useT } from '../i18n/useT';
+import { useCatalogs } from '../services/catalogService';
+import { DEMO_ENABLED } from '../utils/env';
 import type { AlarmSound, Settings, ThemePref } from '../types';
 
 type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
 
 const TOGGLE_KEYS: ToggleKey[] = ['soundEnabled', 'visualSignalEnabled', 'vibrationEnabled', 'highContrast', 'largeText', 'reduceMotion'];
 
-/** Umbrales del ahorro automático de batería (0 = nunca). 20 % es el aviso de batería baja de Android. */
-const LOW_BATTERY_OPTIONS = [0, 10, 15, 20, 30];
 
 export default function SettingsPage() {
   const router = useIonRouter();
   const [presentToast] = useIonToast();
   const { data, activeAlert, updateSettings, setDemoMode, resetDemoData, resetAll } = useAppState();
   const { settings } = data;
+  // Umbrales del ahorro automático de batería (parámetro administrable; 0 = nunca).
+  const catalogs = useCatalogs();
   const { common: tc, settings: t } = useT();
   const [name, setName] = useState(settings.userName);
   const [dialog, setDialog] = useState<'demo' | 'all' | null>(null);
@@ -164,7 +168,7 @@ export default function SettingsPage() {
           className="segment segment--compact"
           aria-label={t.battery.label}
         >
-          {LOW_BATTERY_OPTIONS.map((v) => (
+          {catalogs.params.lowBatteryOptions.map((v) => (
             <IonSegmentButton key={v} value={String(v)}>
               <IonLabel>{v === 0 ? t.battery.off : `${v} %`}</IonLabel>
             </IonSegmentButton>
@@ -173,26 +177,28 @@ export default function SettingsPage() {
         <p className="small muted">{t.battery.detail}</p>
       </section>
 
-      <section className="card card--demo">
-        <h2 className="card__title"><FlaskConical size={18} aria-hidden="true" /> {t.demo.title}</h2>
-        <div className="toggle-row toggle-row--plain">
-          <span>
-            <strong>{settings.demoMode ? t.demo.on : t.demo.off}</strong>
-            <small>{t.demo.detail}</small>
-          </span>
-          <IonToggle
-            checked={settings.demoMode}
-            onIonChange={(e) => {
-              setDemoMode(e.detail.checked);
-              toast(e.detail.checked ? t.demo.toastOn : t.demo.toastOff, 'medium');
-            }}
-            aria-label={t.demo.title}
-          />
-        </div>
-        <button className="btn btn--outline btn--block" onClick={() => setDialog('demo')}>
-          <RotateCcw size={18} aria-hidden="true" /> {t.demo.reset}
-        </button>
-      </section>
+      {DEMO_ENABLED && (
+        <section className="card card--demo">
+          <h2 className="card__title"><FlaskConical size={18} aria-hidden="true" /> {t.demo.title}</h2>
+          <div className="toggle-row toggle-row--plain">
+            <span>
+              <strong>{settings.demoMode ? t.demo.on : t.demo.off}</strong>
+              <small>{t.demo.detail}</small>
+            </span>
+            <IonToggle
+              checked={settings.demoMode}
+              onIonChange={(e) => {
+                setDemoMode(e.detail.checked);
+                toast(e.detail.checked ? t.demo.toastOn : t.demo.toastOff, 'medium');
+              }}
+              aria-label={t.demo.title}
+            />
+          </div>
+          <button className="btn btn--outline btn--block" onClick={() => setDialog('demo')}>
+            <RotateCcw size={18} aria-hidden="true" /> {t.demo.reset}
+          </button>
+        </section>
+      )}
 
       <section className="card">
         <h2 className="card__title"><MapPin size={18} aria-hidden="true" /> {t.perms.title}</h2>
@@ -209,6 +215,10 @@ export default function SettingsPage() {
           <StatusBadge tone="neutral" label={t.perms.none} />
         </div>
       </section>
+
+      <BackupCard />
+
+      <DeleteAccountCard />
 
       <section className="card">
         <h2 className="card__title"><AlertTriangle size={18} aria-hidden="true" /> {t.limitationsTitle}</h2>

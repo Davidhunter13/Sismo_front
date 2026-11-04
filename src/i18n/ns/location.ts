@@ -46,7 +46,7 @@ const es = {
   limits: [
     'La precisión depende del GPS, la red y el entorno; en interiores puede variar decenas o cientos de metros.',
     'El navegador solo permite la ubicación en sitios seguros (HTTPS o localhost) y con su autorización.',
-    'La ubicación se guarda solo en este dispositivo y se adjunta a la alerta local.',
+    'La ubicación se guarda en este dispositivo, se adjunta a la alerta y, cuando hay conexión, se respalda en el servidor de SISMO.',
     'La pestaña «Esquema» es un dibujo y funciona sin internet. «Mapa real» descarga el mapa de OpenStreetMap: requiere conexión y revela a ese servicio la zona aproximada que se está viendo.',
   ],
 };
@@ -96,7 +96,7 @@ const en: typeof es = {
   limits: [
     'Accuracy depends on GPS, the network and the surroundings; indoors it may be off by tens or hundreds of meters.',
     'The browser only allows location on secure sites (HTTPS or localhost) and with your permission.',
-    'The location is stored only on this device and attached to the local alert.',
+    'The location is stored on this device, attached to the alert and, when there is a connection, backed up to the SISMO server.',
     'The “Sketch” tab is a drawing and works offline. “Real map” downloads the OpenStreetMap map: it requires a connection and reveals to that service the approximate area being viewed.',
   ],
 };

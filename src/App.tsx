@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { Capacitor } from '@capacitor/core';
+import { RequestOverlay, SplashScreen } from './components/AppLoader';
 import { IonApp, IonRouterOutlet, setupIonicReact, useIonRouter } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { useEffect, useState } from 'react';
@@ -79,8 +80,14 @@ function Routes() {
   // Mientras se lee la acción de arranque (milisegundos) no se dibuja nada: la pantalla de inicio de Android la cubre.
   if (launch === 'pendiente') return null;
 
+  // Pantalla de carga solo en un arranque normal: si la app se abre para una alerta (widget, acceso rápido,
+  // alerta activa o ruta de alerta) no se muestra, para no tapar el SOS ni un segundo.
+  const skipSplash = launch !== null || data.activeAlertId !== null || window.location.pathname.startsWith('/alerta');
+
   return (
     <>
+      <SplashScreen skip={skipSplash} />
+      <RequestOverlay />
       <FallDetector />
       <IonRouterOutlet>
         <Route exact path="/bienvenida" component={WelcomePage} />

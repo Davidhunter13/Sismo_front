@@ -2,8 +2,10 @@
 import { distanceKm } from '../services/quakeService';
 import type { MeetingPoint } from '../types';
 
-/** Tope de puntos de encuentro: todos van en el SMS, que debe seguir siendo corto. */
-export const MAX_MEETING_POINTS = 5;
+import { getCatalogs } from '../services/catalogService';
+
+/** Tope de puntos de encuentro (parámetro administrable): todos van en el SMS, que debe seguir siendo corto. */
+export const maxMeetingPoints = (): number => getCatalogs().params.maxMeetingPoints;
 
 /**
  * Punto de encuentro más cercano a una posición: es el que usan la brújula y la ruta por defecto.

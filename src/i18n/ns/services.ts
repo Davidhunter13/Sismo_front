@@ -14,7 +14,7 @@ const es = {
     battery: (level: number) => `Batería: ${level} %`,
     lowBattery: (who: string, level: number) =>
       `SISMO: ${who} sigue en emergencia y su batería está al ${level} %. Puede quedarse sin comunicación; su teléfono pasó a modo ahorro.`,
-    callToAction: 'Si puede, comuníquese o llame a la línea 123.',
+    callToAction: 'Si puede, comuníquese o llame a la línea {emergencyNumber}.',
     safeAfterAlert: (who: string, event: string, hour: string) => `SISMO: ${who} está a salvo. La alerta (${event}) finalizó a las ${hour}.`,
     safeNow: (who: string, hour: string) => `SISMO: ${who} está bien. Aviso enviado a las ${hour}.`,
     blood: (v: string) => `Sangre ${v}`,
@@ -117,7 +117,7 @@ const en: typeof es = {
     battery: (level) => `Battery: ${level}%`,
     lowBattery: (who, level) =>
       `SISMO: ${who} is still in an emergency and their battery is at ${level}%. They may lose contact; their phone switched to saving mode.`,
-    callToAction: 'If you can, get in touch or dial 123.',
+    callToAction: 'If you can, get in touch or dial {emergencyNumber}.',
     safeAfterAlert: (who, event, hour) => `SISMO: ${who} is safe. The alert (${event}) ended at ${hour}.`,
     safeNow: (who, hour) => `SISMO: ${who} is OK. Notice sent at ${hour}.`,
     blood: (v) => `Blood type ${v}`,
