@@ -105,7 +105,7 @@ export function AlertEmailCard({ alert }: { alert: AlertRecord }) {
             <Mail size={44} aria-hidden="true" />
             <h2 id="email-title">{t.dialogTitle}</h2>
             <p id="email-desc">{t.dialogText(recipients.length)}</p>
-            <strong className="fall-count" aria-live="polite">{t.countdown(remaining)}</strong>
+            <strong className="fall-count fall-count--text" aria-live="polite">{t.countdown(remaining)}</strong>
             <button className="btn btn--primary btn--lg btn--block" onClick={() => void send()}>{t.yes}</button>
             <button className="btn btn--outline btn--block" onClick={cancel}>{t.no}</button>
           </div>

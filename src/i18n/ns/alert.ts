@@ -71,7 +71,7 @@ const es = {
   email: {
     dialogTitle: "¿Enviar correo a sus contactos?",
     dialogText: (n: number) => `Se enviará un correo de alerta a ${n} contacto(s) con su ubicación.`,
-    countdown: (s: number) => `Se enviará automáticamente en ${s} s`,
+    countdown: (s: number) => `Se enviará automáticamente en ${s}\u00a0s`,
     yes: "Sí, enviar ahora",
     no: "No enviar",
     channel: "Correo a contactos",
@@ -238,7 +238,7 @@ const en: typeof es = {
   email: {
     dialogTitle: "Email your contacts?",
     dialogText: (n: number) => `An alert email with your location will be sent to ${n} contact(s).`,
-    countdown: (s: number) => `It will be sent automatically in ${s} s`,
+    countdown: (s: number) => `It will be sent automatically in ${s}\u00a0s`,
     yes: "Yes, send now",
     no: "Don’t send",
     channel: "Email to contacts",

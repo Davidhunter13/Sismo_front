@@ -430,6 +430,8 @@ ion-alert.sismo-alert .alert-radio-label { color: var(--text); }
 }
 .fall-dialog svg { color: var(--red); }
 .fall-count { font-size: 2.6rem; font-weight: 850; color: var(--red); font-variant-numeric: tabular-nums; }
+/* Cuenta regresiva del correo: es una frase, no un número; más pequeña para que no se salga del diálogo. */
+.fall-count--text { font-size: 1.15rem; font-weight: 800; line-height: 1.3; text-wrap: balance; }
 
 /* ---------- Encuesta SUS ---------- */
 .sus-item { border: 1px solid var(--border); margin: 0; display: flex; flex-direction: column; gap: 10px; }

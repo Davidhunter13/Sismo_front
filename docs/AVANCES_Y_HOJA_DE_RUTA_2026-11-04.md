@@ -31,6 +31,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
 | Almacenamiento | Solo en el teléfono | Teléfono + base de datos MySQL vía backend en CodeIgniter 3; sin red los cambios esperan en una cola y se suben solos al volver la conexión |
 | Monitoreo | No existía | Panel administrativo web (backend) con alertas activas en tiempo real, mapa, detalle de la persona y registro de la ayuda brindada, visible en la app |
+| Divulgación | No existía | Página web informativa (comercial) con beneficios, funciones, capturas en teléfonos, portátil y escritorio, y lo que aún está pendiente |
 | Recuperación | Si se perdía el teléfono se perdía todo | Código de recuperación: en un teléfono nuevo se restauran contactos, historial, ficha médica y demás datos |
 | Contenido | Listas y textos fijos en el código | Tipos de evento, parentescos, kit, pasos post-sismo, tipos de sangre, guía de emergencia y parámetros (número de emergencia, topes, tiempos) editables desde el panel |
 | Modo demostración | Visible siempre | Solo en desarrollo; en producción no aparece y se apaga solo |
@@ -143,6 +144,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | WhatsApp decía que el contacto no existía | WhatsApp exige el número con código de país y sin «+» | Botón de WhatsApp por contacto en la alerta con el número normalizado (`whatsappNumber`: se quita el «+» y se antepone 57 a celulares colombianos guardados sin indicativo) |
 | La detección de caídas se activó al apretar el teléfono con fuerza | El umbral de impacto aislado (4 g) se alcanza con un apretón o sacudida | Impacto aislado sube a 6 g; caída libre + impacto se mantiene. Prueba de falsas alarmas |
 | La cuenta regresiva del correo se quedaba en 20 s y nunca enviaba (detectado por las pruebas) | La pantalla de alerta se redibuja cada segundo y reiniciaba el temporizador | El temporizador ya no depende de los redibujos (referencia a la función de envío) |
+| El texto «Se enviará automáticamente en N s» se salía del diálogo del correo en teléfonos angostos | Usaba el tamaño de letra de un número grande (2,6 rem) para una frase completa | Tamaño de frase (1,15 rem), líneas equilibradas y espacio que no se parte entre el número y la «s» |
 | El mapa real podía verse gris | El mapa se dibujaba antes de tener su tamaño final (pestañas, transiciones) o las teselas no cargaban (sin internet o un bloqueador) | El mapa se recalcula cada vez que cambia su contenedor y, si las teselas fallan, muestra un aviso en lugar de quedar gris |
 | «Elegir en el mapa» no llevaba al mapa | — | Sube automáticamente hasta el mapa |
 | La búsqueda de dirección no encontraba «Carrera 20 # 39-52» (Consejo Colombiano de Seguridad) | OpenStreetMap casi no tiene números de casa en Colombia | Esri ArcGIS como fuente principal (punto exacto), Photon de respaldo, limpieza del texto (paréntesis, «Barrio», «D.C.») |
@@ -165,7 +167,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Brújula al punto de encuentro** (en Ubicación y en la alerta): flecha que apunta al punto de encuentro, distancia en metros y dirección en grados con punto cardinal. **Funciona sin internet**: usa el GPS en vivo y el magnetómetro (`deviceorientationabsolute` en Android/Chrome, `webkitCompassHeading` en iOS). Sin magnetómetro dibuja la dirección respecto al norte. Indica «ya llegó» a menos de 25 m. Archivos: `compassService.ts`, `components/MeetingCompass.tsx`.
 - **Lista «Después del sismo»** (`/despues-del-sismo`, acceso en Inicio y en la alerta; se abre sola al finalizar la alerta): 11 pasos (heridos, gas, electricidad, agua, grietas, escaleras, punto de encuentro, réplicas, uso del teléfono, información oficial, avisar a la familia) con casillas y barra de progreso. **Cada alerta tiene su propia lista** (`AlertRecord.postQuakeDone`): al dar SOS empieza vacía y las anteriores se conservan con su alerta, sin borrar datos (preparado para migrar a una base de datos). Desde Inicio se abre la de la alerta más reciente; sin alertas, una lista de práctica. Arriba muestra el **punto de encuentro con la brújula** o, si no hay uno configurado, invita a configurarlo (botón que lleva a la brújula en Ubicación). Orientativa: debe validarse con la UNGRD.
-- **QR médico:** en la ficha médica y en la pantalla de alerta. Contiene la ficha en texto plano (nombre, sangre, alergias, medicamentos, condiciones, notas, línea 123): cualquier lector de QR lo muestra **sin internet ni app**. Solo se genera si «Compartir» está activo. Siempre sobre fondo blanco para que lo lean los escáneres. Librería `qrcode`.
+- **QR médico:** en la ficha médica y en la pantalla de alerta. Contiene la ficha en texto plano (nombre, sangre, alergias, medicamentos, condiciones, notas, línea 123): cualquier lector de QR lo muestra **sin internet ni app**. Solo se genera si «Compartir» está activo. Siempre sobre fondo blanco para que lo lean los escáneres. Librería `qrcode`. **Evidencia:** `screenshots/2026-11-04/visual/visual_front/14-ficha-medica-qr.png` (el QR en la ficha) y `15-qr-escaneado-por-un-rescatista.png` (lo que ve quien lo escanea: el texto se obtuvo decodificando el QR real generado por la app; la pantalla del lector es una simulación genérica).
 - **Ficha médica sobre la pantalla de bloqueo (Android):** durante la alerta SISMO se muestra encima de la pantalla bloqueada y la enciende (`setShowWhenLocked` / `setTurnScreenOn`), para que los rescatistas vean la ficha y el QR sin desbloquear. Se desactiva al finalizar.
 - **Indicador de red:** aviso «Sin internet» en Inicio y en la alerta (qué sigue funcionando: SMS, 123, brújula, esquema; qué no: mapa real y sismos recientes) y fila «Conexión a internet» en la disponibilidad de servicios.
 - **Recordatorios de simulacro:** en Inicio y en Simulacro, si nunca se ha hecho uno o pasaron 90 días; en septiembre y octubre recuerda el **Simulacro Nacional de Respuesta a Emergencias** (la fecha exacta se remite a la UNGRD). Dentro de la app. Archivo: `drillReminderService.ts`.
@@ -306,6 +308,17 @@ Pestaña **Sismos recientes** con las **últimas 24 horas** y los **últimos 7 d
 - **En el backend** (`POST /eliminar_cuenta`, en una sola transacción): borrado lógico en cascada (`activo = 0`, convención CCS) de ajustes, contactos, alertas, puntos de encuentro, encuestas, kit, ficha médica y bitácora de ayuda. Además hay **supresión de datos personales y de salud** (Ley 1581): se vacían el nombre, los contactos, la ficha médica cifrada, las ubicaciones, los puntos de encuentro, las notas y los mensajes de ayuda. Solo quedan métricas anónimas (tiempos de reacción y confirmación, SUS) para la tesis. La persona desaparece del panel.
 - **Sin conexión** no se borra nada (para no dejar datos huérfanos en el servidor) y la app avisa que debe intentarlo con internet.
 - **Verificado de punta a punta:** registro, contacto y código de recuperación; luego eliminar → `ok` y el token anterior queda inválido. Pruebas unitarias: aviso al servidor, borrado del token y la cola, y comportamiento sin red.
+
+### 2.22 Página web informativa (comercial) desde el backend
+
+Se creó una **página web informativa para presentar y «vender» SISMO**, servida por el backend en CodeIgniter 3 en `Sismo_info`. **Es pública: no exige iniciar sesión** (controlador propio, separado del panel, que sigue protegido). Desde el panel se abre con el botón «Qué ofrece SISMO»; solo si quien la ve es administrador aparece además «Ir al panel». Es una página propia, sin menús ni encabezados de otros sistemas, con la identidad visual de la app (paleta, logo, Inter) y tema claro u oscuro con botón de sol y luna (comparte la preferencia con el panel).
+
+- **Contenido:** portada con llamado a la acción y capturas de la app dentro de teléfonos; cifras del producto (1 toque, sin red, ubicación cada 2 min, en vivo); **«Lo que aún está pendiente»** en una franja propia (hoy el SMS y el WhatsApp los confirma la persona; pendiente el correo automático a los contactos al activar el SOS y el envío de la ubicación actualizada por correo); beneficios para la organización; funciones con capturas (alerta, centro de monitoreo, orientación, información con la ficha médica, su QR y lo que ve quien lo escanea, guía y sismos recientes, supervivencia); **el panel de monitoreo en un monitor de escritorio y en un portátil**; **«Todo es administrable»** con pestañas Catálogos / Guía / Parámetros (lo editado en el panel llega a la app sin publicar una nueva versión); carrusel automático de pantallas; comparación con y sin SISMO; cómo funciona en 4 pasos; seguridad y privacidad; cierre.
+- **Botón «Solicitar una demostración»:** se activa con `sismo_contacto_url` en `config/sismo.php` (solo URL `https://`); vacío = no se muestra.
+- **Movimiento:** aparición al hacer scroll, dispositivos que flotan, pares de teléfonos inclinados en 3D, abanico de cuatro teléfonos y fondo de partículas conectadas (solo se anima la sección visible). Todo se desactiva si el sistema pide reducir el movimiento. Carrusel que avanza solo cada 3,5 s y se pausa con el mouse o el foco.
+- **Contenido honesto:** solo funciones que existen; las capturas usan datos ficticios (los sismos son datos reales del USGS). Contenido estático: no consulta datos de personas.
+- **Imágenes:** capturas de la app y del panel convertidas a WebP (`assets/sismo/landing/`, ~1 MB en total), con carga diferida.
+- **Adaptable:** escritorio y celular sin scroll horizontal (verificado a 1440 px y 390 px).
 
 ## 3. Decisiones de diseño
 
@@ -537,7 +550,7 @@ Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y corre
 | `02-bienvenida-sin-conexion.png` | Bienvenida sin internet: «Sus datos se guardan en el teléfono y se subirán apenas haya conexión» (§2.20) |
 | `03-registro-sin-conexion.png` | Registro sin internet con el mismo aviso (§2.20) |
 | `04-inicio-sin-conexion-cambios-pendientes.png` | Inicio sin internet con el número de cambios pendientes de subir (§2.14) |
-| `05-alerta-ayuda-del-centro-de-monitoreo.png` | Alerta activa con el aviso fijo del centro de monitoreo («Ayuda en camino» y el mensaje del operador) (§2.15) |
+| `05-alerta-ayuda-del-centro-de-monitoreo.png` | Alerta activa con el aviso fijo del centro de monitoreo («Ayuda en camino» y el mensaje del operador) sobre la pregunta del correo, con la cuenta regresiva ya ajustada para que no se salga del diálogo (§2.15, §2.10) |
 | `06-configuracion-respaldo-y-recuperacion.png` | Configuración → Respaldo y recuperación: crear código y recuperar datos (§2.16) |
 | `07-loader-de-solicitud.png` | Loader de pantalla completa mientras se crea el código de recuperación (§2.20) |
 | `08-codigo-de-recuperacion.png` | Código de recuperación generado, para guardarlo fuera del teléfono (§2.16) |
@@ -545,6 +558,11 @@ Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y corre
 | `10-confirmar-eliminar-cuenta.png` | Confirmación antes de eliminar la cuenta (§2.21) |
 | `11-guia-desde-catalogo.png` | Guía de emergencia leída del catálogo administrable (§2.17) |
 | `12-despues-del-sismo-por-clave.png` | «Después del sismo» con pasos del catálogo y avance guardado por clave de paso (§2.17) |
+| `13-alerta-aviso-del-centro.png` | Alerta activa solo con el aviso fijo del centro de monitoreo (correo descartado): «Ayuda en camino», el mensaje del operador y el recuadro de estado (§2.15) |
+| `14-ficha-medica-qr.png` | Ficha médica con datos ficticios y su QR médico para rescatistas (§2.11) |
+| `15-qr-escaneado-por-un-rescatista.png` | Lo que ve un rescatista al escanear el QR con cualquier lector del teléfono: la ficha en texto, sin internet ni SISMO. El texto es el real decodificado del QR; la pantalla del lector es una simulación genérica (§2.11) |
+| `16-guia-de-emergencia.png` | Guía de emergencia («Durante») con lectura en voz alta, sin modo de demostración (§2.5, §2.17) |
+| `17-sismos-recientes.png` | Sismos recientes de los últimos 7 días en Colombia con datos reales del USGS (§2.5) |
 
 **`visual/visual_back/`** (panel administrativo, 1440×900, tema oscuro):
 
@@ -560,6 +578,8 @@ Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y corre
 | `08-panel-editar-tarjeta-de-la-guia.png` | Edición de una tarjeta de la guía (título y pasos en español e inglés, ícono, orden) (§2.17) |
 | `09-panel-parametros.png` | Parámetros: número de emergencia, topes, tiempos y textos de la guía (§2.17) |
 | `10-panel-loader.png` | Loader del panel durante una consulta iniciada por el operador (§2.15) |
+| `11-pagina-informativa-escritorio.png` | Página web informativa completa en escritorio (1440 px, tema claro): portada, pendientes, beneficios, funciones, panel en escritorio y portátil, todo administrable, carrusel, comparación, pasos y seguridad (§2.22) |
+| `12-pagina-informativa-celular.png` | Portada de la página informativa en celular (390 px, tema oscuro) (§2.22) |
 
 **`codigo/codigo_front/`** (código real del repositorio de la app):
 

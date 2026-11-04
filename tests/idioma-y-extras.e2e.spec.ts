@@ -214,7 +214,7 @@ test('correo: al activar pregunta y «No enviar» lo cancela', async ({ page }) 
   await activateAlert(page);
   const dialog = page.getByRole('alertdialog', { name: '¿Enviar correo a sus contactos?' });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText(/Se enviará automáticamente en \d+ s/);
+  await expect(dialog).toContainText(/Se enviará automáticamente en \d+\ss/);
   await dialog.getByRole('button', { name: 'No enviar' }).click();
   await expect(view(page).getByText('Usted eligió no enviar el correo.')).toBeVisible();
   await expect.poll(async () => (await readStorage(page)).alerts[0].emailStatus).toBe('cancelado');
