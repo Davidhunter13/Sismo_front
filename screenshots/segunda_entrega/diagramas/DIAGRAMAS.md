@@ -85,8 +85,8 @@ El diccionario de datos completo está en [`BASE_DE_DATOS_SISMO.md`](BASE_DE_DAT
 
   ```bash
   npm i --no-save mermaid@11.4.1
-  node screenshots/diagramas/fuentes/generar-imagenes.cjs            # todas
-  node screenshots/diagramas/fuentes/generar-imagenes.cjs 05a        # solo las que contienen «05a»
+  node screenshots/segunda_entrega/diagramas/fuentes/generar-imagenes.cjs            # todas
+  node screenshots/segunda_entrega/diagramas/fuentes/generar-imagenes.cjs 05a        # solo las que contienen «05a»
   ```
 
   Usa el Chromium de Playwright que ya tiene el proyecto.

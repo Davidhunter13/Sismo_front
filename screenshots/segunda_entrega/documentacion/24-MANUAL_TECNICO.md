@@ -42,7 +42,7 @@ Los diagramas detallados están en [`../diagramas/DIAGRAMAS.md`](../diagramas/DI
 | `src/types/index.ts` | Modelo de datos (`AppData`) |
 | `tests/` | Pruebas e2e y de capturas |
 | `android/` | Proyecto nativo de Capacitor |
-| `screenshots/` | Evidencias por fecha, `diagramas/` y `documentacion/` |
+| `screenshots/` | Evidencias por entrega y fecha (`primera_entrega/`, `segunda_entrega/`), con `segunda_entrega/diagramas/` y `segunda_entrega/documentacion/` |
 
 **Backend (CodeIgniter 3)**
 

@@ -167,7 +167,7 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 
 - **Brújula al punto de encuentro** (en Ubicación y en la alerta): flecha que apunta al punto de encuentro, distancia en metros y dirección en grados con punto cardinal. **Funciona sin internet**: usa el GPS en vivo y el magnetómetro (`deviceorientationabsolute` en Android/Chrome, `webkitCompassHeading` en iOS). Sin magnetómetro dibuja la dirección respecto al norte. Indica «ya llegó» a menos de 25 m. Archivos: `compassService.ts`, `components/MeetingCompass.tsx`.
 - **Lista «Después del sismo»** (`/despues-del-sismo`, acceso en Inicio y en la alerta; se abre sola al finalizar la alerta): 11 pasos (heridos, gas, electricidad, agua, grietas, escaleras, punto de encuentro, réplicas, uso del teléfono, información oficial, avisar a la familia) con casillas y barra de progreso. **Cada alerta tiene su propia lista** (`AlertRecord.postQuakeDone`): al dar SOS empieza vacía y las anteriores se conservan con su alerta, sin borrar datos (preparado para migrar a una base de datos). Desde Inicio se abre la de la alerta más reciente; sin alertas, una lista de práctica. Arriba muestra el **punto de encuentro con la brújula** o, si no hay uno configurado, invita a configurarlo (botón que lleva a la brújula en Ubicación). Orientativa: debe validarse con la UNGRD.
-- **QR médico:** en la ficha médica y en la pantalla de alerta. Contiene la ficha en texto plano (nombre, sangre, alergias, medicamentos, condiciones, notas, línea 123): cualquier lector de QR lo muestra **sin internet ni app**. Solo se genera si «Compartir» está activo. Siempre sobre fondo blanco para que lo lean los escáneres. Librería `qrcode`. **Evidencia:** `screenshots/2026-11-04/visual/visual_front/14-ficha-medica-qr.png` (el QR en la ficha) y `15-qr-escaneado-por-un-rescatista.png` (lo que ve quien lo escanea: el texto se obtuvo decodificando el QR real generado por la app; la pantalla del lector es una simulación genérica).
+- **QR médico:** en la ficha médica y en la pantalla de alerta. Contiene la ficha en texto plano (nombre, sangre, alergias, medicamentos, condiciones, notas, línea 123): cualquier lector de QR lo muestra **sin internet ni app**. Solo se genera si «Compartir» está activo. Siempre sobre fondo blanco para que lo lean los escáneres. Librería `qrcode`. **Evidencia:** `screenshots/segunda_entrega/2026-11-04/visual/visual_front/14-ficha-medica-qr.png` (el QR en la ficha) y `15-qr-escaneado-por-un-rescatista.png` (lo que ve quien lo escanea: el texto se obtuvo decodificando el QR real generado por la app; la pantalla del lector es una simulación genérica).
 - **Ficha médica sobre la pantalla de bloqueo (Android):** durante la alerta SISMO se muestra encima de la pantalla bloqueada y la enciende (`setShowWhenLocked` / `setTurnScreenOn`), para que los rescatistas vean la ficha y el QR sin desbloquear. Se desactiva al finalizar.
 - **Indicador de red:** aviso «Sin internet» en Inicio y en la alerta (qué sigue funcionando: SMS, 123, brújula, esquema; qué no: mapa real y sismos recientes) y fila «Conexión a internet» en la disponibilidad de servicios.
 - **Recordatorios de simulacro:** en Inicio y en Simulacro, si nunca se ha hecho uno o pasaron 90 días; en septiembre y octubre recuerda el **Simulacro Nacional de Respuesta a Emergencias** (la fecha exacta se remite a la UNGRD). Dentro de la app. Archivo: `drillReminderService.ts`.
@@ -403,7 +403,7 @@ Se creó una **página web informativa para presentar y «vender» SISMO**, serv
 | Cubierto por pruebas e2e | Datos faltantes en rojo (aviso en Inicio y bordes), confirmaciones y borrar puntos en el registro, editar y eliminar contactos en el registro, ahorro de batería automático (batería simulada, aviso, no se reactiva, «Nunca»), contacto desde la agenda en el registro, registro obligatorio (4 pasos y SOS), varios puntos de encuentro (lista, más cercano, tope de 5), ubicación cada 5 min (reloj simulado), páginas nuevas, botón 123, métricas, ubicación automática al dar SOS, simulacro desde Inicio con su señal, encuesta SUS, mochila, modo atrapado (entrar y salir), muestras de sonido en Configuración, detección de caídas, navegación engranaje/casita sin vistas superpuestas, ficha médica, estadísticas y CSV, sismos |
 | Cubierto por pruebas unitarias | Texto de los SMS (varios puntos de encuentro), punto más cercano, migración de datos, métricas y CSV, sismos, SUS, mochila, detector de caídas |
 | Integración continua | Configurada; se verá su primera ejecución en GitHub al subir los cambios |
-| Prueba en emulador Android 16 | Widgets 1×1 y 2×2 (selector, colocación, doble toque), alerta abierta desde el widget con la app recién instalada, señales nativas encendidas y notificación «Alerta SISMO activa» (capturas en `screenshots/2026-11-02/android/`) |
+| Prueba en emulador Android 16 | Widgets 1×1 y 2×2 (selector, colocación, doble toque), alerta abierta desde el widget con la app recién instalada, señales nativas encendidas y notificación «Alerta SISMO activa» (capturas en `screenshots/segunda_entrega/2026-11-02/android/`) |
 | Prueba en dispositivo físico | **Pendiente**: servicio nativo con pantalla bloqueada, modo atrapado con pantalla apagada, silbato, linterna SOS, vibración, notificación, widget, acceso rápido, voz, selector de contactos, batería, SMS y llamada |
 | Sin pruebas automáticas | Funciones nativas de Android |
 
@@ -430,10 +430,10 @@ Se creó una **página web informativa para presentar y «vender» SISMO**, serv
 
 ## 7. Evidencias: capturas de pantalla y de código
 
-Las capturas se guardan en carpetas con la **fecha en que se tomaron** (`screenshots/AAAA-MM-DD/`), para conservar el historial del prototipo. Desde el 2/11/2026 cada fecha se organiza así:
+Las capturas se guardan por entrega (`screenshots/primera_entrega/` y `screenshots/segunda_entrega/`) y dentro de cada una en carpetas con la **fecha en que se tomaron** (`AAAA-MM-DD/`). `npm run screenshots` las genera en `screenshots/AAAA-MM-DD/` y luego se mueven a la carpeta de su entrega. Esto sirve para conservar el historial del prototipo. Desde el 2/11/2026 cada fecha se organiza así:
 
 ```
-screenshots/AAAA-MM-DD/
+screenshots/<primera|segunda>_entrega/AAAA-MM-DD/
 ├── codigo/
 │   ├── codigo_front/   código nuevo o modificado de la app
 │   └── codigo_back/    código nuevo o modificado del backend
@@ -444,19 +444,19 @@ screenshots/AAAA-MM-DD/
 
 **Nombres:** `NN-descripcion-corta.png` (número de orden de dos dígitos y descripción en minúsculas separada con guiones). Cada archivo aparece abajo con lo que muestra. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
 
-**Diagramas:** `screenshots/diagramas/` (sin fecha, se actualiza con cada cambio de la base de datos). `BASE_DE_DATOS_SISMO.md` es el diccionario de datos del backend: diagrama entidad-relación (Mermaid; GitHub lo dibuja), las 12 tablas `sismo_*` con cada columna, tipo, si admite nulos, valor por defecto y descripción, índices, valores iniciales de catálogos y parámetros, y dónde quedan los datos personales y cómo se protegen.
+**Diagramas:** `screenshots/segunda_entrega/diagramas/` (sin fecha, se actualiza con cada cambio de la base de datos). `BASE_DE_DATOS_SISMO.md` es el diccionario de datos del backend: diagrama entidad-relación (Mermaid; GitHub lo dibuja), las 12 tablas `sismo_*` con cada columna, tipo, si admite nulos, valor por defecto y descripción, índices, valores iniciales de catálogos y parámetros, y dónde quedan los datos personales y cómo se protegen.
 
-**Documentación gráfica:** `screenshots/diagramas/DIAGRAMAS.md` es el índice de **33 diagramas**, cada uno en su propia imagen PNG y construido a partir del código real. Cuando una función la usan roles distintos (persona usuaria, operador del centro de monitoreo, visitante), hay un diagrama por rol.
+**Documentación gráfica:** `screenshots/segunda_entrega/diagramas/DIAGRAMAS.md` es el índice de **33 diagramas**, cada uno en su propia imagen PNG y construido a partir del código real. Cuando una función la usan roles distintos (persona usuaria, operador del centro de monitoreo, visitante), hay un diagrama por rol.
 - **UML y funcionales:** casos de uso, actividades, secuencia, clases, estados y flujo de procesos.
 - **Arquitectura y diseño:** arquitectura, componentes, despliegue, infraestructura y navegación.
 - **Base de datos:** DER, modelo lógico y modelo físico (este último generado desde el script SQL).
 - **Planificación y tiempos:** Gantt, PERT, ruta crítica y línea de tiempo.
 
-El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). Las fechas de planificación salen de las tres entregas registradas (24/10, 02/11 y 04/11/2026), y la ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
+El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). Las fechas de planificación salen de las tres entregas registradas (24/10, 02/11 y 04/11/2026), y la ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/segunda_entrega/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
 
-**Documentación técnica y funcional:** `screenshots/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (125) y registro de cambios y versiones (1.0 a 3.1).
+**Documentación técnica y funcional:** `screenshots/segunda_entrega/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (125) y registro de cambios y versiones (1.0 a 3.1).
 
-### 7.1 Carpeta `screenshots/2026-10-24/` (primera versión)
+### 7.1 Carpeta `screenshots/primera_entrega/2026-10-24/` (primera versión)
 
 | Carpeta | Archivo | Qué muestra |
 |---|---|---|
@@ -477,7 +477,7 @@ El envío de correos de alerta aparece como función del sistema (servicio de co
 | `codigo/` | `16-componente-boton-panico.png` | Componente del botón de pánico |
 | `codigo/` | `17-logica-alertas.png` | Lógica de alertas |
 
-### 7.2 Carpeta `screenshots/2026-11-02/` (versión anterior)
+### 7.2 Carpeta `screenshots/segunda_entrega/2026-11-02/` (versión anterior)
 
 **`visual/visual_front/`** (vista móvil 390×844, español):
 
@@ -550,7 +550,7 @@ El envío de correos de alerta aparece como función del sistema (servicio de co
 | `05-alerta-activada-desde-el-widget.png` | Segundo toque: SISMO abre la alerta activa (app recién instalada, sin registro) |
 | `06-notificacion-alerta-activa.png` | Notificación «Alerta SISMO activa · Sirena · Linterna SOS · Vibración» con «Silenciar sonido» |
 
-### 7.3 Carpeta `screenshots/2026-11-04/` (esta versión: backend, sincronización, panel y catálogos)
+### 7.3 Carpeta `screenshots/segunda_entrega/2026-11-04/` (esta versión: backend, sincronización, panel y catálogos)
 
 Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y correos `@example.com`). En las de la app, las respuestas del servidor se simularon para no escribir en la base de datos. Las del panel se tomaron con la vista real alimentada con datos de prueba.
 
