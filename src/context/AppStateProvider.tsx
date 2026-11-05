@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
-  AlertRecord, AlertSource, AppData, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint,
+  AlertPriorityPatch, AlertRecord, AlertSource, AppData, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo, MeetingPoint,
   Settings, SusResponse,
 } from '../types';
 import { setLang } from '../i18n';
@@ -132,7 +132,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const activateAlert = useCallback(
-    (eventType: EventType, source: AlertSource = 'app') => {
+    (eventType: EventType, source: AlertSource = 'app', extra: { urgent?: boolean; fallNoResponse?: boolean } = {}) => {
       const simulated = data.settings.demoMode;
       const currentDrill = drillRef.current;
       const metrics = { ...takeTrace(), drillSignalAt: currentDrill?.signalAt };
@@ -151,6 +151,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         isDrill: currentDrill !== null,
         source,
         locationUpdates: 0,
+        ...(extra.urgent ? { urgent: true, urgentAt: new Date().toISOString() } : {}),
+        ...(extra.fallNoResponse ? { fallNoResponse: true } : {}),
       };
       setDrill(null);
       setData((d) => ({
@@ -265,6 +267,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setData((d) => ({ ...d, kit }));
   }, []);
 
+  const updateActiveAlert = useCallback((patch: AlertPriorityPatch) => {
+    setData((d) => {
+      const current = d.alerts.find((a) => a.id === d.activeAlertId);
+      // Sin cambios reales no se toca el estado (evita sincronizaciones innecesarias).
+      if (!current || (Object.keys(patch) as (keyof AlertPriorityPatch)[]).every((k) => current[k] === patch[k])) return d;
+      return { ...d, alerts: d.alerts.map((a) => (a.id === d.activeAlertId ? { ...a, ...patch } : a)) };
+    });
+  }, []);
+
   const setEmailStatus = useCallback((alertId: string, emailStatus: EmailStatus) => {
     setData((d) => ({ ...d, alerts: d.alerts.map((a) => (a.id === alertId ? { ...a, emailStatus } : a)) }));
   }, []);
@@ -362,6 +373,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setKit,
     setPostQuakeDone,
     setEmailStatus,
+    updateActiveAlert,
     setLocation,
     setLocationPermission,
     setDemoMode,

@@ -1,4 +1,4 @@
-%% title: Diagrama de actividades — Operador: administrar catálogos, guía y parámetros
+%% title: Diagrama de actividades — Operador: administrar catálogos, guía, parámetros y plantillas de mensaje
 flowchart TD
   S((●)):::ini --> A["Abrir «Catálogos de la app» en el panel"]
   A --> B{"¿Qué administrar?"}
@@ -6,10 +6,13 @@ flowchart TD
   C --> C1["Agregar o editar: clave, español, inglés,<br/>ícono, orden, visible"]
   B -- Guía --> D["Editar tarjeta: momento, título y pasos<br/>(es / en), ícono, orden"]
   B -- Parámetro --> E["Editar valor: número de emergencia,<br/>topes, tiempos, textos"]
-  C1 & D & E --> V{"¿Datos válidos?<br/>(clave, tipo, rangos, reservados)"}
+  B -- Mensajes de ayuda --> T["Agregar o editar plantilla: estado (general,<br/>en atención, ayuda enviada, resuelta), título,<br/>mensaje con [nombre] / [primer_nombre] / [evento], orden, visible"]
+  C1 & D & E & T --> V{"¿Datos válidos?<br/>(clave, tipo, rangos, reservados,<br/>título único por estado)"}
   V -- No --> M["Mostrar error"] --> B
   V -- Sí --> G["Guardar en la base de datos<br/>(nueva versión de catálogos)"]
-  G --> H["La app descarga los catálogos al abrirse<br/>(sin conexión usa la última copia)"]
+  G -- Catálogo, guía o parámetro --> H["La app descarga los catálogos al abrirse<br/>(sin conexión usa la última copia)"]
+  G -- Plantilla --> P["Queda disponible en «Brindar ayuda»<br/>(solo en el panel; la app no la descarga)"]
   H --> F1((◉)):::fin
+  P --> F1
   classDef ini fill:#0b2545,color:#fff
   classDef fin fill:#d62828,color:#fff

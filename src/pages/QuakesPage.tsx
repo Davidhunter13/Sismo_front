@@ -1,15 +1,20 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 import { withLoader } from '../services/loaderService';
-import { Activity, ExternalLink, Info, Loader2, RefreshCw, WifiOff } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Activity, ExternalLink, Info, Loader2, Map as MapIcon, RefreshCw, WifiOff } from 'lucide-react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
+import { QuakeSpikeChart } from '../components/QuakeSpikeChart';
 import { useAppState } from '../context/appContext';
 import { getLocale } from '../i18n';
 import { useT } from '../i18n/useT';
 import { fetchNearbyQuakes, NEARBY_RADIUS_KM, type Quake, type QuakePeriod } from '../services/quakeService';
 
 type Status = 'cargando' | 'listo' | 'error';
+
+// El mapa (Leaflet) se carga solo al mostrarse, como el mapa real de Ubicación.
+const QuakeMap = lazy(() => import('../components/QuakeMap'));
+const PERIOD_MS: Record<QuakePeriod, number> = { day: 86_400_000, week: 7 * 86_400_000 };
 
 const magnitudeTone = (m: number) => (m >= 6 ? 'quake-mag--high' : m >= 4.5 ? 'quake-mag--mid' : 'quake-mag--low');
 
@@ -20,6 +25,7 @@ export default function QuakesPage() {
   const [period, setPeriod] = useState<QuakePeriod>('day');
   const [quakes, setQuakes] = useState<Quake[]>([]);
   const [status, setStatus] = useState<Status>('cargando');
+  const [loadedAt, setLoadedAt] = useState(() => Date.now());
 
   // Solo se usa una ubicación real del dispositivo; las coordenadas de prueba se ignoran.
   const origin = data.lastLocation?.source === 'dispositivo' ? data.lastLocation : null;
@@ -29,6 +35,7 @@ export default function QuakesPage() {
     setStatus('cargando');
     try {
       setQuakes(await withLoader(fetchNearbyQuakes(period, origin)));
+      setLoadedAt(Date.now());
       setStatus('listo');
     } catch {
       setStatus('error');
@@ -51,6 +58,23 @@ export default function QuakesPage() {
       <p className="small muted">
         {origin ? t.nearby(NEARBY_RADIUS_KM) : t.colombia}
       </p>
+
+      {status === 'listo' && quakes.length > 0 && (
+        <>
+          <section className="card">
+            <h2 className="card__title"><Activity size={18} aria-hidden="true" /> {t.chartTitle}</h2>
+            <p className="small muted">{t.chartHint}</p>
+            <QuakeSpikeChart quakes={quakes} from={loadedAt - PERIOD_MS[period]} to={loadedAt} locale={locale} />
+          </section>
+          <section className="card">
+            <h2 className="card__title"><MapIcon size={18} aria-hidden="true" /> {t.mapTitle}</h2>
+            <p className="small muted">{t.mapHint}</p>
+            <Suspense fallback={<div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> {t.loading}</div>}>
+              <QuakeMap quakes={quakes} origin={origin} locale={locale} />
+            </Suspense>
+          </section>
+        </>
+      )}
 
       <section className="card card--flush">
         {status === 'cargando' && (

@@ -8,6 +8,11 @@ test.beforeEach(async ({ page }) => {
   consoleErrors.length = 0;
   page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
   page.on('pageerror', (e) => consoleErrors.push(e.message));
+  // Batería simulada al 100 % (cargando): las pruebas no dependen de la batería real del equipo, que bajo el
+  // umbral activaría solo el ahorro automático y cambiaría la pantalla de alerta. bateria.e2e cubre ese caso.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'getBattery', { value: async () => ({ level: 1, charging: true, addEventListener() {}, removeEventListener() {} }), configurable: true });
+  });
   // Catálogo del USGS simulado: las pruebas no dependen de internet.
   await page.route('https://earthquake.usgs.gov/**', (route) =>
     route.fulfill({
@@ -133,7 +138,8 @@ test('mochila: lista base, vencimientos y aviso en el inicio', async ({ page }) 
   await expect(v.locator('.kit-item').first()).toContainText('Vencido');
   await expect(v.getByText(/Revise y reemplace/)).toBeVisible();
   await goTo(page, '/inicio', 'Panel principal');
-  await expect(view(page).locator('.quick-tile--warn', { hasText: 'Mochila' })).toContainText('1 por revisar');
+  // Algo vencido: la tarjeta de la mochila se pone roja y dice qué se venció.
+  await expect(view(page).locator('.quick-tile--missing', { hasText: 'Mochila' })).toContainText('Vencido:');
 });
 
 test('modo atrapado: pausa las señales continuas', async ({ page }) => {

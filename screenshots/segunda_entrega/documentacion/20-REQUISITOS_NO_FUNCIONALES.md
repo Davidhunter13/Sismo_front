@@ -34,7 +34,7 @@ Versión 1.0 · 4 de noviembre de 2026. Cada requisito tiene un identificador `R
 | ID | Requisito | Valor |
 |---|---|---|
 | RNF-RE-01 | La pantalla de carga no retrasa el uso de la app. | Mínimo 600 ms, máximo 1,5 s; nunca tapa una alerta activa. |
-| RNF-RE-02 | La alerta del panel llega rápido al operador. | Actualización automática cada 60 s; detalle de la persona al abrirla. |
+| RNF-RE-02 | La alerta del panel llega rápido al operador. | Pulso cada 3 s: una alerta nueva aparece en unos 3 s; respaldo completo cada 60 s; detalle de la persona al abrirla y al cambiar. |
 | RNF-RE-03 | La ayuda del operador llega rápido a la persona. | La app consulta `GET /atencion` cada 15 s mientras la alerta está activa. |
 | RNF-RE-04 | El catálogo de sismos no satura el servicio externo. | Caché de 5 minutos en el backend para el USGS. |
 | RNF-RE-05 | La ubicación de la alerta es precisa sin demorar el aviso. | Afinado de GPS de hasta 10 s; actualización cada 2 min. |

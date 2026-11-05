@@ -119,7 +119,20 @@ export interface AlertRecord {
    * las anteriores se conservan con su alerta (listas para migrar a una base de datos).
    */
   postQuakeDone?: string[];
+  /** Prioridad para el centro de monitoreo: la persona pidió ayuda urgente (botón o «Pedir ayuda ahora» tras una caída). */
+  urgent?: boolean;
+  urgentAt?: string;
+  /** Se activó sola por una caída detectada y la persona no respondió «¿Está bien?». */
+  fallNoResponse?: boolean;
+  /** La persona está en modo atrapado (ahorro de batería) en este momento. */
+  trapped?: boolean;
+  /** Última batería leída durante la alerta (0–100 %) y cuándo. */
+  batteryLevel?: number;
+  batteryAt?: string;
 }
+
+/** Datos de prioridad que la pantalla de alerta actualiza mientras la alerta está activa. */
+export type AlertPriorityPatch = Partial<Pick<AlertRecord, 'urgent' | 'urgentAt' | 'trapped' | 'batteryLevel' | 'batteryAt'>>;
 
 /**
  * Estado del correo de alerta a los contactos:

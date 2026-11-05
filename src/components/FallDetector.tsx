@@ -44,7 +44,8 @@ export function FallDetector() {
     void showOverLockScreen(false);
   }, []);
 
-  const raiseAlert = useCallback(() => {
+  // `askedForHelp`: tocó «Pedir ayuda ahora» (urgente); si no, se acabó el tiempo sin respuesta (posible inconsciencia).
+  const raiseAlert = useCallback((askedForHelp: boolean) => {
     if (triggered.current) return;
     triggered.current = true;
     stopVibration();
@@ -52,14 +53,14 @@ export function FallDetector() {
     beginTrace();
     mark('confirmedAt');
     startAlertSignals(settings);
-    activateAlert('emergencia_general', 'deteccion_automatica');
+    activateAlert('emergencia_general', 'deteccion_automatica', askedForHelp ? { urgent: true } : { fallNoResponse: true });
     router.push('/alerta', 'forward');
   }, [activateAlert, router, settings]);
 
   useEffect(() => {
     if (remaining === null) return;
     if (remaining <= 0) {
-      raiseAlert();
+      raiseAlert(false);
       return;
     }
     const timer = window.setTimeout(() => setRemaining((r) => (r === null ? r : r - 1)), 1000);
@@ -76,7 +77,7 @@ export function FallDetector() {
         <p id="fall-desc">{t.desc}</p>
         <strong className="fall-count" aria-live="assertive">{t.seconds(remaining)}</strong>
         <button className="btn btn--success btn--lg btn--block" onClick={dismiss}>{t.ok}</button>
-        <button className="btn btn--danger btn--block" onClick={raiseAlert}>{t.help}</button>
+        <button className="btn btn--danger btn--block" onClick={() => raiseAlert(true)}>{t.help}</button>
       </div>
     </div>
   );

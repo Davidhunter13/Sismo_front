@@ -105,7 +105,7 @@ auditoría `created_at/created_by/updated_at/updated_by`):
 
 Página web servida por el mismo backend en CodeIgniter 3, con la **identidad visual de la app** (paleta, logo, tipografía Inter, modo claro/oscuro) y acceso solo para los administradores autorizados en la configuración del servidor.
 
-- **Siempre al día:** cada pestaña consulta al servidor al abrirse; además el panel (y el detalle de una persona abierto) se actualiza solo cada minuto, en silencio (cada 2 min si la pestaña del navegador está oculta). Al registrar una ayuda la lista se actualiza al instante. Indicador «En vivo». Nunca hace falta recargar la página.
+- **Siempre al día:** cada pestaña consulta al servidor al abrirse; además el panel consulta un pulso liviano (`GET Sismo_admin/pulso`) cada 3 s (cada 15 s con la pestaña oculta) y, si cambió, descarga los datos y el detalle de una persona abierto; cada minuto descarga todo como respaldo. Al registrar una ayuda la lista se actualiza al instante. Indicador «En vivo». Nunca hace falta recargar la página.
 - **Loader:** las consultas que inicia el operador muestran un loader de pantalla completa (fondo oscuro translúcido, anillo rojo y onda sísmica); las actualizaciones automáticas no.
 - **Alertas activas:** tarjetas con la persona, el tipo, hace cuánto se activó, el origen (app, widget, acceso rápido, caída), los contactos y la ubicación (enlace a Google Maps); los simulacros se distinguen en morado.
 - **Mapa** (Leaflet + OpenStreetMap) con las alertas activas y el círculo de precisión.

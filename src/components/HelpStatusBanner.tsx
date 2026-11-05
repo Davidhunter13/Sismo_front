@@ -4,13 +4,15 @@ import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n/useT';
 import { fetchHelpStatus, syncEnabled, type HelpStatus } from '../services/syncService';
+import { RichText } from './RichText';
 
 /** Cada cuánto se consulta si el centro de monitoreo registró ayuda para la alerta. */
 const HELP_POLL_MS = 15_000;
 
 /**
  * Aviso en la pantalla de alerta cuando el centro de monitoreo de SISMO (panel administrativo) registra ayuda:
- * «en atención», «ayuda enviada» o «resuelta», con su mensaje. Sin servidor o sin red no muestra nada.
+ * «en atención», «ayuda enviada» o «resuelta», con su mensaje (con el formato del editor del panel: negrilla,
+ * cursiva, subrayado, tachado y listas). Sin servidor o sin red no muestra nada.
  * - Cada actualización nueva aparece como una alerta FIJA arriba de la pantalla (se ve sin importar el scroll)
  *   y se cierra tocándola. Solo vuelve a aparecer si llega otra actualización (otro estado o mensaje).
  * - Además queda el recuadro dentro de la pantalla como registro.
@@ -51,7 +53,7 @@ export function HelpStatusBanner({ alertId }: { alertId: string }) {
         <div className="help-toast__body">
           <small className="help-toast__title">{t.title}</small>
           <strong>{t[help.status]}</strong>
-          {help.note && <p>{t.note}: {help.note}</p>}
+          {help.note && <div className="help-toast__note"><small className="help-toast__label">{t.note}</small><RichText html={help.note} /></div>}
           <small className="help-toast__hint">{t.tapToClose}</small>
         </div>
         <button type="button" className="help-toast__close" aria-label={t.dismiss} onClick={(e) => { e.stopPropagation(); close(); }}>
@@ -69,7 +71,7 @@ export function HelpStatusBanner({ alertId }: { alertId: string }) {
       <LifeBuoy size={20} aria-hidden="true" />
       <div>
         <strong>{t[help.status]}</strong>
-        {help.note && <p className="small">{t.note}: {help.note}</p>}
+        {help.note && <div className="small help-note"><span className="muted">{t.note}:</span> <RichText html={help.note} /></div>}
       </div>
     </div>
     </>

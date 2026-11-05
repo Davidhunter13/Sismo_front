@@ -17,6 +17,9 @@ flowchart LR
     A12(["Editar guía de emergencia"])
     A13(["Editar parámetros"])
     A14(["Abrir página informativa"])
+    A15(["Usar plantilla de mensaje<br/>([nombre], [primer_nombre], [evento])"])
+    A16(["Administrar plantillas de mensaje<br/>(general y por estado)"])
+    A17(["Priorizar y filtrar por criticidad<br/>(urgente, caída sin respuesta, atrapado, batería)"])
   end
   P["«actor»<br/><b>Persona usuaria</b>"]:::actor
   U["«sistema»<br/><b>USGS</b>"]:::sys
@@ -33,10 +36,15 @@ flowchart LR
   O --- A12
   O --- A13
   O --- A14
+  O --- A16
+  O --- A17
+  A17 -. «extend» .-> A2
   A2 -. «include» .-> A1
   A4 -. «include» .-> A1
   A11 -. «include» .-> A1
   A4 -. «extend» .-> A2
+  A15 -. «extend» .-> A4
+  A16 -. «include» .-> A1
   A5 -. «extend» .-> A2
   A4 --- P
   A10 --- P

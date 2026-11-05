@@ -1,12 +1,14 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonContent, IonInput, IonPage, useIonRouter, useIonToast } from '@ionic/react';
+import { IonContent, IonInput, IonLabel, IonPage, IonSegment, IonSegmentButton, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
 import { SyncStatusBanner } from '../components/SyncStatusBanner';
-import { ArrowLeft, ArrowRight, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Pencil, Search, Siren, Trash2, UserPlus } from 'lucide-react';
+import { Activity, ArrowLeft, ArrowRight, BatteryLow, BookUser, CheckCircle2, Crosshair, Loader2, MapPin, Pencil, Search, Siren, Trash2, UserPlus, Volume2 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactFormModal } from '../components/ContactFormModal';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
+import { useCatalogs } from '../services/catalogService';
+import { FALL_COUNTDOWN_S, isMotionSupported } from '../services/fallDetectionService';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
 import { requestDeviceLocation } from '../services/locationService';
 import { isContactPickerSupported, pickContact } from '../services/contactPickerService';
@@ -16,7 +18,9 @@ import type { Contact, ContactInput } from '../types';
 import { maxMeetingPoints } from '../utils/meetingPoints';
 import { goToRoot } from '../utils/navigation';
 
-const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
+const STEPS = ['name', 'location', 'meeting', 'contact', 'protection'] as const;
+/** Señales de la alerta que se eligen en el último paso (mismos textos que Configuración). */
+const SIGNAL_KEYS = ['soundEnabled', 'visualSignalEnabled', 'vibrationEnabled'] as const;
 
 /**
  * Registro obligatorio cuando se empieza sin modo de demostración: nombre, ubicación real del dispositivo,
@@ -25,6 +29,7 @@ const STEPS = ['name', 'location', 'meeting', 'contact'] as const;
  */
 export default function SetupPage() {
   const router = useIonRouter();
+  const catalogs = useCatalogs();
   const { data, updateSettings, setLocation, setLocationPermission, addMeetingPoint, removeMeetingPoint, addContact, updateContact, deleteContact } = useAppState();
   const { setup: t, settings: ts, location: tl, contacts: tc } = useT();
   const [presentToast, dismissToast] = useIonToast();
@@ -49,7 +54,7 @@ export default function SetupPage() {
   const nameError = name.trim().length < 2 ? ts.profile.min : name.trim().length > 30 ? ts.profile.max : '';
   const labelError = label.trim().length < 2 ? tl.meeting.min : '';
 
-  const done = [!nameError, !!deviceLocation, meetingPoints.length > 0, realContacts.length > 0];
+  const done = [!nameError, !!deviceLocation, meetingPoints.length > 0, realContacts.length > 0, true];
   const key = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
@@ -327,6 +332,44 @@ export default function SetupPage() {
                     </ul>
                   </>
                 )}
+              </>
+            )}
+            {key === 'protection' && (
+              <>
+                <p className="small muted">{t.protectionHint}</p>
+                <h3 className="setup__sub"><Volume2 size={16} aria-hidden="true" /> {t.signalsTitle}</h3>
+                {SIGNAL_KEYS.map((k) => (
+                  <div key={k} className="toggle-row toggle-row--plain">
+                    <span><strong>{ts.toggles[k].label}</strong><small>{ts.toggles[k].detail}</small></span>
+                    <IonToggle checked={data.settings[k]} onIonChange={(e) => updateSettings({ [k]: e.detail.checked })} aria-label={ts.toggles[k].label} />
+                  </div>
+                ))}
+                <h3 className="setup__sub"><Activity size={16} aria-hidden="true" /> {ts.fall.title}</h3>
+                <div className="toggle-row toggle-row--plain">
+                  <span><strong>{ts.fall.ask}</strong><small>{ts.fall.detail(FALL_COUNTDOWN_S)}</small></span>
+                  <IonToggle
+                    checked={data.settings.fallDetection}
+                    disabled={!isMotionSupported()}
+                    onIonChange={(e) => updateSettings({ fallDetection: e.detail.checked })}
+                    aria-label={ts.fall.title}
+                  />
+                </div>
+                {!isMotionSupported() && <p className="small muted">{ts.fall.unsupported}</p>}
+                <h3 className="setup__sub"><BatteryLow size={16} aria-hidden="true" /> {ts.battery.title}</h3>
+                <IonSegment
+                  value={String(data.settings.lowBatterySaver)}
+                  onIonChange={(e) => updateSettings({ lowBatterySaver: Number(e.detail.value) })}
+                  className="segment segment--compact"
+                  aria-label={ts.battery.label}
+                >
+                  {catalogs.params.lowBatteryOptions.map((v) => (
+                    <IonSegmentButton key={v} value={String(v)}>
+                      <IonLabel>{v === 0 ? ts.battery.off : `${v} %`}</IonLabel>
+                    </IonSegmentButton>
+                  ))}
+                </IonSegment>
+                <p className="small muted">{ts.battery.detail}</p>
+                <p className="small muted">{t.protectionLater}</p>
               </>
             )}
           </section>

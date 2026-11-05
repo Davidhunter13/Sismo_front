@@ -29,6 +29,7 @@ import { onSosDialogRequest } from '../services/sosRequestService';
 import type { AlertSource, EventType } from '../types';
 import { eventTypeLabel, formatLongDate } from '../utils/format';
 import { goToRoot } from '../utils/navigation';
+import { homeAttention, type Attention } from '../utils/homeAttention';
 import { setupGaps } from '../utils/setupGaps';
 
 export default function HomePage() {
@@ -37,7 +38,8 @@ export default function HomePage() {
   const t = all.home;
   const { data, activeAlert, activateAlert, drill, cancelDrill } = useAppState();
   // Tipos de evento del catálogo administrable (el primero queda seleccionado).
-  const eventTypes = useCatalogs().eventTypes;
+  const catalogs = useCatalogs();
+  const eventTypes = catalogs.eventTypes;
   const [confirmOpen, setConfirmOpen] = useState(false);
   // Al hacer scroll y perder de vista la mini brújula, aparece una en el encabezado.
   const [compassVisible, setCompassVisible] = useState(true);
@@ -90,11 +92,14 @@ export default function HomePage() {
   // Los contactos de demostración son ficticios: no se les envía SMS.
   const smsContacts = contacts.filter((c) => !c.isSeed);
   const kit = kitStatus(data.kit);
-  const kitAlerts = kit.expired.length + kit.expiringSoon.length;
-  const kitWarn = data.kit !== null && (kitAlerts > 0 || kit.reviewDue);
-  const kitDetail = !data.kit
-    ? t.tiles.kitPrepare
-    : kitAlerts > 0 ? t.tiles.kitToReview(kitAlerts) : kit.reviewDue ? t.tiles.kitReviewDue : t.tiles.kitReady(kit.checked, kit.total);
+  // Qué le falta para estar preparada: amarillo = pendiente, rojo = algo de la mochila vencido o por vencer.
+  const att = homeAttention(data, catalogs.postQuakeSteps.length);
+  const names = (items: { name: string }[]) => items.slice(0, 3).map((i) => i.name).join(', ') + (items.length > 3 ? ` +${items.length - 3}` : '');
+  const kitDetail = att.kit.expired.length || att.kit.expiring.length
+    ? [att.kit.expired.length ? t.tiles.kitExpired(names(att.kit.expired)) : '', att.kit.expiring.length ? t.tiles.kitExpiring(names(att.kit.expiring)) : ''].filter(Boolean).join(' · ')
+    : att.kit.empty ? t.tiles.kitEmpty
+    : kit.reviewDue ? t.tiles.kitReviewDue : t.tiles.kitReady(kit.checked, kit.total);
+  const pq = att.postQuake;
 
   const reminder = drillReminder(data.alerts);
   const rt = all.features.drillReminder;
@@ -106,7 +111,7 @@ export default function HomePage() {
 
   // Tarjetas con borde rojo cuando falta un dato necesario (ver setupGaps).
   const gaps = setupGaps(data);
-  const quick: { path: string; label: string; detail: string; icon: LucideIcon; root?: boolean; warn?: boolean; missing?: boolean }[] = [
+  const quick: { path: string; label: string; detail: string; icon: LucideIcon; root?: boolean; warn?: boolean; missing?: boolean; attention?: Attention }[] = [
     { path: '/contactos', label: t.tiles.contacts, detail: t.tiles.contactsDetail(contacts.length), icon: Users, root: true, missing: gaps.includes('contact') },
     {
       path: '/ubicacion',
@@ -118,19 +123,25 @@ export default function HomePage() {
     },
     { path: '/guia', label: t.tiles.guide, detail: t.tiles.guideDetail, icon: BookOpen, root: true },
     { path: '/historial', label: t.tiles.history, detail: t.tiles.historyDetail(data.alerts.length), icon: History, root: true },
-    { path: '/despues-del-sismo', label: all.features.postQuake.tile, detail: all.features.postQuake.tileDetail, icon: ClipboardList },
+    {
+      path: pq.alert ? `/despues-del-sismo?alerta=${encodeURIComponent(pq.alert.id)}` : '/despues-del-sismo',
+      label: all.features.postQuake.tile,
+      detail: pq.alert ? t.tiles.postQuakePending(new Date(pq.alert.endedAt ?? pq.alert.activatedAt).toLocaleDateString(), pq.done, pq.total) : all.features.postQuake.tileDetail,
+      icon: ClipboardList,
+      attention: pq.level,
+    },
     {
       path: '/ubicacion?ver=brujula',
       label: all.features.compass.tile,
-      detail: data.meetingPoints.length ? data.meetingPoints.map((p) => p.label).join(' · ') : all.features.compass.tileNoPoint,
+      detail: data.meetingPoints.length ? data.meetingPoints.map((p) => p.label).join(' · ') : t.tiles.compassNoPoint,
       icon: Navigation,
-      missing: gaps.includes('meeting'),
+      attention: att.compass,
     },
     { path: '/sismos', label: t.tiles.quakes, detail: t.tiles.quakesDetail, icon: Activity },
-    { path: '/simulacro', label: t.tiles.drill, detail: t.tiles.drillDetail, icon: Timer },
+    { path: '/simulacro', label: t.tiles.drill, detail: att.drill ? t.tiles.drillNever : t.tiles.drillDetail, icon: Timer, attention: att.drill },
     { path: '/estadisticas', label: t.tiles.stats, detail: t.tiles.statsDetail, icon: BarChart3 },
-    { path: '/ficha-medica', label: t.tiles.medical, detail: data.medical ? t.tiles.medicalSaved : t.tiles.medicalOptional, icon: HeartPulse },
-    { path: '/mochila', label: t.tiles.kit, detail: kitDetail, icon: Backpack, warn: kitWarn },
+    { path: '/ficha-medica', label: t.tiles.medical, detail: data.medical ? t.tiles.medicalSaved : t.tiles.medicalMissing, icon: HeartPulse, attention: att.medical },
+    { path: '/mochila', label: t.tiles.kit, detail: kitDetail, icon: Backpack, attention: att.kit.level },
   ];
 
   // Elige el canal (SMS o WhatsApp por contacto) en lugar de depender del enlace SMS.
@@ -207,10 +218,10 @@ export default function HomePage() {
       <section>
         <h2 className="section-title">{t.quickTitle}</h2>
         <div className="quick-grid">
-          {quick.map(({ path, label, detail, icon: Icon, root, warn, missing }) => (
+          {quick.map(({ path, label, detail, icon: Icon, root, warn, missing, attention }) => (
             <button
               key={path}
-              className={`card quick-tile${missing ? ' quick-tile--missing' : warn ? ' quick-tile--warn' : ''}`}
+              className={`card quick-tile${missing || attention === 'urgente' ? ' quick-tile--missing' : warn || attention === 'pendiente' ? ' quick-tile--warn' : ''}`}
               onClick={() => (root ? goToRoot(router, path) : router.push(path, 'forward'))}
             >
               <span className="quick-tile__icon"><Icon size={22} aria-hidden="true" /></span>

@@ -9,6 +9,11 @@ test.beforeEach(async ({ page }) => {
   consoleErrors.length = 0;
   page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
   page.on('pageerror', (e) => consoleErrors.push(e.message));
+  // Batería simulada al 100 % (cargando): las pruebas no dependen de la batería real del equipo, que bajo el
+  // umbral activaría solo el ahorro automático y cambiaría la pantalla de alerta. bateria.e2e cubre ese caso.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'getBattery', { value: async () => ({ level: 1, charging: true, addEventListener() {}, removeEventListener() {} }), configurable: true });
+  });
 });
 
 test.afterEach(() => {

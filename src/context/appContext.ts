@@ -2,7 +2,7 @@
 import { createContext, useContext, type Context } from 'react';
 import type { ServerState } from '../services/syncService';
 import type {
-  AlertRecord, AlertSource, AppData, Contact, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
+  AlertPriorityPatch, AlertRecord, AlertSource, AppData, Contact, ContactInput, EmailStatus, EmergencyKit, EventType, LocationPermission, LocationSnapshot, MedicalInfo,
   MeetingPoint, Settings, SusResponse,
 } from '../types';
 
@@ -16,7 +16,10 @@ export interface AppStateValue {
   addContact: (input: ContactInput) => Contact;
   updateContact: (id: string, input: ContactInput) => void;
   deleteContact: (id: string) => void;
-  activateAlert: (eventType: EventType, source?: AlertSource) => AlertRecord;
+  /** `extra.urgent`: pidió ayuda de inmediato; `extra.fallNoResponse`: caída detectada sin respuesta. */
+  activateAlert: (eventType: EventType, source?: AlertSource, extra?: { urgent?: boolean; fallNoResponse?: boolean }) => AlertRecord;
+  /** Actualiza la prioridad de la alerta activa (ayuda urgente, modo atrapado, batería); se sincroniza con el panel. */
+  updateActiveAlert: (patch: AlertPriorityPatch) => void;
   endAlert: () => void;
   /** Registra que se abrió la app de SMS para la alerta activa (reemplaza cualquier simulación). */
   markSmsOpened: () => void;

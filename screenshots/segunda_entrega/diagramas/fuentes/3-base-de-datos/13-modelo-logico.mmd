@@ -77,6 +77,12 @@ erDiagram
     texto estado_correo
     booleano es_simulacro
     texto origen_activacion
+    booleano es_urgente
+    fecha_hora fecha_urgente
+    booleano caida_sin_respuesta
+    booleano modo_atrapado
+    entero nivel_bateria
+    fecha_hora fecha_bateria
     texto nota
     texto pasos_post_sismo
     entero ms_sos_presionado
@@ -160,6 +166,14 @@ erDiagram
     texto valor
     texto tipo
     texto descripcion
+    booleano activo
+  }
+  sismo_plantillas_atenciones {
+    entero id PK
+    texto estado
+    texto titulo
+    texto mensaje
+    entero orden
     booleano activo
   }
   operadores_panel {

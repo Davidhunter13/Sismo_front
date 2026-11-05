@@ -38,6 +38,20 @@ const es = {
     goHome: 'Ir al inicio',
   },
   title: 'Alerta activa',
+  urgent: {
+    button: 'Necesito ayuda urgente',
+    hint: 'El centro de monitoreo verá su alerta primero.',
+    on: 'Pidió ayuda urgente',
+    onHint: 'Su alerta aparece con prioridad en el centro de monitoreo.',
+    cancel: 'Ya no es urgente',
+    toast: 'Listo: su alerta quedó marcada como urgente.',
+  },
+  activeBanner: {
+    title: 'Tiene una alerta SOS activa',
+    drill: 'Tiene un simulacro en curso',
+    since: (d: string) => `Activa hace ${d}`,
+    action: 'Toque para volver a la alerta',
+  },
   help: {
     en_atencion: 'El centro de monitoreo de SISMO está atendiendo su alerta.',
     ayuda_enviada: 'Ayuda en camino: el centro de monitoreo envió ayuda.',
@@ -205,6 +219,20 @@ const en: typeof es = {
     goHome: 'Go to home',
   },
   title: 'Active alert',
+  urgent: {
+    button: 'I need urgent help',
+    hint: 'The monitoring center will see your alert first.',
+    on: 'You asked for urgent help',
+    onHint: 'Your alert has priority at the monitoring center.',
+    cancel: 'It is no longer urgent',
+    toast: 'Done: your alert is marked as urgent.',
+  },
+  activeBanner: {
+    title: 'You have an active SOS alert',
+    drill: 'You have a drill in progress',
+    since: (d: string) => `Active for ${d}`,
+    action: 'Tap to go back to the alert',
+  },
   help: {
     en_atencion: 'The SISMO monitoring center is handling your alert.',
     ayuda_enviada: 'Help is on the way: the monitoring center sent help.',

@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 // Genera las evidencias visuales (app real en producción) y de código fuente (archivos reales del repositorio).
-// Cada ejecución guarda en screenshots/<AAAA-MM-DD>/visual/visual_front y codigo/codigo_front (las de otras fechas se conservan).
+// Cada ejecución guarda en screenshots/segunda_entrega/<AAAA-MM-DD>/visual/visual_front y codigo/codigo_front (las de otras fechas se conservan).
 // Las del backend (panel) van en visual/visual_back y codigo/codigo_back.
 // Los datos son ficticios (nombres «demo», teléfonos de prueba y correos @example.com).
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
@@ -12,8 +12,8 @@ import { view } from './helpers';
 const ROOT = process.cwd();
 /** Fecha local de Colombia (AAAA-MM-DD); se puede fijar con SCREENSHOT_DATE. */
 const DATE = process.env.SCREENSHOT_DATE ?? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
-const VISUAL = join(ROOT, 'screenshots', DATE, 'visual', 'visual_front');
-const CODE = join(ROOT, 'screenshots', DATE, 'codigo', 'codigo_front');
+const VISUAL = join(ROOT, 'screenshots', 'segunda_entrega', DATE, 'visual', 'visual_front');
+const CODE = join(ROOT, 'screenshots', 'segunda_entrega', DATE, 'codigo', 'codigo_front');
 mkdirSync(VISUAL, { recursive: true });
 mkdirSync(CODE, { recursive: true });
 
@@ -104,6 +104,9 @@ test('capturas visuales: registro y uso real (sin demostración)', async ({ brow
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await settle(page);
   await shot(page, '06-registro-4-contactos.png');
+  await v.getByRole('button', { name: 'Siguiente' }).click();
+  await settle(page);
+  await shot(page, '06b-registro-5-proteccion.png');
   await v.getByRole('button', { name: 'Finalizar registro' }).click();
   await expect(page).toHaveURL(/\/inicio$/);
   await settle(page);
@@ -312,7 +315,7 @@ test('capturas de código', async ({ browser }) => {
   await codeShot(page, '04-componente-boton-panico.png', 'src/components/PanicButton.tsx', panic.code, 'typescript', panic.start);
 
   const setup = between('src/pages/SetupPage.tsx', 'const STEPS', 'const locate = async');
-  await codeShot(page, '05-registro-obligatorio.png', 'src/pages/SetupPage.tsx — registro obligatorio de 4 pasos', setup.code, 'typescript', setup.start);
+  await codeShot(page, '05-registro-obligatorio.png', 'src/pages/SetupPage.tsx — registro: 4 pasos obligatorios y protección opcional', setup.code, 'typescript', setup.start);
 
   const gaps = lines('src/utils/setupGaps.ts', 2);
   await codeShot(page, '06-datos-faltantes.png', 'src/utils/setupGaps.ts — datos necesarios que faltan (borde rojo)', gaps.code, 'typescript', gaps.start);

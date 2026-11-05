@@ -45,6 +45,20 @@ ion-app {
 }
 /* Sin navegación inferior, el contenido debe quedar por encima de los botones del sistema. */
 .page--no-nav { padding-bottom: calc(28px + var(--safe-bottom)); }
+/* Acción principal pegada a la parte inferior del teléfono mientras se hace scroll (p. ej. «Estoy a salvo»).
+   Ocupa el ancho completo y cubre el relleno inferior de la página, sobre los botones del sistema. */
+.sticky-action {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 -16px calc(-28px - var(--safe-bottom));
+  /* Margen inferior generoso + zona segura del sistema: el botón nunca queda detrás de la barra de gestos,
+     los botones de navegación de Android ni la barra del navegador. */
+  padding: 12px 16px calc(24px + var(--safe-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.08);
+}
 
 h1, h2, h3 { margin: 0; color: var(--text); letter-spacing: -0.01em; }
 h1 { font-size: 1.5rem; font-weight: 750; }
@@ -162,6 +176,13 @@ p { margin: 0; line-height: 1.5; }
 .btn--primary { background: var(--brand); color: #fff; }
 .btn--dark { background: var(--btn-dark); color: #fff; }
 .btn--danger { background: var(--red); color: #fff; }
+/* «Necesito ayuda urgente»: contraste fuerte (fondo oscuro con borde rojo) para distinguirlo de «Llamar». */
+.btn--urgent { background: #3a0d0d; color: #fff; border: 3px solid var(--red); gap: 12px; justify-content: flex-start; text-align: left; padding-block: 12px; }
+.btn--urgent:active { background: var(--red); }
+.btn-urgent__text { display: flex; flex-direction: column; line-height: 1.25; }
+.btn-urgent__text small { font-size: 0.78rem; font-weight: 500; opacity: .9; }
+.urgent-on { border: 2px solid var(--red); background: var(--danger-bg); color: var(--text); }
+.urgent-on svg { color: var(--red); flex-shrink: 0; }
 .btn--success { background: var(--success); color: #fff; }
 .btn--outline { background: var(--card); color: var(--navy); border-color: var(--navy); }
 .btn--ghost { background: var(--navy-soft); color: var(--navy); flex: 1; min-height: 42px; font-size: 0.85rem; }
@@ -184,12 +205,19 @@ p { margin: 0; line-height: 1.5; }
 .welcome__foot { text-align: center; color: var(--muted); font-size: 0.78rem; }
 /* Asistente de registro obligatorio (/registro) */
 .setup h1 { margin: 0; font-size: 1.6rem; }
-.setup__progress { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; padding: 0; }
+.setup__progress { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 0; padding: 0; }
 .setup__progress li { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--muted); font-size: 0.72rem; }
 .setup__progress li > span, .setup__progress li > svg { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid currentColor; font-weight: 700; }
 .setup__progress li.is-done { color: var(--success); }
 .setup__progress li.is-current { color: var(--navy); font-weight: 700; }
 .setup__progress li.is-current > span { background: var(--navy); color: var(--card); border-color: var(--navy); }
+/* El encabezado y el progreso van sobre la franja azul del fondo: texto claro (antes quedaba oscuro sobre azul). */
+.setup > header h1, .setup > header p { color: #fff; }
+.setup > header .muted { color: #cdd8e8; }
+.setup__progress li { color: #cdd8e8; }
+.setup__progress li.is-done { color: #5fcf96; }
+.setup__progress li.is-current { color: #fff; }
+.setup__progress li.is-current > span { background: #fff; color: #0b2545; border-color: #fff; }
 .setup__nav { display: flex; justify-content: space-between; gap: 12px; }
 .setup__nav .btn { flex: 1; }
 
@@ -413,6 +441,45 @@ ion-alert.sismo-alert .alert-radio-label { color: var(--text); }
 .quake-mag--low { background: var(--success-bg); color: var(--success); }
 .quake-mag--mid { background: var(--warning-bg); color: var(--warning); }
 .quake-mag--high { background: var(--danger-bg); color: var(--danger); }
+/* Sismos: rojo que se intensifica con la magnitud (la altura del pico y el tamaño del punto son la codificación
+   principal; el color la refuerza). Claro: más oscuro = más fuerte. Oscuro: más brillante = más fuerte. */
+:root { --q-low: #E35D5D; --q-mid: #C62828; --q-high: #8E1515; }
+html[data-theme="dark"] { --q-low: #B65450; --q-mid: #E8433B; --q-high: #FF8A80; }
+@media (prefers-color-scheme: dark) { html:not([data-theme]) { --q-low: #B65450; --q-mid: #E8433B; --q-high: #FF8A80; } }
+.spike-chart { margin: 8px 0 0; }
+.spike-chart__plot { position: relative; }
+.spike-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.spike-chart__grid line { stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.spike-chart__grid text, .spike-chart__x { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.spike line { stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.spike circle { stroke: var(--card); stroke-width: 2; vector-effect: non-scaling-stroke; transition: r .15s; }
+.spike--low line { stroke: var(--q-low); } .spike--low circle { fill: var(--q-low); }
+.spike--mid line { stroke: var(--q-mid); } .spike--mid circle { fill: var(--q-mid); }
+.spike--high line { stroke: var(--q-high); } .spike--high circle { fill: var(--q-high); }
+.spike--on line { stroke-width: 3; }
+.spike__hit { fill: transparent; cursor: pointer; outline: none; }
+.spike__hit:focus-visible { fill: var(--surface-2); fill-opacity: .6; }
+.spike-chart__label { fill: var(--text); font-size: 12px; font-weight: 700; }
+.spike-tip { position: absolute; top: 0; transform: translateX(-50%); background: var(--card); color: var(--text); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 10px; box-shadow: 0 6px 18px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: 2px;
+  font-size: 0.8rem; max-width: 240px; pointer-events: none; z-index: 2; }
+.spike-tip small { color: var(--muted); }
+.spike-chart__legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 0.76rem; color: var(--muted); }
+.spike-chart__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.spike-key { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.spike-key--low { background: var(--q-low); } .spike-key--mid { background: var(--q-mid); } .spike-key--high { background: var(--q-high); }
+.quake-map { height: 300px; border-radius: 12px; overflow: hidden; margin-top: 8px; background: var(--surface-2); z-index: 0; }
+/* Punto del mapa: palpita y lanza ondas en ráfagas (--s tamaño, --d duración; más fuertes = más grandes y rápidos). */
+.quake-pin-wrap { background: transparent; border: 0; }
+.quake-pin { --c: var(--q-low); position: relative; width: var(--s); height: var(--s); }
+.quake-pin--mid { --c: var(--q-mid); } .quake-pin--high { --c: var(--q-high); }
+.quake-pin__dot { position: absolute; inset: 0; border-radius: 50%; background: var(--c); opacity: .9; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.35); animation: quake-latido var(--d) ease-in-out infinite; }
+.quake-pin__wave { position: absolute; inset: 0; border-radius: 50%; border: 3px solid var(--c); opacity: 0; pointer-events: none;
+  animation: quake-onda var(--d) ease-out infinite; }
+@keyframes quake-onda { 0% { transform: scale(.7); opacity: .85; } 60% { transform: scale(2.8); opacity: 0; } 100% { transform: scale(2.8); opacity: 0; } }
+@keyframes quake-latido { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.18); } 24% { transform: scale(.96); } 36% { transform: scale(1.08); } 50% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .quake-pin__dot { animation: none; } .quake-pin__wave { animation: none; opacity: .35; transform: scale(1.6); } }
 
 /* ---------- Modo atrapado ---------- */
 .trapped-card { border-left: 4px solid var(--warning); }
@@ -642,6 +709,27 @@ html[data-a11y-reduce-motion] *::after { animation: none !important; transition:
 .help-toast__body p { margin: 0; font-size: 15px; opacity: .95; }
 .help-toast__title { text-transform: uppercase; letter-spacing: .6px; font-size: 11px; opacity: .75; }
 .help-toast__hint { font-size: 12px; opacity: .65; }
+.active-alert-banner { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; padding: 10px 16px; background: var(--red); color: #fff;
+  font: inherit; text-align: left; cursor: pointer; z-index: 10; animation: active-alert-pulse 2s ease-in-out infinite; }
+.active-alert-banner--drill { background: #6b3fa0; animation: none; }
+.active-alert-banner__text { flex: 1; display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.active-alert-banner__text strong { font-size: 0.95rem; }
+.active-alert-banner__text small { font-size: 0.78rem; opacity: .92; }
+.active-alert-banner__icon { flex-shrink: 0; }
+.active-alert-banner:focus-visible { outline: 3px solid #ffd60a; outline-offset: -3px; }
+@keyframes active-alert-pulse { 0%, 100% { background: var(--red); } 50% { background: #b51f1f; } }
+@media (prefers-reduced-motion: reduce) { .active-alert-banner { animation: none; } }
+.setup__sub { display: flex; align-items: center; gap: 6px; margin: 14px 0 2px; font-size: 0.9rem; color: var(--navy); }
+.help-toast__label { text-transform: uppercase; letter-spacing: .5px; font-size: 11px; opacity: .7; }
+.help-toast__body .rich-text strong { font-size: inherit; }
+/* Mensaje del centro de monitoreo con formato (mismo resultado que el editor del panel). */
+.rich-text { overflow-wrap: anywhere; }
+.rich-text p { margin: 0 0 .35em; }
+.rich-text p:last-child { margin-bottom: 0; }
+.rich-text ul, .rich-text ol { margin: .2em 0 .4em; padding-left: 1.3em; }
+.rich-text li { margin: .1em 0; }
+.help-toast__body .rich-text { font-size: 15px; }
+.help-note .rich-text { display: block; margin-top: 2px; }
 .help-toast__close { background: rgba(255, 255, 255, .14); border: 0; color: #fff; border-radius: 10px; width: 36px; height: 36px; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; }
 @keyframes help-toast-in { from { transform: translateY(-16px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .help-toast { animation: none; } }

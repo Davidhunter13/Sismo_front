@@ -46,7 +46,7 @@ El backend está hecho en **CodeIgniter 3 (PHP 7.3)** y se comunica en **JSON**.
 | `PUT` | `/ajustes` | Sí | `{settings, locationPermission, lastLocation, postQuakeDone}` | **200** `{"ok":true}` | 401, 422 |
 | `PUT` | `/contactos/{id}` | Sí | `Contact` | **200** `{"ok":true}` | 401, 422 |
 | `DELETE` | `/contactos/{id}` | Sí | — | **200** `{"ok":true}` (borrado lógico) | 401 |
-| `PUT` | `/alertas/{id}` | Sí | `AlertRecord` (incluye métricas, ubicación, `emailStatus`, `postQuakeDone`) | **200** `{"ok":true}` | 401, 422 |
+| `PUT` | `/alertas/{id}` | Sí | `AlertRecord` (incluye métricas, ubicación, `emailStatus`, `postQuakeDone` y la prioridad: `urgent`, `urgentAt`, `fallNoResponse`, `trapped`, `batteryLevel` 0–100, `batteryAt`) | **200** `{"ok":true}` | 401, 422 |
 | `DELETE` | `/alertas/{id}` | Sí | — | **200** `{"ok":true}` | 401 |
 | `PUT` | `/puntos_encuentro/{id}` | Sí | `MeetingPoint` | **200** `{"ok":true}` | 401, 422 |
 | `DELETE` | `/puntos_encuentro/{id}` | Sí | — | **200** `{"ok":true}` | 401 |
@@ -96,14 +96,16 @@ Sin sesión, las páginas redirigen al inicio de sesión y las consultas respond
 |---|---|---|---|
 | `GET` | `/Sismo_admin` | — | Página del panel (HTML) con el token CSRF |
 | `GET` | `/Sismo_admin/datos` | — | **200** `{resumen, activas, alertas, usuarios, ahora}` |
+| `GET` | `/Sismo_admin/pulso` | — | **200** `{firma}`: huella de alertas y atenciones; el panel la pide cada 3 s y descarga `datos` solo si cambia |
 | `GET` | `/Sismo_admin/usuario/{id}` | — | **200** detalle de la persona (contactos, ficha descifrada, puntos, alertas, kit, encuestas, bitácora). La consulta queda en el log · 404 |
-| `POST` | `/Sismo_admin/atender` | `{id_alerta, estado: en_atencion\|ayuda_enviada\|resuelta, nota}` | **200** `{"ok":true}` · 404 `alerta_no_encontrada` · 422 |
+| `POST` | `/Sismo_admin/atender` | `{id_alerta, estado: en_atencion\|ayuda_enviada\|resuelta, nota}` (`nota` en HTML; el servidor deja solo p, br, strong, em, u, s, ul, ol, li; máx. 500 caracteres visibles) | **200** `{"ok":true}` · 404 `alerta_no_encontrada` · 422 |
 | `POST` | `/Sismo_admin/codigo` | `{id_usuario}` | **201** `{codigo, horas: 48}` · 404 `usuario_no_encontrado` |
 | `GET` | `/Sismo_admin/sismos?dias=1\|7` | `dias` | **200** `{dias, sismos[]}` (USGS, caché de 5 min) · 502 `usgs_no_disponible` |
-| `GET` | `/Sismo_admin/catalogos` | — | **200** catálogos, guía y parámetros (incluye los ocultos) + íconos disponibles |
+| `GET` | `/Sismo_admin/catalogos` | — | **200** catálogos, guía, parámetros y plantillas de mensaje (incluye los ocultos) + íconos disponibles |
 | `POST` | `/Sismo_admin/catalogo_guardar` | `{id?, tipo, clave, nombre_es, nombre_en, icono, orden, activo}` | **200** · 422 `{campo}` |
 | `POST` | `/Sismo_admin/guia_guardar` | `{id?, clave, momento, titulo_es, titulo_en, pasos_es, pasos_en, icono, orden, activo}` | **200** · 422 `{campo}` |
 | `POST` | `/Sismo_admin/parametro_guardar` | `{clave, valor, activo}` | **200** · 422 `{campo}` (valida números y listas) |
+| `POST` | `/Sismo_admin/plantilla_guardar` | `{id?, estado: general\|en_atencion\|ayuda_enviada\|resuelta, titulo, mensaje (HTML con la misma lista blanca), orden, activo}` | **200** `{"ok":true}` · 422 `{campo}` · 422 `titulo_repetido` · 422 `no_encontrado` |
 
 ## 4. Página informativa (`Sismo_info`)
 

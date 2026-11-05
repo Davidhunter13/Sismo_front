@@ -91,7 +91,7 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | ID | Requisito | Rol | Prioridad |
 |---|---|---|---|
 | RF-PA-01 | Solo deben entrar al panel las personas con sesión iniciada y correo autorizado en la configuración del servidor. | OP | Alta |
-| RF-PA-02 | El panel debe mostrar indicadores, alertas activas y un mapa en tiempo real, y actualizarse solo cada minuto (sin loader); cada consulta iniciada por el operador muestra un loader. | OP | Alta |
+| RF-PA-02 | El panel debe mostrar indicadores, alertas activas y un mapa en tiempo real, y actualizarse solo casi en tiempo real (pulso cada 3 s, sin loader); cada consulta iniciada por el operador muestra un loader. | OP | Alta |
 | RF-PA-03 | El panel debe avisar las alertas nuevas con banner, sonido y notificación del sistema (si los avisos están activos; la preferencia se recuerda). | OP | Alta |
 | RF-PA-04 | El operador debe poder registrar la ayuda (En atención, Ayuda enviada, Resuelta) con un mensaje; la persona lo ve como aviso fijo en la app (consulta cada 15 s). | OP | Alta |
 | RF-PA-05 | El operador debe poder ver el detalle de la persona: contactos, ficha médica descifrada, puntos de encuentro, alertas, kit, encuestas y bitácora de ayuda. Cada consulta queda en el log. | OP | Alta |

@@ -2,7 +2,7 @@
 
 # Base de datos de SISMO: tablas, columnas y relaciones
 
-Diccionario de datos del backend (CodeIgniter 3 + MySQL/MariaDB). Describe las **12 tablas `sismo_*`** que guardan lo que la app tenía en el teléfono, la bitácora de ayuda del panel de monitoreo y el contenido administrable (catálogos, guía y parámetros).
+Diccionario de datos del backend (CodeIgniter 3 + MySQL/MariaDB). Describe las **13 tablas `sismo_*`** que guardan lo que la app tenía en el teléfono, la bitácora de ayuda del panel de monitoreo y el contenido administrable (catálogos, guía, parámetros y plantillas de mensaje).
 
 - **Motor y juego de caracteres:** InnoDB, `utf8mb4`.
 - **Convención de nombres (CCS):** tablas en plural y `snake_case`; claves foráneas con prefijo `id_`; fechas de negocio con prefijo `fecha_`; todo comentado.
@@ -26,6 +26,7 @@ erDiagram
     sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
     sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe ayuda"
     operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
+    sismo_plantillas_atenciones }o..o{ sismo_atenciones_alertas : "sugiere el mensaje (por estado, sin FK)"
 
     sismo_usuarios {
         INT id PK
@@ -142,11 +143,21 @@ erDiagram
         VARCHAR descripcion
         TINYINT activo
     }
+    sismo_plantillas_atenciones {
+        INT id PK
+        VARCHAR estado
+        VARCHAR titulo
+        VARCHAR mensaje
+        SMALLINT orden
+        TINYINT activo
+    }
 ```
 
 > `operadores_panel` representa la tabla de personas que inician sesión en el sistema administrativo (operadores del panel de monitoreo). No es parte de las tablas `sismo_*`; solo se referencia desde `sismo_atenciones_alertas.id_persona`.
 >
 > Las tablas de **catálogos, guía y parámetros** no tienen relaciones con claves foráneas: la app guarda la **clave** del catálogo (por ejemplo `tipo_evento = 'sismo'` o los pasos de «Después del sismo» por `paso_01`…). Así, si el administrador cambia el nombre o lo oculta, los datos ya guardados no se pierden.
+>
+> `sismo_plantillas_atenciones` tampoco tiene clave foránea: el operador elige una plantilla en «Brindar ayuda», el panel reemplaza los comodines y el texto final se guarda en `sismo_atenciones_alertas.nota`. Si después se edita u oculta la plantilla, las atenciones ya registradas no cambian.
 
 ### Resumen de las tablas
 
@@ -164,6 +175,7 @@ erDiagram
 | 10 | `sismo_catalogos` | Listas administrables (tipos de evento, parentescos, kit, pasos, tipos de sangre) | Sin FK (por clave) |
 | 11 | `sismo_guia_tarjetas` | Tarjetas de la guía de emergencia | Sin FK |
 | 12 | `sismo_parametros` | Parámetros generales (número de emergencia, topes, tiempos, textos) | Sin FK |
+| 13 | `sismo_plantillas_atenciones` | Plantillas del mensaje de «Brindar ayuda» (general y por estado) | Sin FK (se copia el texto a la atención) |
 
 ---
 
@@ -264,6 +276,12 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `estado_correo` | `VARCHAR(20)` | Sí | — | `enviado` \| `cancelado` \| `sin_servidor` \| `sin_destinatarios` \| `fallido`; NULL = no se preguntó |
 | `es_simulacro` | `TINYINT(1)` | No | `0` | 1 si se activó durante un simulacro |
 | `origen_activacion` | `VARCHAR(25)` | Sí | — | `app` \| `acceso_rapido` \| `widget` \| `deteccion_automatica` |
+| `es_urgente` | `TINYINT(1)` | No | `0` | 1 = la persona pidió ayuda urgente («Necesito ayuda urgente» o «Pedir ayuda ahora» tras una caída). El panel la pone primero |
+| `fecha_urgente` | `DATETIME` | Sí | — | Cuándo pidió ayuda urgente (UTC) |
+| `caida_sin_respuesta` | `TINYINT(1)` | No | `0` | 1 = se activó sola por una caída detectada y la persona no respondió «¿Está bien?» |
+| `modo_atrapado` | `TINYINT(1)` | No | `0` | 1 = la persona está en modo atrapado (ahorro de batería) |
+| `nivel_bateria` | `TINYINT UNSIGNED` | Sí | — | Última batería leída durante la alerta (0–100 %) |
+| `fecha_bateria` | `DATETIME` | Sí | — | Cuándo se leyó la batería (UTC) |
 | `nota` | `VARCHAR(500)` | Sí | — | Nota opcional de la alerta |
 | `pasos_post_sismo` | `VARCHAR(2000)` | Sí | — | JSON con las claves de los pasos marcados de «Después del sismo» |
 | `ms_sos_presionado` | `BIGINT UNSIGNED` | Sí | — | Métrica: ms epoch en que se presionó el SOS |
@@ -276,6 +294,8 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `activo` | `TINYINT(1)` | No | `1` | 1 = activo, 0 = borrado desde la app |
 
 Índices: `uq_sismo_alertas_cliente (id_usuario, id_cliente)` (único), `ix_sismo_alertas_fecha (fecha_activacion)`.
+
+Las seis columnas de prioridad se agregan con `2026-11-05-sismo-prioridad-alertas.sql` (idempotente: solo agrega las que faltan). Si aún no se ejecutó, la API y el panel siguen funcionando sin esos datos.
 
 ### 2.5 `sismo_fichas_medicas_usuarios`: ficha médica (dato sensible, siempre cifrada)
 
@@ -341,7 +361,7 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `id_alerta` | `INT UNSIGNED` (FK → `sismo_alertas_usuarios.id`) | No | — | Alerta atendida |
 | `id_persona` | `INT` (FK → tabla de operadores del panel) | No | — | Operador que registró la atención |
 | `estado` | `VARCHAR(15)` | No | — | `en_atencion` \| `ayuda_enviada` \| `resuelta` |
-| `nota` | `VARCHAR(500)` | Sí | — | Mensaje para la persona (lo ve en la app) y bitácora del operador (texto plano) |
+| `nota` | `VARCHAR(3000)` | Sí | — | Mensaje para la persona (lo ve en la app con el mismo formato) y bitácora del operador. HTML limpio: `p`, `br`, `strong`, `em`, `u`, `s`, `ul`, `ol`, `li`, sin atributos; máx. 500 caracteres visibles |
 | `activo` | `TINYINT(1)` | No | `1` | 1 = vigente, 0 = anulada |
 
 Índice: `ix_sismo_atenciones_alerta (id_alerta, activo)`.
@@ -421,6 +441,49 @@ Semilla: 11 tarjetas (3 de «antes», 4 de «durante», 4 de «después»). En l
 | `guia_intro_despues_es` / `_en` | texto | texto | Introducción de «después» en la guía |
 | `guia_aviso_es` / `_en` | texto | texto | Aviso final de la guía |
 
+### 3.4 `sismo_plantillas_atenciones`: plantillas de mensaje para «Brindar ayuda»
+
+Se administran en el panel, en **Catálogos de la app → Mensajes de ayuda**. Solo las usa el panel: la app no las descarga, porque recibe el mensaje ya escrito.
+
+| Columna | Tipo | Nulo | Por defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `INT UNSIGNED` (PK) | No | — | Identificador de la plantilla |
+| `estado` | `VARCHAR(15)` | No | — | `general` (aparece en todos los estados) \| `en_atencion` \| `ayuda_enviada` \| `resuelta` |
+| `titulo` | `VARCHAR(80)` | No | — | Nombre corto que ve el operador en la lista (único por estado) |
+| `mensaje` | `VARCHAR(3000)` | No | — | HTML limpio del editor (misma lista blanca; máx. 500 caracteres visibles); admite comodines |
+| `orden` | `SMALLINT` | No | `0` | Orden dentro del estado (menor primero) |
+| `activo` | `TINYINT(1)` | No | `1` | 1 = disponible en «Brindar ayuda», 0 = oculta |
+
+Índices: `uq_sismo_plantillas_estado_titulo (estado, titulo)` (único), `ix_sismo_plantillas_estado (estado, activo, orden)`.
+
+**Formato:** el mensaje se escribe en un editor de texto enriquecido (negrilla, cursiva, subrayado, tachado y listas). El servidor guarda solo las etiquetas de la lista blanca, sin atributos; el panel y la app lo vuelven a limpiar al mostrarlo.
+
+**Comodines** (se insertan con clic o arrastre; los reemplaza el panel al elegir la plantilla y el operador puede ajustar el texto antes de registrarlo):
+
+| Comodín | Se reemplaza por | Ejemplo |
+|---|---|---|
+| `[nombre]` | Nombre completo de la persona | Ana María Demo |
+| `[primer_nombre]` | Primera palabra del nombre | Ana |
+| `[evento]` | Tipo de alerta, en minúscula (o «simulacro») | sismo |
+| `[estado]` | Estado elegido en «Brindar ayuda» | ayuda en camino |
+| `[fecha_alerta]` | Fecha de activación de la alerta | 5/11/2026 |
+| `[hora_alerta]` | Hora de activación de la alerta | 10:42 a. m. |
+| `[tiempo_alerta]` | Tiempo desde la activación | 6 min |
+| `[contactos]` | Cantidad de contactos de emergencia | 4 |
+| `[numero_emergencia]` | Parámetro `numero_emergencia` | 123 |
+| `[operador]` | Nombre del operador que registra la ayuda | Operador del centro |
+
+Si la persona no registró nombre, se quita el comodín y se corrige la puntuación («Hola [primer_nombre], …» queda «Hola, …»).
+
+**Valores iniciales (semilla): 20 plantillas, 5 por estado.**
+
+| Estado | Plantillas |
+|---|---|
+| `general` | Saludo del centro de monitoreo · Mantener la calma · Confirmar que está bien · Ahorrar batería · Contactando a su familiar |
+| `en_atencion` | Alerta recibida · Revisando su ubicación · Permanezca donde está · Coordinando con emergencias · Si está atrapado |
+| `ayuda_enviada` (en camino) | Ayuda en camino · Diríjase al punto de encuentro · Llegada próxima · Familiar avisado · No se mueva |
+| `resuelta` | Alerta atendida · Después del sismo · Atento a réplicas · Familiar informado · Si necesita ayuda otra vez |
+
 ---
 
 ## 4. Datos personales y seguridad
@@ -439,4 +502,4 @@ Semilla: 11 tarjetas (3 de «antes», 4 de «durante», 4 de «después»). En l
 
 ## 5. Script de creación
 
-Todo lo anterior se crea con un **único script SQL idempotente** (se puede ejecutar varias veces): `CREATE TABLE IF NOT EXISTS` para las tablas, `ALTER … MODIFY` para dejar las columnas con su tamaño final e `INSERT IGNORE` para la semilla, que no pisa lo editado desde el panel.
+Todo lo anterior se crea con **scripts SQL idempotentes** (se pueden ejecutar varias veces): el script completo de SISMO y, después, el de plantillas de mensaje (`sismo_plantillas_atenciones`). Ambos usan `CREATE TABLE IF NOT EXISTS` para las tablas, `ALTER … MODIFY` para dejar las columnas con su tamaño final e `INSERT IGNORE` para la semilla, que no pisa lo editado desde el panel.

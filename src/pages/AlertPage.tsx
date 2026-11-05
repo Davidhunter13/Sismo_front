@@ -66,7 +66,7 @@ export default function AlertPage() {
   const chooseChannel = useContactChannel();
   const tf = useT().features;
   const ta = useT().alert;
-  const { data, activeAlert, endAlert, markSmsOpened } = useAppState();
+  const { data, activeAlert, endAlert, markSmsOpened, updateActiveAlert } = useAppState();
   // Brújula de la alerta: hacia el punto de encuentro más cercano a donde se activó (o la última ubicación).
   const meeting = useMeetingTarget(activeAlert?.location ?? data.lastLocation);
   // Los contactos de demostración son ficticios: no se les envía SMS.
@@ -102,6 +102,29 @@ export default function AlertPage() {
     const t = window.setInterval(() => void check(), BATTERY_CHECK_MS);
     return () => window.clearInterval(t);
   }, [alertId, threshold]);
+
+  // Prioridad para el centro de monitoreo: modo atrapado y batería viajan con la alerta (el panel las muestra).
+  const activeId = activeAlert?.id;
+  useEffect(() => {
+    if (activeId) updateActiveAlert({ trapped });
+  }, [activeId, trapped, updateActiveAlert]);
+  const savedBattery = activeAlert?.batteryLevel;
+  useEffect(() => {
+    if (!activeId) return;
+    const read = async () => {
+      const level = await getBatteryLevel();
+      // Solo cuando cambia el porcentaje (no en cada lectura), para no sincronizar de más.
+      if (level != null && level !== savedBattery) updateActiveAlert({ batteryLevel: level, batteryAt: new Date().toISOString() });
+    };
+    void read();
+    const t = window.setInterval(() => void read(), BATTERY_CHECK_MS);
+    return () => window.clearInterval(t);
+  }, [activeId, savedBattery, updateActiveAlert]);
+
+  const askUrgentHelp = (urgent: boolean) => {
+    updateActiveAlert(urgent ? { urgent: true, urgentAt: new Date().toISOString() } : { urgent: false });
+    if (urgent) presentToast({ message: ta.urgent.toast, duration: 3500, color: 'danger', position: 'top' });
+  };
 
   const notifyLowBattery = () => {
     if (!activeAlert || lowBattery == null) return;
@@ -242,6 +265,22 @@ export default function AlertPage() {
       </section>
 
       <HelpStatusBanner alertId={activeAlert.id} />
+
+      {activeAlert.urgent ? (
+        <div className="callout callout--row urgent-on" role="status">
+          <Siren size={22} aria-hidden="true" />
+          <div>
+            <strong>{ta.urgent.on}</strong>
+            <p className="small">{ta.urgent.onHint}</p>
+            <button type="button" className="link-btn small" onClick={() => askUrgentHelp(false)}>{ta.urgent.cancel}</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="btn btn--urgent btn--lg btn--block" onClick={() => askUrgentHelp(true)}>
+          <Siren size={22} aria-hidden="true" />
+          <span className="btn-urgent__text"><strong>{ta.urgent.button}</strong><small>{ta.urgent.hint}</small></span>
+        </button>
+      )}
 
       <NetworkBanner />
 
@@ -405,9 +444,12 @@ export default function AlertPage() {
         <ClipboardList size={18} aria-hidden="true" /> {tf.postQuake.title}
       </button>
 
-      <button className="btn btn--success btn--lg btn--block" onClick={() => setConfirmEnd(true)}>
-        <CheckCircle2 size={20} aria-hidden="true" /> {ta.safeFinish}
-      </button>
+      {/* Fijo en la parte inferior de la pantalla aunque haya scroll: siempre a un toque. */}
+      <div className="sticky-action">
+        <button className="btn btn--success btn--lg btn--block" onClick={() => setConfirmEnd(true)}>
+          <CheckCircle2 size={20} aria-hidden="true" /> {ta.safeFinish}
+        </button>
+      </div>
 
       <ConfirmationDialog
         isOpen={confirmEnd}

@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonContent, IonPage } from '@ionic/react';
+import { ActiveAlertBanner } from './ActiveAlertBanner';
 import { SyncStatusBanner } from './SyncStatusBanner';
 import type { ReactNode } from 'react';
 import { BottomNavigation } from './BottomNavigation';
@@ -21,6 +22,8 @@ export function AppLayout({ title, backTo, hideNav, showSettings, className, hea
   return (
     <IonPage className={className}>
       <Header title={title} backTo={backTo} showSettings={showSettings} extra={headerExtra} />
+      {/* Fuera del contenido desplazable: siempre visible arriba mientras haya una alerta activa. */}
+      <ActiveAlertBanner />
       <IonContent className="app-content">
         <main className={`page${hideNav ? ' page--no-nav' : ''}`}>
           <SyncStatusBanner />

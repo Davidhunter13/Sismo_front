@@ -25,6 +25,7 @@ classDiagram
     <<Panel de monitoreo>>
     +index()
     +datos()
+    +pulso()
     +usuario(id)
     +atender()
     +codigo()
@@ -33,6 +34,7 @@ classDiagram
     +catalogo_guardar()
     +guia_guardar()
     +parametro_guardar()
+    +plantilla_guardar()
   }
   class Sismo_info {
     <<Página pública>>
@@ -59,6 +61,9 @@ classDiagram
     +guardar_catalogo()
     +guardar_guia()
     +guardar_parametro()
+    +catalogos_admin()
+    +firma_panel()
+    +guardar_plantilla()
     +sismos_recientes()
     -cifrar() AES-256-GCM
     -descifrar()
@@ -71,6 +76,10 @@ classDiagram
     +es_admin_sismo()
     +csrf_token()
   }
+  class Html_seguro {
+    <<librería>>
+    +limpiar(html) lista blanca
+  }
   class ServicioCorreo {
     <<servicio externo>>
     +POST alerta(JSON)
@@ -82,4 +91,5 @@ classDiagram
   Sismo --> Sismo_model : usa
   Sismo_admin --> Sismo_model : usa
   Sismo_admin --> Sesion_persona : autoriza
+  Sismo_admin --> Html_seguro : limpia mensajes
   Sismo_info --> Sesion_persona : muestra «Ir al panel»

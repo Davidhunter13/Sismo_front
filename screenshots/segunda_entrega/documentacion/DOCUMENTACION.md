@@ -16,5 +16,5 @@
 | 26 | [Plan y casos de prueba](26-PLAN_Y_CASOS_DE_PRUEBA.md) | Calidad | Niveles, entorno, criterios, 46 casos e2e, unitarias, 14 casos manuales y trazabilidad |
 | 27 | [Informe de resultados de pruebas](27-INFORME_DE_RESULTADOS_DE_PRUEBAS.md) | Calidad, dirección | Resultados de la ejecución del 04/11/2026 |
 | 28 | [Registro de riesgos](28-REGISTRO_DE_RIESGOS.md) | Dirección, equipo | 17 riesgos con probabilidad, impacto, mitigación y estado |
-| 29 | [Evidencias visuales](29-EVIDENCIAS_VISUALES.md) | Evaluadores | Índice de las 125 capturas de front y back |
-| 30 | [Registro de cambios y versiones](30-REGISTRO_DE_CAMBIOS_Y_VERSIONES.md) | Todos | Versiones 1.0 a 3.1 y pendientes |
+| 29 | [Evidencias visuales](29-EVIDENCIAS_VISUALES.md) | Evaluadores | Índice de las 162 capturas de front y back |
+| 30 | [Registro de cambios y versiones](30-REGISTRO_DE_CAMBIOS_Y_VERSIONES.md) | Todos | Versiones 0.1 a 3.2 por fase y actividad del plan (06/10 – 11/12) y pendientes |

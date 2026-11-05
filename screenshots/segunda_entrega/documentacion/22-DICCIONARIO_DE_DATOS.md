@@ -4,7 +4,7 @@
 
 Los datos de SISMO viven en dos lugares:
 
-1. **Base de datos del backend** (MySQL / MariaDB): 12 tablas `sismo_*`.
+1. **Base de datos del backend** (MySQL / MariaDB): 13 tablas `sismo_*` (incluidas las plantillas de mensaje de «Brindar ayuda», `sismo_plantillas_atenciones`).
 2. **Almacenamiento local del teléfono** (`localStorage`): copia de trabajo de la app, cola sin conexión y caché.
 
 ## 1. Base de datos del backend

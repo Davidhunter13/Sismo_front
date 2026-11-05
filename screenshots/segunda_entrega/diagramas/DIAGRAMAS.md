@@ -24,14 +24,14 @@ Diagramas técnicos del proyecto (app, backend en CodeIgniter 3 y base de datos)
 | # | Imagen | Qué muestra |
 |---|---|---|
 | 1 | `01a-casos-de-uso-persona-usuaria.png` | Casos de uso de la persona en la app: registro, alerta SOS («include»: tipo de evento, señales y ubicación; «extend»: correo y SMS/WhatsApp), «Estoy bien», contactos, puntos de encuentro, ficha médica y QR, guía, sismos, mochila, «Después del sismo», simulacro y SUS, historial, configuración, recuperación y eliminar cuenta |
-| 1 | `01b-casos-de-uso-operador-centro-de-monitoreo.png` | Casos de uso del operador: alertas y mapa en tiempo real, avisos, brindar ayuda, detalle de la persona, historial, usuarios, indicadores, sismos recientes, código temporal y administración de catálogos, guía y parámetros |
+| 1 | `01b-casos-de-uso-operador-centro-de-monitoreo.png` | Casos de uso del operador: alertas y mapa en tiempo real, avisos, brindar ayuda, detalle de la persona, historial, usuarios, indicadores, sismos recientes, código temporal y administración de catálogos, guía, parámetros y **plantillas de mensaje** (usar plantilla «extend» de brindar ayuda) |
 | 1 | `01c-casos-de-uso-visitante-pagina-informativa.png` | Casos de uso del visitante en la página pública |
 | 2 | `02a-actividades-persona-registro-inicial.png` | Actividades: registro en 4 pasos y subida al servidor (o cola sin conexión) |
 | 2 | `02b-actividades-persona-alerta-sos-y-correo.png` | Actividades: alerta SOS con señales, ubicación, **correo con cuenta regresiva de 20 s**, sincronización y aviso del centro de monitoreo |
-| 2 | `02c-actividades-operador-atencion-de-alerta.png` | Actividades del operador: acceso, actualización cada minuto, aviso y registro de la ayuda |
-| 2 | `02d-actividades-operador-administrar-contenido.png` | Actividades del operador: catálogos, guía y parámetros, con validación y descarga en la app |
+| 2 | `02c-actividades-operador-atencion-de-alerta.png` | Actividades del operador: acceso, pulso cada 3 s, aviso y registro de la ayuda |
+| 2 | `02d-actividades-operador-administrar-contenido.png` | Actividades del operador: catálogos, guía, parámetros y plantillas de mensaje, con validación; la app descarga los catálogos y las plantillas quedan en «Brindar ayuda» |
 | 3 | `03a-secuencia-persona-alerta-sos-y-correo.png` | Secuencia: AlertPage → emailService → servicio de correo → proveedor → contactos, en paralelo con syncService → API → modelo → MySQL, y la consulta de ayuda cada 15 s |
-| 3 | `03b-secuencia-operador-brindar-ayuda.png` | Secuencia: panel → `Sismo_admin` → `Sesion_persona` / `Sismo_model` → MySQL (con CSRF) |
+| 3 | `03b-secuencia-operador-brindar-ayuda.png` | Secuencia: panel → `Sismo_admin` → `Sesion_persona` / `Sismo_model` → MySQL (con CSRF), con la carga de plantillas y el reemplazo de `[nombre]`, `[primer_nombre]` y `[evento]` |
 | 3 | `03c-secuencia-persona-recuperar-cuenta.png` | Secuencia: código de recuperación (SHA-256), restauración en un teléfono nuevo y revocación del anterior |
 | 3 | `03d-secuencia-sistema-sincronizacion-sin-conexion.png` | Secuencia: cola persistente, envío al volver la red, nuevo registro tras un 401 y reintentos |
 | 4 | `04a-clases-backend.png` | Clases del backend: `Sismo`, `Sismo_admin`, `Sismo_info`, `Sismo_model`, `Sesion_persona` |
@@ -53,13 +53,13 @@ Diagramas técnicos del proyecto (app, backend en CodeIgniter 3 y base de datos)
 | 9 | `09-despliegue.png` | Nodos: teléfono Android (APK), navegador, servidor web (Apache + PHP 7.3), base de datos, servidor de correo y servicios de Internet, con protocolos y puertos |
 | 10 | `10-infraestructura.png` | Desarrollo (GitHub, GitHub Actions con pruebas y APK, base de datos de desarrollo en Google Cloud por túnel IAP) y producción |
 | 11 | `11a-navegacion-app-persona-usuaria.png` | Navegación entre las 17 rutas de la app (barra inferior, encabezado y enlaces) |
-| 11 | `11b-navegacion-panel-operador.png` | Navegación del panel (ventanas, pestañas, catálogos) y de la página pública |
+| 11 | `11b-navegacion-panel-operador.png` | Navegación del panel (ventanas, pestañas, catálogos y «Mensajes de ayuda») y de la página pública |
 
 ## 3. Base de datos (`3-base-de-datos/`)
 
 | # | Imagen | Qué muestra |
 |---|---|---|
-| 12 | `12-entidad-relacion.png` | DER: las 12 tablas `sismo_*`, sus atributos principales y las relaciones con cardinalidad |
+| 12 | `12-entidad-relacion.png` | DER: las 13 tablas `sismo_*` (incluida `sismo_plantillas_atenciones`), sus atributos principales y las relaciones con cardinalidad |
 | 13 | `13-modelo-logico.png` | Modelo lógico: todas las columnas con tipo lógico y claves PK / FK / UK |
 | 14 | `14-modelo-fisico.png` | Modelo físico generado desde el script SQL: tipos MySQL, nulos, valores por defecto, índices, claves foráneas, motor y juego de caracteres |
 

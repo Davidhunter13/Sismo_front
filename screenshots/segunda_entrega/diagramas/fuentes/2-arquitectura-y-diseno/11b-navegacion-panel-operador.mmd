@@ -20,6 +20,8 @@ flowchart TD
   CAT --> CT5["Tipos de sangre"]
   CAT --> CT6["Guía de emergencia"]
   CAT --> CT7["Parámetros"]
+  CAT --> CT8["Mensajes de ayuda (plantillas)"]
+  CT8 -.->|"se usan en"| AY
   PANEL -->|"«Qué ofrece SISMO»"| INFO["Página informativa pública (Sismo_info)"]
   INFO -->|"«Ir al panel» (solo operadores)"| PANEL
   VIS["Visitante (sin sesión)"] --> INFO

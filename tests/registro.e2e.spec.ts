@@ -11,7 +11,7 @@ async function startWithoutDemo(page: import('@playwright/test').Page) {
   await expect(page).toHaveURL(/\/registro$/);
 }
 
-test('registro obligatorio: los 4 pasos bloquean «Siguiente» hasta completarse', async ({ page, context }) => {
+test('registro obligatorio: los 4 primeros pasos bloquean «Siguiente» y el 5.º (protección) es opcional', async ({ page, context }) => {
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 4.65, longitude: -74.1, accuracy: 20 });
   await startWithoutDemo(page);
@@ -19,30 +19,29 @@ test('registro obligatorio: los 4 pasos bloquean «Siguiente» hasta completarse
   const next = v.getByRole('button', { name: 'Siguiente' });
 
   // 1. Nombre
-  await expect(v.getByText('Paso 1 de 4')).toBeVisible();
+  await expect(v.getByText('Paso 1 de 5')).toBeVisible();
   await expect(next).toBeDisabled();
   await v.locator('ion-input[label="Nombre de usuario"] input').fill('Ana');
   await expect(next).toBeEnabled();
   await next.click();
 
   // 2. Ubicación actual (real del dispositivo)
-  await expect(v.getByText('Paso 2 de 4')).toBeVisible();
+  await expect(v.getByText('Paso 2 de 5')).toBeVisible();
   await expect(next).toBeDisabled();
   await v.getByRole('button', { name: 'Obtener mi ubicación' }).click();
   await expect(v.getByText(/Ubicación obtenida\./)).toBeVisible({ timeout: 15_000 });
   await next.click();
 
   // 3. Punto de encuentro
-  await expect(v.getByText('Paso 3 de 4')).toBeVisible();
+  await expect(v.getByText('Paso 3 de 5')).toBeVisible();
   await expect(next).toBeDisabled();
   await v.getByRole('button', { name: 'Mi ubicación actual' }).click();
   await expect(v.getByText('Guardado: Punto de encuentro')).toBeVisible();
   await next.click();
 
   // 4. Contacto real
-  await expect(v.getByText('Paso 4 de 4')).toBeVisible();
-  const finish = v.getByRole('button', { name: 'Finalizar registro' });
-  await expect(finish).toBeDisabled();
+  await expect(v.getByText('Paso 4 de 5')).toBeVisible();
+  await expect(next).toBeDisabled();
   await v.getByRole('button', { name: 'Agregar contacto' }).click();
   const modal = page.locator('ion-modal');
   await modal.locator('ion-input[label="Nombre"] input').fill('Luisa');
@@ -52,6 +51,13 @@ test('registro obligatorio: los 4 pasos bloquean «Siguiente» hasta completarse
   await page.waitForTimeout(300);
   await modal.getByRole('button', { name: 'Agregar contacto' }).click();
   await expect(v.getByText('1 contacto agregado.')).toBeVisible();
+  await next.click();
+
+  // 5. Protección: opcional; se elige dejar activa la detección de caídas (si el navegador tiene acelerómetro).
+  await expect(v.getByText('Paso 5 de 5')).toBeVisible();
+  await expect(v.getByText('Detección de caídas')).toBeVisible();
+  const finish = v.getByRole('button', { name: 'Finalizar registro' });
+  await expect(finish).toBeEnabled();
   await finish.click();
 
   await expect(page).toHaveURL(/\/inicio$/);
@@ -123,7 +129,7 @@ test('registro: el contacto agregado se puede editar o eliminar si hubo un error
   await v.getByRole('button', { name: 'Eliminar Luisa' }).click();
   await page.locator('ion-alert').getByRole('button', { name: 'Eliminar' }).click();
   await expect(v.getByText('1 contacto agregado.')).toHaveCount(0);
-  await expect(v.getByRole('button', { name: 'Finalizar registro' })).toBeDisabled();
+  await expect(v.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
 });
 
 test('datos faltantes (SOS durante el registro): aviso rojo en Inicio y tarjetas con borde rojo', async ({ page }) => {
@@ -137,7 +143,9 @@ test('datos faltantes (SOS durante el registro): aviso rojo en Inicio y tarjetas
   const v = view(page);
   const banner = v.locator('.card--missing', { hasText: 'Faltan datos para avisar a sus contactos' });
   await expect(banner).toContainText('Falta: su nombre, su ubicación, un punto de encuentro, un contacto real.');
-  await expect(v.locator('.quick-tile--missing')).toHaveCount(3);
+  // Rojo: contactos y ubicación (datos obligatorios); la brújula sin punto de encuentro queda en amarillo.
+  await expect(v.locator('.quick-tile--missing')).toHaveCount(2);
+  await expect(v.locator('.quick-tile--warn', { hasText: 'Brújula' })).toContainText('Sin punto de encuentro');
   await banner.getByRole('button', { name: 'Completar registro' }).click();
   await expect(page).toHaveURL(/\/registro$/);
 

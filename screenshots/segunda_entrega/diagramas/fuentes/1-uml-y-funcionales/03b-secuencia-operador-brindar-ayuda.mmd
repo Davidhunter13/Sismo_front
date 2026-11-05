@@ -12,15 +12,32 @@ sequenceDiagram
   CA->>SP: persona() y es_admin_sismo()
   SP-->>CA: autorizado
   CA-->>PV: Página del panel + token CSRF
-  loop cada 60 s (silencioso)
+  loop pulso cada 3 s (silencioso)
+    PV->>CA: GET pulso
+    CA->>MD: firma_panel()
+    MD->>DB: SELECT COUNT/MAX (una consulta)
+    CA-->>PV: {firma}
+  end
+  opt la firma cambió (o cada 60 s de respaldo)
     PV->>CA: GET datos
     CA->>MD: resumen(), alertas_panel(), usuarios_panel()
     MD->>DB: SELECT …
     CA-->>PV: JSON (indicadores, alertas, usuarios)
   end
+  PV->>CA: GET catalogos
+  CA->>MD: catalogos_admin()
+  MD->>DB: SELECT sismo_plantillas_atenciones …
+  CA-->>PV: JSON (catálogos, guía, parámetros y plantillas)
   PV-->>O: Banner SOS, sonido y notificación
-  O->>PV: «Brindar ayuda»: estado + mensaje
+  O->>PV: Abre «Brindar ayuda» y elige estado
+  PV-->>O: Plantillas del estado + generales
+  opt Elige una plantilla
+    PV->>PV: Reemplaza [nombre], [primer_nombre] y [evento]
+    PV-->>O: Mensaje listo para revisar o ajustar
+  end
+  O->>PV: «Brindar ayuda»: estado + mensaje con formato (editor)
   PV->>CA: POST atender (X-CSRF-Token)
+  CA->>CA: Html_seguro: lista blanca y máx. 500 caracteres
   CA->>MD: alerta_por_id() y registrar_atencion()
   MD->>DB: INSERT sismo_atenciones_alertas
   CA-->>PV: 200 ok

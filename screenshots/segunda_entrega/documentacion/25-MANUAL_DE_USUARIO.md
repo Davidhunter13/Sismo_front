@@ -65,7 +65,7 @@ Inicie sesión con su cuenta y abra **Panel SISMO**. Solo entran los correos aut
 
 ### B2. Pantalla principal
 - **Indicadores:** alertas activas, usuarios, activos en 24 h, alertas reales, simulacros, tiempos promedio y SUS.
-- **Alertas activas** y **mapa en tiempo real**. El panel se actualiza solo cada minuto.
+- **Alertas activas** y **mapa en tiempo real**. El panel se actualiza solo, casi en tiempo real (revisa cambios cada 3 segundos). Cada alerta activa palpita en el mapa.
 - **Activar avisos:** toque el botón para recibir sonido, notificación del sistema y una ventana con cada alerta nueva. La preferencia se recuerda.
 
 ### B3. Atender una alerta

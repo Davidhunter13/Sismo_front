@@ -24,16 +24,16 @@ Repositorio: <https://github.com/Davidhunter13/Sismo_front>
 | Canal digital | Solo simulación | SMS a contactos con ubicación y puntos de encuentro + «Estoy bien» (SMS o WhatsApp) con ubicación actual, puntos de encuentro y batería |
 | Ubicación | Una lectura al tocar un botón | Afinado de GPS (hasta 10 s) y actualización cada 2 min durante la alerta |
 | Mapa | Esquema SVG | Pestañas «Esquema» y «Mapa real» (OpenStreetMap) con punto de encuentro |
-| Información | Guía de emergencia | + Sismos recientes (USGS), ficha médica con QR, lectura en voz alta, mochila de emergencia y lista «Después del sismo» |
+| Información | Guía de emergencia | + Sismos recientes (USGS) con gráfica de picos y mapa con ondas, ficha médica con QR, lectura en voz alta, mochila de emergencia y lista «Después del sismo» |
 | Orientación | Mapa | + Brújula sin internet hacia el punto de encuentro |
 | Presentación | Solo español, tema claro | Español e inglés, tema claro u oscuro |
 | Supervivencia | No existía | Modo atrapado (ahorro de batería), silbato de rescate, batería en el SMS, detección de caídas |
 | Validación | Sin datos | Métricas de tiempo, simulacro con cronómetro, encuesta SUS, estadísticas y CSV |
 | Almacenamiento | Solo en el teléfono | Teléfono + base de datos MySQL vía backend en CodeIgniter 3; sin red los cambios esperan en una cola y se suben solos al volver la conexión |
-| Monitoreo | No existía | Panel administrativo web (backend) con alertas activas en tiempo real, mapa, detalle de la persona y registro de la ayuda brindada, visible en la app |
+| Monitoreo | No existía | Panel administrativo web (backend) con alertas activas en tiempo real, mapa, detalle de la persona y registro de la ayuda brindada, visible en la app, con plantillas de mensaje administrables («Hola [primer_nombre]…») |
 | Divulgación | No existía | Página web informativa (comercial) con beneficios, funciones, capturas en teléfonos, portátil y escritorio, y lo que aún está pendiente |
 | Recuperación | Si se perdía el teléfono se perdía todo | Código de recuperación: en un teléfono nuevo se restauran contactos, historial, ficha médica y demás datos |
-| Contenido | Listas y textos fijos en el código | Tipos de evento, parentescos, kit, pasos post-sismo, tipos de sangre, guía de emergencia y parámetros (número de emergencia, topes, tiempos) editables desde el panel |
+| Contenido | Listas y textos fijos en el código | Tipos de evento, parentescos, kit, pasos post-sismo, tipos de sangre, guía de emergencia, parámetros (número de emergencia, topes, tiempos) y plantillas de mensaje de ayuda editables desde el panel |
 | Modo demostración | Visible siempre | Solo en desarrollo; en producción no aparece y se apaga solo |
 | Calidad | 18 pruebas e2e | 114 pruebas e2e (móvil y escritorio) + 116 pruebas unitarias + integración continua con APK automático |
 
@@ -244,7 +244,7 @@ Antes todo se guardaba solo en el teléfono (`localStorage`). Ahora también se 
 
 Se construyó un **panel administrativo web desde el backend (CodeIgniter 3)** para el centro de monitoreo. Solo pueden entrar los administradores autorizados en la configuración del servidor. El diseño usa la **misma identidad visual de la app**: paleta (azul `#0B2545`, rojo SOS `#D62828`, morado para simulacros), logo, tipografía Inter y modo claro u oscuro. Es una página propia, sin menús ni encabezados de otros sistemas.
 
-- **Siempre al día, sin recargar la página:** cada pestaña **consulta al servidor al abrirse** (Historial, Usuarios, Sismos recientes y cada catálogo). Además, el panel se actualiza solo **cada minuto, en silencio**: alertas activas, indicadores, mapa, historial, usuarios y el detalle de una persona abierto. Así, cuando alguien activa una alerta o pide ayuda, la tarjeta aparece sola en «Alertas activas». El detalle se actualiza sin perder la posición del scroll y no interrumpe si hay una ventana abierta. Al registrar una ayuda, la lista se actualiza al instante.
+- **Siempre al día, sin recargar la página:** cada pestaña **consulta al servidor al abrirse** (Historial, Usuarios, Sismos recientes y cada catálogo). Además, el panel revisa con un **pulso cada 3 segundos** (una consulta liviana al servidor que solo devuelve una huella de alertas y atenciones); si algo cambió, el panel descarga los datos al instante. Una alerta nueva aparece en unos 3 s en vez de hasta 1 min (con la pestaña oculta, cada 15 s; y cada minuto descarga todo como respaldo): alertas activas, indicadores, mapa, historial, usuarios y el detalle de una persona abierto. Así, cuando alguien activa una alerta o pide ayuda, la tarjeta aparece sola en «Alertas activas». El detalle se actualiza sin perder la posición del scroll y no interrumpe si hay una ventana abierta. Al registrar una ayuda, la lista se actualiza al instante.
 - **Loader:** cada consulta que inicia el operador (abrir una pestaña o una persona, registrar ayuda, generar un código, guardar un catálogo) muestra un loader de pantalla completa: fondo oscuro translúcido con desenfoque, un anillo que gira con el rojo SOS y la onda sísmica que se dibuja. Las actualizaciones automáticas de cada minuto no lo muestran. Muestra quién activó la alerta, el tipo de evento, hace cuánto, el origen (app, widget, acceso rápido o detección de caída), los contactos y la última ubicación con su precisión. Los simulacros se distinguen en morado.
 - **Mapa en vivo** (Leaflet + OpenStreetMap) con cada alerta activa y su círculo de precisión.
 - **Avisos al operador:** banner rojo y contador en la pestaña del navegador. Con «Activar avisos» (la preferencia se guarda en el navegador): pitido, notificación del sistema y una ventana (SweetAlert2) con «Ver persona» y «Brindar ayuda».
@@ -319,6 +319,66 @@ Se creó una **página web informativa para presentar y «vender» SISMO**, serv
 - **Contenido honesto:** solo funciones que existen; las capturas usan datos ficticios (los sismos son datos reales del USGS). Contenido estático: no consulta datos de personas.
 - **Imágenes:** capturas de la app y del panel convertidas a WebP (`assets/sismo/landing/`, ~1 MB en total), con carga diferida.
 - **Adaptable:** escritorio y celular sin scroll horizontal (verificado a 1440 px y 390 px).
+- **Actualizada el 05/11** con lo nuevo: bloque **«Primero, quien más lo necesita»** (ayuda urgente, caída sin respuesta, modo atrapado, batería, filtros y evento masivo), bloque **«La app le avisa qué le falta»** (tarjetas de Inicio), sismos con gráfica de picos, mensajes con formato y plantillas, pestaña «Mensajes» en «Todo es administrable», cifra «~3 s» y nuevas pantallas en el carrusel. Imágenes nuevas en WebP (~550 KB).
+
+### 2.23 Plantillas de mensaje en «Brindar ayuda» (panel)
+
+El operador ya no tiene que escribir cada mensaje desde cero: la ventana **«Brindar ayuda»** tiene una lista **«Plantilla de mensaje (opcional)»**, y el mensaje se escribe en un **editor de texto enriquecido**.
+
+- **Por estado:** muestra las plantillas del estado elegido (*En atención*, *Ayuda enviada: va en camino* o *Resuelta*) y las **generales**, que sirven para cualquier estado. Al cambiar el estado, la lista cambia.
+- **Editor de texto enriquecido:** negrilla, cursiva, subrayado, tachado y listas (numeradas y con viñetas), tanto en «Brindar ayuda» como al crear o editar una plantilla. **La persona ve el mensaje en la app con el mismo formato.** Se usa Quill 2.0.3 (licencia BSD, gratuito), que ya estaba en el servidor; no se carga nada desde un CDN: Quill, Leaflet y SweetAlert2 se sirven desde `assets/`. Sin enlaces ni imágenes, a propósito (evita mensajes engañosos en una emergencia).
+- **Seguridad del formato:** el servidor limpia el HTML con una lista blanca (`p`, `br`, `strong`, `em`, `u`, `s`, `ul`, `ol`, `li`, sin atributos) antes de guardarlo; el panel y la app lo vuelven a limpiar antes de mostrarlo. Cualquier otra etiqueta (por ejemplo `<script>`) se elimina. Los mensajes anteriores en texto plano se siguen viendo bien.
+- **Comodines (10):** `[nombre]`, `[primer_nombre]`, `[evento]` (tipo de alerta, o «simulacro»), `[estado]`, `[fecha_alerta]`, `[hora_alerta]`, `[tiempo_alerta]`, `[contactos]`, `[numero_emergencia]` y `[operador]`. Al crear o editar una plantilla se insertan **con un clic** (donde está el cursor) o **arrastrándolos** al mensaje, y una **vista previa** muestra el resultado con datos de ejemplo. Al elegir la plantilla en «Brindar ayuda», el panel los reemplaza con los datos de la alerta, por ejemplo «Hola [primer_nombre], la ayuda ya va en camino hacia su ubicación.» queda «Hola Ana, la ayuda ya va en camino hacia su ubicación.». Si la persona no registró nombre, se quita el comodín y se arregla la puntuación («Hola, la ayuda…»). El operador puede ajustar el texto antes de registrarlo (máximo 500 caracteres visibles, con contador) y también puede seguir escribiendo un mensaje propio.
+- **Administrables:** nueva pestaña **Catálogos de la app → Mensajes de ayuda** para agregar, editar, reordenar u ocultar plantillas (estado, título, mensaje, orden, visible); la tabla muestra cada mensaje con su formato. El título no se puede repetir dentro de un mismo estado.
+- **20 plantillas iniciales, 5 por estado:** generales (saludo, calma, «Estoy bien», ahorro de batería, contacto con el familiar), en atención (alerta recibida, ubicación, permanecer, coordinación, si está atrapado), ayuda enviada (en camino, punto de encuentro, llegada próxima, familiar avisado, no moverse) y resuelta (atendida, «Después del sismo», réplicas, familiar informado, volver a activar el SOS).
+- **Nueva tabla `sismo_plantillas_atenciones`**, con la convención de nombres del CCS (auditoría, `activo` como único borrado y comentarios), en un script SQL propio e idempotente, que además amplía `sismo_atenciones_alertas.nota` a `VARCHAR(3000)` para guardar el formato. No tiene clave foránea: lo que queda en la bitácora es el texto final, en `sismo_atenciones_alertas.nota`, así que editar u ocultar una plantilla no cambia las atenciones ya registradas. En la app, el aviso fijo y el recuadro de la alerta muestran el mensaje con su formato (componente `RichText`, con pruebas unitarias del limpiador).
+- **Alertas casi en tiempo real:** el panel ya no espera un minuto: un **pulso cada 3 segundos** (una consulta liviana al servidor que solo devuelve una huella de alertas y atenciones); si algo cambió, el panel descarga los datos al instante. Una alerta nueva aparece en unos 3 s en vez de hasta 1 min.
+- **Mapa:** cada alerta activa es un punto que **palpita y lanza ondas en ráfagas** (rojo; morado si es simulacro), para verla de un vistazo. Respeta «reducir movimiento».
+- **Diagramas actualizados:** entidad-relación, modelo lógico y modelo físico (13 tablas), casos de uso y actividades del operador, secuencia de «Brindar ayuda», clases del backend y navegación del panel. El diccionario de datos (`BASE_DE_DATOS_SISMO.md`) tiene la tabla, los comodines y la semilla.
+
+### 2.24 Sismos recientes: gráfica de picos y mapa con ondas (app y panel)
+
+- **Gráfica de picos tipo sismógrafo:** cada sismo es un pico vertical en su hora; la altura es la magnitud (un solo eje, de M2 en adelante) y el rojo se intensifica con ella (menor de 4, de 4 a 4,9 y 5 o más, con leyenda). Al tocar o pasar el mouse sobre un pico aparece el detalle (magnitud, lugar, hora y profundidad) y el más fuerte lleva su etiqueta. Está hecha en SVG propio, sin librerías ni CDN, y se adapta al ancho de la pantalla. La lista de sismos sigue debajo como vista en tabla de los mismos datos.
+- **Mapa de sismos:** cada sismo es un punto rojo que **palpita y lanza ondas en ráfagas**; entre más intenso, **más grande el punto, más ondas (1, 2 o 3) y más rápido** late. Al tocar un punto se ve el detalle. En la app también aparece la última ubicación de la persona, si la registró.
+- **Dónde:** en la app, en *Sismos recientes* (24 h y 7 días); en el panel, en la pestaña *Sismos recientes*, con su propio mapa (no pierde el zoom cuando la tabla se actualiza).
+- Ambos respetan el tema claro u oscuro y «reducir movimiento». Los cálculos de la app tienen pruebas unitarias (`quakeViz.test.ts`).
+
+### 2.25 Muchas alertas a la vez (sismo fuerte) en el panel
+
+En un sismo fuerte muchas personas pueden activar el SOS casi al mismo tiempo. Para que el operador no reciba una ventana, un pitido y una notificación por cada alerta:
+
+- **Una sola ventana a la vez:** si llega otra alerta con la ventana abierta, no se abre otra: se actualiza su contador («y 12 más»).
+- **Modo evento masivo** (3 o más alertas nuevas juntas, o 5 o más activas): sin ventanas emergentes. El banner rojo muestra el conteo («Evento masivo: 120 personas tienen una alerta SOS activa · 97 sin atender», siempre en una línea, sin importar cuántas sean) y un aviso corto orienta a atender desde la lista.
+- **Sonido y notificaciones con límite:** un pitido como máximo cada 15 s y una sola notificación del sistema que se reemplaza (no se apilan).
+- **Orden de triaje en «Alertas activas»:** primero las reales sin atender, luego las en atención y al final los simulacros; dentro de cada grupo, quien más lleva esperando va primero. La lista tiene su propio scroll.
+- **Mapa legible con muchas alertas:** con más de 15, los nombres aparecen al pasar el mouse; con más de 40, los puntos siguen palpitando pero sin ondas, para que el mapa siga fluido. Con pocas alertas, **el nombre de la persona se ve siempre, pequeño, encima de su punto**.
+
+### 2.26 Aviso de alerta activa en cualquier pantalla (app)
+
+Si la persona tiene una alerta activa y se mueve a otra pantalla (Ubicación, Configuración, Contactos…), arriba aparece un **aviso rojo fijo**: «Tiene una alerta SOS activa · Activa hace 8 min · Toque para volver a la alerta». No se mueve con el scroll, se actualiza solo y al tocarlo vuelve a la pantalla de alerta (en morado si es un simulacro). En la pantalla de alerta, el botón **«Estoy a salvo · Finalizar alerta»** queda **fijo en la parte inferior** aunque haya scroll, con margen para no quedar detrás de los botones del teléfono ni de la barra del navegador.
+
+### 2.27 Prioridad de las alertas: ayuda urgente, caída, modo atrapado y batería
+
+Para que el centro de monitoreo sepa a quién atender primero, cada alerta lleva ahora datos de prioridad:
+
+- **Botón «Necesito ayuda urgente»** en la pantalla de alerta (debajo del aviso del centro, antes de «Llamar al 123»). Un toque marca la alerta como urgente; aparece «Pidió ayuda urgente» con la opción «Ya no es urgente».
+- **Caída detectada:** si la alerta se activó porque la persona no respondió «¿Está bien?», se marca como **caída sin respuesta** (posible inconsciencia). Si tocó «Pedir ayuda ahora», se marca como **urgente**.
+- **Modo atrapado y batería:** la app informa si la persona está en modo atrapado y su porcentaje de batería (cuando cambia).
+- **En el panel:** cada tarjeta de «Alertas activas» muestra insignias (🆘 *Pidió ayuda urgente*, *Caída detectada · no respondió*, *Modo atrapado*, 🔋 *Batería 14 %*), y el tipo (sismo u otra emergencia) sigue a la vista. El orden pone primero las **urgentes**, luego **caídas sin respuesta**, luego **atrapados o con batería ≤ 20 %**. Hay **filtros por criticidad** con conteo (Todas, Urgentes, Caída sin respuesta, Atrapados o batería ≤ 20 %, Sin atender, Simulacros). Cuando alguien pide ayuda urgente llega un aviso al instante (también en un evento masivo), su tarjeta queda resaltada en rojo y su punto late más rápido en el mapa.
+- **Datos:** seis columnas nuevas en `sismo_alertas_usuarios` (`es_urgente`, `fecha_urgente`, `caida_sin_respuesta`, `modo_atrapado`, `nivel_bateria`, `fecha_bateria`) con un script idempotente (`2026-11-05-sismo-prioridad-alertas.sql`). Si aún no se ejecutó, la API y el panel siguen funcionando sin esos datos.
+
+### 2.28 Registro: 5.º paso «Protección» (opcional)
+
+Al final del registro hay un paso más para elegir qué dejar activo: señal sonora, señal visual, vibración SOS, **detección de caídas** y el **ahorro de batería en la alerta**. Es opcional (se puede finalizar sin cambiar nada) y todo se puede cambiar después en Configuración. Además, el encabezado del registro ahora se lee bien (antes tenía texto oscuro sobre el fondo azul).
+
+### 2.29 Inicio: tarjetas que avisan qué falta
+
+Las tarjetas de acceso rápido de Inicio se resaltan según lo que le falta a la persona para estar preparada:
+
+- **Amarillo (pendiente):** mochila vacía o sin revisar, sin ficha médica, sin simulacro hecho, sin punto de encuentro (tarjeta de la brújula) y «Después del sismo» incompleto tras el último sismo real (por ejemplo «Pendiente tras el sismo del 4/11/2026 (3/11)»; al tocarla abre la lista de esa alerta).
+- **Rojo (urgente):** algo de la mochila vencido o por vencer, con el nombre: «Vencido: Agua potable · Se vence pronto: Pilas».
+- Los datos obligatorios del registro (contactos y ubicación) siguen en rojo como antes.
+- Se calcula con los datos del teléfono, que son los mismos que se guardan en la base de datos: funciona también sin internet. La lógica tiene pruebas unitarias (`homeAttention.test.ts`).
 
 ## 3. Decisiones de diseño
 
@@ -444,7 +504,7 @@ screenshots/<primera|segunda>_entrega/AAAA-MM-DD/
 
 **Nombres:** `NN-descripcion-corta.png` (número de orden de dos dígitos y descripción en minúsculas separada con guiones). Cada archivo aparece abajo con lo que muestra. Las de pantalla web y de código se generan con `npm run screenshots` (app real compilada, con datos ficticios); las de Android, en el emulador con el APK de depuración.
 
-**Diagramas:** `screenshots/segunda_entrega/diagramas/` (sin fecha, se actualiza con cada cambio de la base de datos). `BASE_DE_DATOS_SISMO.md` es el diccionario de datos del backend: diagrama entidad-relación (Mermaid; GitHub lo dibuja), las 12 tablas `sismo_*` con cada columna, tipo, si admite nulos, valor por defecto y descripción, índices, valores iniciales de catálogos y parámetros, y dónde quedan los datos personales y cómo se protegen.
+**Diagramas:** `screenshots/segunda_entrega/diagramas/` (sin fecha, se actualiza con cada cambio de la base de datos). `BASE_DE_DATOS_SISMO.md` es el diccionario de datos del backend: diagrama entidad-relación (Mermaid; GitHub lo dibuja), las 13 tablas `sismo_*` con cada columna, tipo, si admite nulos, valor por defecto y descripción, índices, valores iniciales de catálogos y parámetros, y dónde quedan los datos personales y cómo se protegen.
 
 **Documentación gráfica:** `screenshots/segunda_entrega/diagramas/DIAGRAMAS.md` es el índice de **33 diagramas**, cada uno en su propia imagen PNG y construido a partir del código real. Cuando una función la usan roles distintos (persona usuaria, operador del centro de monitoreo, visitante), hay un diagrama por rol.
 - **UML y funcionales:** casos de uso, actividades, secuencia, clases, estados y flujo de procesos.
@@ -454,7 +514,7 @@ screenshots/<primera|segunda>_entrega/AAAA-MM-DD/
 
 El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). La planificación va del 6 de octubre al 11 de diciembre de 2026 (49 días hábiles, 5 fases). Lo hecho respeta las entregas reales (23/10, 02/11 y 04/11) y lo que falta queda como plan de noviembre y diciembre. La ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/segunda_entrega/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
 
-**Documentación técnica y funcional:** `screenshots/segunda_entrega/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (125) y registro de cambios y versiones (1.0 a 3.1).
+**Documentación técnica y funcional:** `screenshots/segunda_entrega/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (162) y registro de cambios y versiones (0.1 a 3.2, alineado con la planificación).
 
 ### 7.1 Carpeta `screenshots/primera_entrega/2026-10-24/` (primera versión)
 
@@ -626,4 +686,63 @@ Capturas con **datos ficticios** (nombres «Demo», teléfonos de prueba y corre
 | `10-sismos-recientes-usgs.png` | Modelo: sismos de 24 h y 7 días desde el USGS con caché de 5 minutos |
 | `11-panel-endpoints.png` | Controlador del panel: datos, detalle de la persona, ayuda y código de recuperación |
 | `12-panel-tiempo-real-y-loader.png` | Vista del panel: consultas con loader y actualización silenciosa |
+
+### 7.4 Carpeta `screenshots/segunda_entrega/2026-11-05/` (versión 3.2: editor y plantillas, prioridad de alertas, evento masivo, sismos con gráfica y mapa)
+
+**`visual/visual_front/`** (app, 390×844):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-sismos-grafica-de-picos.png` | Gráfica de picos tipo sismógrafo con el detalle de un sismo y la etiqueta del más fuerte (tema oscuro) (§2.24) |
+| `02-sismos-mapa-con-ondas.png` | Mapa de sismos: puntos más grandes y con más ondas entre más intenso el sismo (§2.24) |
+| `03-aviso-de-alerta-activa-en-otra-pantalla.png` | Aviso rojo fijo «Tiene una alerta SOS activa» en la pantalla de Ubicación (§2.26) |
+| `04-estoy-a-salvo-fijo-abajo.png` | «Estoy a salvo · Finalizar alerta» fijo en la parte inferior con scroll (§2.26) |
+| `05-registro-5-proteccion.png` | 5.º paso del registro, «Protección»: señales, detección de caídas y ahorro de batería (§2.28) |
+| `06-alerta-boton-necesito-ayuda-urgente.png` | Botón «Necesito ayuda urgente» en la pantalla de alerta (§2.27) |
+| `07-alerta-ayuda-urgente-solicitada.png` | Estado «Pidió ayuda urgente» con «Ya no es urgente» (§2.27) |
+| `08-inicio-tarjetas-por-atender.png` | Inicio con tarjetas en amarillo (pendiente) y la mochila en rojo con lo vencido y lo que se vence pronto (§2.29) |
+
+**`visual/visual_back/`** (panel administrativo, 1440×900, tema oscuro):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-panel-brindar-ayuda-con-plantilla.png` | «Brindar ayuda» con el editor de texto enriquecido: plantilla «Ayuda en camino» con el nombre ya reemplazado y una línea en negrilla agregada por el operador (§2.23) |
+| `02-panel-catalogos-mensajes-de-ayuda.png` | Pestaña «Mensajes de ayuda»: plantillas generales y por estado, con su formato y comodines (§2.23) |
+| `03-panel-editar-plantilla-de-mensaje.png` | Agregar una plantilla: editor enriquecido, comodines para hacer clic o arrastrar y vista previa con datos de ejemplo (§2.23) |
+| `04-panel-sismos-grafica-de-picos.png` | Panel, pestaña «Sismos recientes»: gráfica de picos (§2.24) |
+| `05-panel-sismos-mapa-con-ondas.png` | Panel: mapa de sismos con puntos que palpitan según la magnitud, sobre la tabla (§2.24) |
+| `06-panel-evento-masivo.png` | Panel en un evento masivo simulado (10 alertas): banner con conteo y «sin atender», lista en orden de triaje (§2.25) |
+| `07-panel-prioridad-de-alertas.png` | Insignias de prioridad (urgente, caída sin respuesta, atrapado, batería), orden por criticidad y filtro «Urgentes» (§2.27) |
+| `08-panel-filtros-por-criticidad.png` | Filtros por criticidad con conteo sobre «Alertas activas» (§2.27) |
+| `09-pagina-informativa-actualizada.png` | Página informativa completa con lo nuevo: prioridad, preparación, sismos con gráfica y mensajes con formato (§2.22) |
+
+**`codigo/codigo_front/`** (código real del repositorio de la app):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-limpiador-texto-enriquecido.png` | `richText.ts`: lista blanca del mensaje del centro de monitoreo, sin depender del DOM (§2.23) |
+| `02-mensaje-con-formato.png` | `RichText.tsx`: el mensaje se ve con el mismo formato del editor (§2.23) |
+| `03-boton-ayuda-urgente.png` | `AlertPage.tsx`: modo atrapado, batería y «Necesito ayuda urgente» viajan con la alerta (§2.27) |
+| `04-caida-urgente-o-sin-respuesta.png` | `FallDetector.tsx`: «Pedir ayuda ahora» = urgente; sin respuesta = caída sin respuesta (§2.27) |
+| `05-prioridad-en-el-estado.png` | `AppStateProvider.tsx`: actualización de la prioridad de la alerta activa (§2.27) |
+| `06-aviso-alerta-activa.png` | `ActiveAlertBanner.tsx`: aviso fijo de alerta activa en cualquier pantalla (§2.26) |
+| `07-inicio-que-avisa-que-falta.png` | `homeAttention.ts`: estados amarillo y rojo de las tarjetas de Inicio (§2.29) |
+| `08-grafica-de-picos-calculo.png` | `quakeViz.ts`: intensidad, tamaño del punto, ondas y posiciones de la gráfica de picos (§2.24) |
+| `09-mapa-de-sismos-con-ondas.png` | `QuakeMap.tsx`: puntos que palpitan según la magnitud (§2.24) |
+| `10-registro-paso-proteccion.png` | `SetupPage.tsx`: 5.º paso «Protección» (§2.28) |
+
+**`codigo/codigo_back/`** (código real del backend):
+
+| Archivo | Qué muestra |
+|---|---|
+| `01-limpieza-html-servidor.png` | `Html_seguro.php`: lista blanca del texto enriquecido en el servidor (§2.23) |
+| `02-tabla-plantillas.png` | SQL de `sismo_plantillas_atenciones` y mensajes en `VARCHAR(3000)` (§2.23) |
+| `03-columnas-de-prioridad.png` | SQL idempotente de las columnas de prioridad (§2.27) |
+| `04-guardar-plantilla-y-mensaje.png` | `Sismo_admin.php`: `plantilla_guardar` y mensaje enriquecido seguro (§2.23) |
+| `05-api-prioridad-de-la-alerta.png` | `Sismo.php`: la API recibe urgente, caída, modo atrapado y batería (§2.27) |
+| `06-pulso-del-panel.png` | `Sismo_model.php`: huella liviana para el pulso de 3 s (§2.23) |
+| `07-editor-y-comodines.png` | `panel.php`: editor Quill local y comodines por clic o arrastre (§2.23) |
+| `08-evento-masivo.png` | `panel.php`: avisos agrupados en un sismo con muchas alertas (§2.25) |
+| `09-prioridad-y-filtros.png` | `panel.php`: filtros por criticidad y orden de triaje (§2.27) |
+| `10-pulso-casi-tiempo-real.png` | `panel.php`: pulso cada 3 s y descarga solo si cambió (§2.23) |
 

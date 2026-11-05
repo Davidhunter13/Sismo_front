@@ -3,9 +3,12 @@
 
 const es = {
   title: 'Registro',
-  intro: 'Complete estos 4 pasos para que SISMO pueda avisar a sus contactos. Todos son obligatorios.',
+  intro: 'Complete estos pasos para que SISMO pueda avisar a sus contactos. Los 4 primeros son obligatorios; el último es opcional.',
+  signalsTitle: 'Señales durante la alerta',
   stepOf: (n: number, total: number) => `Paso ${n} de ${total}`,
-  steps: { name: 'Su nombre', location: 'Ubicación actual', meeting: 'Punto de encuentro', contact: 'Contacto de confianza' },
+  steps: { name: 'Su nombre', location: 'Ubicación actual', meeting: 'Punto de encuentro', contact: 'Contacto de confianza', protection: 'Protección' },
+  protectionHint: 'Elija qué quiere dejar activo durante una alerta. Puede dejar todo como está.',
+  protectionLater: 'Puede cambiar estas opciones cuando quiera en Configuración.',
   nameHint: 'Aparece en los mensajes que reciben sus contactos.',
   locationHint: 'Autorice la ubicación del dispositivo. Se usa para el enlace de los mensajes y para la ruta al punto de encuentro.',
   locationButton: 'Obtener mi ubicación',
@@ -25,9 +28,12 @@ const es = {
 
 const en: typeof es = {
   title: 'Sign-up',
-  intro: 'Complete these 4 steps so SISMO can notify your contacts. All of them are required.',
+  intro: 'Complete these steps so SISMO can notify your contacts. The first 4 are required; the last one is optional.',
+  signalsTitle: 'Signals during the alert',
   stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
-  steps: { name: 'Your name', location: 'Current location', meeting: 'Meeting point', contact: 'Trusted contact' },
+  steps: { name: 'Your name', location: 'Current location', meeting: 'Meeting point', contact: 'Trusted contact', protection: 'Protection' },
+  protectionHint: 'Choose what you want turned on during an alert. You can leave everything as it is.',
+  protectionLater: 'You can change these options at any time in Settings.',
   nameHint: 'It appears in the messages your contacts receive.',
   locationHint: 'Allow device location. It is used for the link in the messages and for the route to the meeting point.',
   locationButton: 'Get my location',

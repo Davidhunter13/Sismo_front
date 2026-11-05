@@ -8,6 +8,8 @@ flowchart LR
     UC2a(["Elegir tipo de evento"])
     UC2b(["Emitir señales locales<br/>(sirena, linterna, vibración)"])
     UC2c(["Registrar y actualizar ubicación"])
+    UC2d(["Pedir ayuda urgente<br/>(prioridad en el panel)"])
+    UC2e(["Informar batería y modo atrapado"])
     UC3(["Enviar correo de alerta a contactos"])
     UC4(["Enviar SMS o WhatsApp a contactos"])
     UC5(["Llamar a la línea de emergencias"])
@@ -36,6 +38,8 @@ flowchart LR
 
   P --- UC1
   P --- UC2
+  UC2d -. «extend» .-> UC2
+  UC2 -. «include» .-> UC2e
   P --- UC4
   P --- UC5
   P --- UC6

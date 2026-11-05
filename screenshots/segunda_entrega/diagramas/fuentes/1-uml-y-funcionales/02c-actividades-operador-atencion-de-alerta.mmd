@@ -4,7 +4,7 @@ flowchart TD
   A --> B{"¿Sesión iniciada y<br/>correo autorizado?"}
   B -- No --> X["Ir a iniciar sesión /<br/>acceso restringido"] --> F0((◉)):::fin
   B -- Sí --> C["Cargar indicadores, alertas activas,<br/>mapa, historial y usuarios"]
-  C --> D["Actualización silenciosa cada 1 min"]
+  C --> D["Pulso cada 3 s: si algo cambió,<br/>actualización silenciosa al instante"]
   D --> E{"¿Nueva alerta activa?"}
   E -- No --> D
   E -- Sí --> F["Banner SOS, sonido y notificación<br/>(si los avisos están activos)"]

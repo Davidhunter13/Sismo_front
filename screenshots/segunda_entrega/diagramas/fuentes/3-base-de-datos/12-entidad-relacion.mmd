@@ -9,6 +9,7 @@ erDiagram
   sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
   sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe"
   operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
+  sismo_plantillas_atenciones }o..o{ sismo_atenciones_alertas : "sugiere el mensaje (por estado, sin FK)"
   sismo_usuarios {
     entero id PK
     texto uuid_dispositivo
@@ -87,6 +88,12 @@ erDiagram
     entero id PK
     texto clave
     texto valor
+  }
+  sismo_plantillas_atenciones {
+    entero id PK
+    texto estado
+    texto titulo
+    texto mensaje
   }
   operadores_panel {
     entero id PK
