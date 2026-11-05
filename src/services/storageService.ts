@@ -1,11 +1,13 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import type { AlertRecord, AppData, MeetingPoint, Settings } from '../types';
 import { normalizePostQuake } from './catalogService';
+import { devOrProd } from '../utils/env';
 
 const STORAGE_KEY = 'sismo:v1:data';
 
 export const defaultSettings: Settings = {
-  userName: 'Usuario demo',
+  // En producción no aparece «demo» en ningún texto (ver utils/env).
+  userName: devOrProd('Usuario demo', 'Usuario'),
   soundEnabled: true,
   visualSignalEnabled: true,
   vibrationEnabled: true,

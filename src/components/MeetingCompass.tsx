@@ -3,6 +3,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Compass } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n/useT';
+import { recordAction } from '../services/badgeService';
 import { bearingDeg, cardinal, watchHeading } from '../services/compassService';
 import { distanceKm } from '../services/quakeService';
 import type { MeetingPoint } from '../types';
@@ -45,6 +46,12 @@ export function MeetingCompass({ meetingPoint, fallback = null }: Props) {
   }, [meetingPoint]);
 
   useEffect(() => (meetingPoint ? watchHeading(setHeading) : undefined), [meetingPoint]);
+
+  // Insignias: la brújula está guiando hacia un punto (como máximo una vez por hora, ver badgeService).
+  const guiding = !!meetingPoint && !!position;
+  useEffect(() => {
+    if (guiding) recordAction('ver_brujula');
+  }, [guiding]);
 
   if (!meetingPoint) {
     return <p className="small muted">{t.noMeeting}</p>;

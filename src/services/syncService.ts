@@ -1,6 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import type { AppData } from '../types';
 import { createEmptyData } from './storageService';
+import { DEMO_ENABLED } from '../utils/env';
 
 /**
  * Sincronización con el backend (API REST en CodeIgniter 3, ver docs/segunda_entrega/BACKEND_Y_SINCRONIZACION.md).
@@ -35,9 +36,25 @@ const RETRY_EVERY_MS = 60_000;
 /** Reintentos inmediatos ante 429/5xx/red (espera exponencial 1 s, 2 s, 4 s); después espera al siguiente ciclo. */
 const RETRIES = 3;
 
+/**
+ * URL del API para las pruebas de interfaz (Playwright la fija con addInitScript y simula el servidor con
+ * page.route). Solo se lee en compilaciones con el modo de demostración habilitado (desarrollo y pruebas); en
+ * producción no existe.
+ */
+export const TEST_API_KEY = 'sismo:v1:api_pruebas';
+
+function testApiOverride(): string | null {
+  if (!DEMO_ENABLED) return null;
+  try {
+    return localStorage.getItem(TEST_API_KEY);
+  } catch {
+    return null;
+  }
+}
+
 /** URL base del API, o null si no está configurada (la app funciona igual, solo en el teléfono). */
 export function syncEndpoint(): string | null {
-  const url = (import.meta.env.VITE_SISMO_API_URL as string | undefined)?.trim();
+  const url = (testApiOverride() ?? (import.meta.env.VITE_SISMO_API_URL as string | undefined))?.trim();
   return url ? url.replace(/\/+$/, '') : null;
 }
 
@@ -385,6 +402,17 @@ export async function fetchHelpStatus(): Promise<HelpStatus | null> {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * El servidor rechazó el token (401: revocado, cuenta eliminada o base reiniciada) en un servicio que llama al API
+ * directamente (insignias, foto): se olvida y se registra de nuevo, igual que hace flush ante un 401, y se resube
+ * todo lo del teléfono.
+ */
+export async function reRegisterDevice(): Promise<void> {
+  if (flushing) await flushing.catch(() => undefined);
+  write(DEVICE_KEY, null);
+  await flush();
 }
 
 /** Token del dispositivo registrado, o null (sin registrar). Lo usan servicios que llaman al API directamente. */

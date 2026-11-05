@@ -2,7 +2,7 @@
 
 # SISMO — Avances de la tercera entrega
 
-**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.3 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
+**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.4 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
 
 Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshots/tercera_entrega/`. Cuando un diagrama o un documento cambia, se copia el de la segunda entrega como base y se actualiza la copia (los de la segunda entrega no se tocan); en la sección 4 se explica qué cambió y por qué. Lo anterior está en [`../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md`](../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
@@ -21,6 +21,9 @@ Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshot
 | Control | — | Un envío por alerta y tipo (la ubicación, uno cada 15 min), nada en simulacros, límites por hora y **bitácoras** sin direcciones |
 | Inicio de la app | «Canal digital: SMS» | **«SMS y WhatsApp (manual)»** y **«Correo a contactos (automático)»** con su estado real |
 | Página informativa | El correo figuraba como pendiente | Sección **«Cómo avisa a sus contactos»** con lo que ya funciona y el correo en un teléfono |
+| **Plus: insignias** | — (no estaba en el plan) | **100 insignias automáticas** (secretas, con fechas y con vencimiento), Mis insignias, «Perfil completado» y su administración en el panel |
+| **Foto de perfil** | — | Tomar o elegir la foto; se guarda en el bucket, se ve en la app, en el panel y **en los correos** |
+| Producción | Textos de «demostración» visibles | En producción **no aparece nada de demo**; «Borrar todos los datos» solo en desarrollo |
 
 ---
 
@@ -76,11 +79,42 @@ Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshot
 
 ### 2.9 Página informativa
 
+- **Insignias y foto de perfil** en la página: bloque «Una cara para reconocerla» (ilustración sin dispositivos) y la sección **«Un plus: insignias que invitan a prepararse»** más abajo, con Mis insignias e insignias reales flotando.
+- **Menos repetición visual:** no todo va en portátil y teléfono; hay ilustraciones, recortes de pantalla, un portátil solo con etiquetas y un teléfono con la brújula en círculo.
+- **Imagen al compartir el enlace** renovada: portátil con el panel y teléfono con la alerta activa.
 - La sección que antes decía «Lo que aún está pendiente» ahora es **«Cómo avisa a sus contactos · Qué se envía solo y qué confirma la persona»**, con fondo neutro y partículas como el resto: SMS y WhatsApp «Hoy: manual», correos automáticos «Ya funciona» y ubicación actualizada por correo «Ya funciona», y un bloque «Así llega el correo» con el correo en un portátil y en un teléfono que flota.
 - **Imágenes actualizadas con la tercera entrega:** alerta activa con «Necesito ayuda urgente», canales con el correo «Enviado», aviso del centro con mensaje con formato, panel con el editor, con prioridad y filtros, y en evento masivo. La portada dice que SISMO «avisa por correo a sus contactos».
 - En la app, la pantalla de alerta cambia «Canal digital» por **«SMS y WhatsApp (manual)»** («SMS sin enviar» mientras no se envíe) y el correo enviado se muestra como **«Enviado»**.
 
-### 2.10 Seguridad y control
+### 2.10 Plus: insignias para motivar el uso de la app
+
+Las insignias **no estaban en el plan**: se agregaron como un plus para que la gente use la app, se prepare y practique (sin convertir la emergencia en un juego).
+
+- **Se ganan solas** (no hay insignias manuales: asignarlas a mano sería una carga para los operadores) al terminar el registro, agregar contactos y puntos de encuentro, llenar la ficha médica, armar y revisar la mochila, poner la foto, hacer simulacros (y hacerlos rápido, de noche o el fin de semana), abrir la app varios días o seguidos, usar la brújula y la ruta, leer la guía, marcar «Estoy a salvo», responder la encuesta, etc. **Las alertas reales no dan insignias.**
+- **Reglas dinámicas** que el panel configura: cantidad, periodo, días seguidos, franja horaria, días de la semana, tiempo máximo del simulacro, porcentaje del perfil y metas («gana 25 insignias», «todas las de la mochila»).
+- **Secretas** (solo se ve una pista), **con fechas** (solo se ganan entre dos fechas, p. ej. diciembre) y **con vencimiento** (p. ej. «Mochila al día» dura 180 días y se puede volver a ganar).
+- **100 insignias iniciales** con imagen propia: forma según el nivel (bronce, plata, oro, diamante, especial), colores de SISMO y marcas de la regla.
+- **App:** página **Mis insignias** (ganadas, por ganar con su avance, secretas y vencidas), tarjetas **«Perfil completado»** (porcentaje y qué falta) y **«Mis insignias»** en Inicio, y el aviso **«¡Ganaste una insignia!»**, que **nunca aparece con una alerta activa** para no distraer a la persona: queda en cola y se muestra al terminar.
+- **Sin internet:** lo que hace la persona queda guardado en el teléfono con su hora y se envía al reconectar (hasta 30 días atrás).
+- **Aviso centrado con dos botones:** «Siguiente/Continuar» y **«Ver mis insignias»**, que cierra todos los avisos en cola y lleva a la página. En Mis insignias nunca sale el aviso: las que se ganen quedan con la marca **«Nueva»** (primero en la lista, con contador en la pestaña y en la tarjeta de Inicio) hasta que se ven.
+- **Panel:** tarjeta «Insignias de la app» con filtros, editor que muestra solo los campos de cada tipo de regla, ganadores, activar o desactivar y auditoría. Las imágenes nuevas quedan en el servidor hasta presionar **«Subir a bucket»**, que las sube a `sismo/insignias/`, verifica que llegaron iguales y **las borra del servidor**.
+- **Rendimiento:** la evaluación trae toda la actividad de la persona en 2 consultas por petición; con 100 insignias y la base de datos remota pasó de ~17 s a menos de 1 s.
+
+### 2.11 Foto de perfil
+
+- En **Configuración → Perfil**: **Tomar foto**, **Elegir de la galería** o **Quitar foto**, con el aviso «Su foto la verán el centro de monitoreo y sus contactos en los correos de alerta».
+- La app la reduce a 512 px; el servidor valida el tipo real, la recorta, le quita los metadatos (como la ubicación del EXIF) y la guarda en el **bucket** `sismo/perfil/` sin dejar copia en el servidor.
+- Se muestra con **URL firmada de 15 minutos**: la app y el panel piden otra cuando vence (nunca hay una URL pública).
+- **Sin internet** queda «pendiente de subir» y se sube sola al reconectar.
+- Se ve en la app, en el **detalle de la persona**, en las **tarjetas de alerta** y en la **tabla de usuarios** del panel, y va **incrustada en los correos** a los contactos para que reconozcan a la persona.
+- Da la insignia «Cara conocida» y suma al perfil completado. Al eliminar la cuenta se borra del bucket.
+
+### 2.12 Producción sin «demostración»
+
+- En producción no aparece ningún texto de demo: «Perfil de demostración» pasa a **«Perfil»** y la tarjeta «Limitaciones del prototipo» se actualizó con lo que ya funciona (correo automático, respaldo en el servidor, foto).
+- **«Borrar todos los datos»** solo aparece en desarrollo; en producción está «Eliminar mi cuenta».
+
+### 2.13 Seguridad y control
 
 - **Destinatarios solo desde la base de datos**: el servicio no se puede usar para escribir a cualquier dirección.
 - Un envío por alerta y tipo (la ubicación, uno cada 15 min), nada en simulacros, máximo 8 correos automáticos por persona y hora, y 10 del centro de monitoreo por persona y hora.
@@ -99,7 +133,12 @@ Script idempotente `2026-11-05-sismo-correos-alertas.sql` (se ejecuta después d
 - Nueva tabla `sismo_correos_operador`: correos del centro de monitoreo a los contactos.
 - `sismo_plantillas_atenciones.estado` admite **«contactos»**, con 6 plantillas iniciales.
 
-En total, **15 tablas**. Si el script aún no se ejecutó, la API responde `correo_no_disponible` y la app muestra «sin servidor»; el resto sigue funcionando.
+Script idempotente `2026-11-05-sismo-insignias.sql` y semilla `2026-11-05-sismo-insignias-iniciales.sql` (100 insignias; se puede repetir y actualiza las reglas por nombre):
+
+- `sismo_usuarios.foto`: ruta de la foto en el bucket.
+- `sismo_insignias` (catálogo y regla), `sismo_usuarios_insignias` (ganadas, con vencimiento y aviso pendiente), `sismo_acciones_usuarios` (lo que hace la persona, máximo una fila por hora, sin datos personales) y `sismo_insignias_auditoria`.
+
+En total, **19 tablas**. Si el script aún no se ejecutó, la API responde `correo_no_disponible` y la app muestra «sin servidor»; el resto sigue funcionando.
 
 ---
 
@@ -109,20 +148,22 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 
 | Diagrama o documento | Por qué cambió |
 |---|---|
-| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos y marcar el contacto principal del correo |
-| `01b` Casos de uso del operador | Nuevos casos: enviar correo a los contactos de la persona y ver los correos enviados |
+| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos, marcar el contacto principal, poner foto de perfil, ganar insignias y ver Mis insignias |
+| `01b` Casos de uso del operador | Nuevos casos: enviar correo a los contactos, ver los correos enviados, administrar insignias, subirlas al bucket y ver foto, insignias y perfil |
 | `02b` Actividades: alerta SOS y correo | El correo se pide al API (alarma o caída), con sus respuestas y los avisos por urgente, atrapado y batería |
 | `03a` Secuencia: alerta SOS y correo | Nuevo recorrido: app → API → modelo (destinatarios, bitácora, límite) → librería `Sismo_correo` → servicio de correo |
 | `03e` Secuencia: correo del operador a los contactos (**nuevo**) | No existía: panel → `Sismo_admin` → lista blanca → modelo → `Sismo_correo` → servicio de correo |
-| `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, librerías `Sismo_correo` y `PHP_Mailer`, métodos de correo del modelo |
-| `12`, `13`, `14` Modelos de base de datos | Tablas `sismo_correos_alertas` y `sismo_correos_operador` (15 tablas) y columna `es_principal_correo` |
+| `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
+| `12`, `13`, `14` Modelos de base de datos | Bitácoras de correo, 4 tablas de insignias y columnas `es_principal_correo` y `foto` (19 tablas) |
 | `BASE_DE_DATOS_SISMO.md` | Mismas razones que los modelos, y el estado «contactos» de las plantillas |
-| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 (principal), 09 (control), 10 (correo del centro) y 11 (plantillas para contactos) |
+| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias) y RF-FP-01 a 05 (foto) |
 | 22 Diccionario de datos | Contrato del correo y dominios de valores (tipos de correo, estado «contactos») |
-| 23 API y endpoints | Nuevos `POST /correo_alerta/{id}` y `POST Sismo_admin/correo_contactos` |
-| 28 Registro de riesgos | R-18 (uso indebido del correo) y R-19 (token del servicio de correo) |
+| 23 API y endpoints | Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto` y los del panel (correo, insignias, foto) |
+| `03f` Secuencia: la persona gana insignias (**nuevo**) | No existía: acciones con cola sin internet → API → registrar y evaluar → aviso (en cola si hay alerta activa) |
+| `03g` Secuencia: foto de perfil (**nuevo**) | No existía: app → API → `Sismo_foto` → bucket `sismo/perfil/` → URL firmada → panel y correos |
+| 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta) y R-22 (rendimiento) |
 | 29 Evidencias visuales | Evidencias de la tercera entrega |
-| 30 Registro de cambios | Versión 3.3 |
+| 30 Registro de cambios | Versiones 3.3 (correo) y 3.4 (plus: insignias y foto) |
 
 ---
 
@@ -132,13 +173,17 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 - **El servidor decide los destinatarios:** evita que el API se use para enviar correos a direcciones arbitrarias.
 - **Un solo endpoint con tipos:** «activó la alarma» es el principal; caída, urgente, atrapado, batería y ubicación reutilizan el mismo endpoint con otro `tipo`.
 - **Ubicación sin cron:** se decide con cada ubicación que envía el teléfono; el servidor solo exige el intervalo.
+- **Insignias solo automáticas:** asignarlas a mano sería una carga para los operadores del centro de monitoreo.
+- **Nada de insignias durante una alerta:** el aviso queda en cola; las alertas reales no dan insignias.
+- **Foto en el bucket con URL firmada:** es un dato personal; nunca URL pública ni copia en el servidor. En los correos va incrustada porque una URL firmada vencería.
+- **Imágenes de insignias locales hasta «Subir a bucket»:** el operador decide cuándo publicarlas; al subirlas se verifica el MD5 y solo entonces se borran del servidor.
 - **Una librería para armar y enviar correos** (`Sismo_correo`): la usan el API de la app y el panel, así el diseño y el remitente son siempre iguales.
 
 ---
 
 ## 6. Limitaciones conocidas
 
-- **Envío real probado el 05/11:** los tipos «activó la alarma», ayuda urgente, modo atrapado y batería baja se enviaron a una cuenta de prueba de la organización con la librería de correo, la plantilla y los textos del API (datos ficticios, asunto «[PRUEBA]»); el servicio confirmó los cuatro envíos. Falta enviar de prueba la caída, la ubicación y el correo del centro (mismo mecanismo) y probar los endpoints completos en el servidor, que requiere crear allí `CORREO_SERVICIO_TOKEN` (actividad P).
+- **Envío real probado el 05/11:** los tipos «activó la alarma», ayuda urgente, modo atrapado y batería baja se enviaron a una cuenta de prueba de la organización con la librería de correo, la plantilla y los textos del API (datos ficticios, asunto «[PRUEBA]»); el servicio confirmó los cuatro envíos. Después se enviaron también la **caída sin respuesta**, la **ubicación actualizada** y el **correo del centro de monitoreo**, con la foto de perfil incrustada (datos ficticios): **los 7 tipos quedaron probados con envío real**. Falta probar los endpoints completos en el servidor de producción con su token configurado (actividad P).
 - **Logo en base64:** no se muestra en Gmail ni Outlook web (sí en Apple Mail, Outlook de escritorio y apps móviles). Alternativa: imagen publicada por URL.
 - **Token anterior:** versiones anteriores de la librería de correo tenían el token en el código; conviene rotarlo (riesgo R-19).
 - El correo depende de internet en el teléfono; sin red, la alerta local y los SMS siguen funcionando.
@@ -147,7 +192,7 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 
 ## 7. Evidencias
 
-Carpeta `screenshots/tercera_entrega/2026-11-05/` (**29 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
+Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
 
 **`visual/visual_front/`** (app, 390×844):
 
@@ -157,6 +202,13 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**29 evidencias**, datos fict
 | `02-formulario-contacto-principal-del-correo.png` | Formulario del contacto con «Contacto principal del correo» (§2.5) |
 | `03-alerta-correo-principales-y-copia-oculta.png` | Diálogo del correo al activar la alarma: principales y copia oculta (§2.1) |
 | `04-inicio-servicios-sms-manual-y-correo.png` | Disponibilidad de servicios con «SMS y WhatsApp (manual)» y «Correo a contactos (automático)» (§2.8) |
+| `05-mis-insignias-ganadas.png` | Mis insignias: foto, ganadas/total, contadores y ganadas con su vencimiento (§2.10) |
+| `06-mis-insignias-por-ganar.png` | Por ganar con su avance y una insignia con fecha límite (§2.10) |
+| `07-aviso-gano-insignia-ver-mis-insignias.png` | Aviso «¡Ganaste una insignia!» centrado, con «Siguiente» y «Ver mis insignias» (§2.10) |
+| `08-insignias-nuevas.png` | Mis insignias tras «Ver mis insignias»: marcas «Nueva» y contador en la pestaña (§2.10) |
+| `09-configuracion-foto-de-perfil.png` | Configuración → Perfil: tomar, elegir o quitar la foto y aviso de privacidad (§2.11) |
+| `10-configuracion-lo-que-debe-saber.png` | Producción: «Lo que debe saber» actualizado, sin textos de demostración (§2.12) |
+| `11-inicio-perfil-completado-y-mis-insignias.png` | Inicio: «Perfil completado» con lo que falta y «Mis insignias» (§2.10) |
 
 **`visual/visual_back/`** (correos y panel):
 
@@ -171,6 +223,9 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**29 evidencias**, datos fict
 | `07-correo-del-centro-de-monitoreo.png` | Correo del centro de monitoreo, franja azul (§2.6) |
 | `08-pagina-informativa-correos-automaticos.png` | Página informativa: «Cómo avisa a sus contactos» con el correo en portátil y teléfono (§2.9) |
 | `09-pagina-informativa-tercera-entrega.png` | Página informativa completa con las imágenes nuevas (ayuda urgente, canales con el correo «Enviado», panel con prioridad y editor) (§2.9) |
+| `10-panel-insignias.png` | Panel: tarjeta «Insignias de la app» con filtros, chips y «Subir a bucket» (§2.10) |
+| `11-panel-editor-insignia.png` | Panel: editor de insignia con los campos de su tipo de regla e imagen (§2.10) |
+| `12-panel-usuario-foto-insignias.png` | Panel: detalle de la persona con foto, perfil completado e insignias (§2.11) |
 
 **`codigo/codigo_front/`**:
 
@@ -183,6 +238,13 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**29 evidencias**, datos fict
 | `05-formulario-principal.png` | `ContactFormModal.tsx`: «Contacto principal del correo» |
 | `06-ubicacion-actualizada-por-correo.png` | `emailService.ts`: ¿toca enviar la ubicación? (200 m y 15 min) |
 | `07-servicios-sms-manual-y-correo.png` | `HomePage.tsx`: estado del correo en «Disponibilidad de servicios» |
+| `08-cola-de-insignias-sin-internet.png` | `badgeService.ts`: acciones en cola sin internet, máximo una por hora |
+| `09-acciones-desde-el-estado.png` | `badgeActions.ts`: lo que cambia en la app se vuelve acción de insignias |
+| `10-aviso-nunca-durante-una-alerta.png` | `badgeGate.ts`: el aviso nunca aparece con una alerta activa ni en simulacro |
+| `11-ver-mis-insignias-y-nuevas.png` | `badgeService.ts`: «Ver mis insignias» y marca «Nueva» |
+| `12-foto-reescalada-y-url-firmada.png` | `photoService.ts`: validar, reducir y renovar la URL firmada |
+| `13-perfil-completado.png` | `profileCompletion.ts`: los 7 puntos del perfil |
+| `14-produccion-sin-demo.png` | `env.ts`: en producción no aparece nada de demostración |
 
 **`codigo/codigo_back/`**:
 
@@ -197,15 +259,25 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**29 evidencias**, datos fict
 | `07-libreria-sismo-correo.png` | `Sismo_correo`: asunto, cuerpo y envío (API y panel) |
 | `08-api-correo-del-centro.png` | `POST Sismo_admin/correo_contactos` |
 | `09-panel-correo-a-contactos.png` | Panel: ventana del correo a los contactos |
+| `10-evaluar-insignias.png` | `Sismo_insignias_model`: evalúa y entrega (renueva las vencidas) |
+| `11-actividad-en-dos-consultas.png` | `Sismo_insignias_model`: toda la actividad en 2 consultas (rendimiento) |
+| `12-reglas-progreso-y-rachas.png` | `Sismo_insignias_reglas`: periodo deslizante y días seguidos |
+| `13-api-insignias.png` | `GET/POST sismo/insignias` con lista blanca |
+| `14-api-foto-de-perfil.png` | `GET/POST/DELETE sismo/foto` |
+| `15-foto-bucket-url-firmada.png` | `Sismo_foto`: sin metadatos, bucket `sismo/perfil/` y URL firmada |
+| `16-panel-subir-a-bucket.png` | «Subir a bucket»: verifica MD5 y solo entonces borra del servidor |
+| `17-sql-insignias.png` | Script SQL de las insignias (convención CCS) |
 
 ---
 
 ## 8. Estado de verificación
 
-- Pruebas unitarias: **145 de 145** (incluye `emailService`, `contactEmail` y la decisión de la ubicación por correo).
-- Pruebas e2e (celular y escritorio): **116 de 116** el 05/11 (incluye «correo: el primer contacto es el principal…» y los textos «SMS sin enviar» y «Enviado»).
-- Lint y tipos (`tsc -b`) sin errores; PHP sin errores de sintaxis.
-- API probada contra el servidor de desarrollo en los casos sin envío, y envío real de cuatro tipos de correo a una cuenta de prueba (§6).
+- Pruebas unitarias: **192 de 192** (27 archivos; incluye correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
+- Pruebas e2e (celular y escritorio): **130 de 130** el 05/11 (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
+- `eslint` y `tsc -b` sin errores; PHP sin errores de sintaxis.
+- API de insignias y foto probados contra el backend local con una cuenta de prueba que se eliminó al final (acciones inválidas → 422, sin token → 401, foto inválida → 422, foto subida y descargada con URL firmada).
+- Evaluación de 100 insignias: < 1 s por petición.
+- Envío real de los 7 tipos de correo a una cuenta de prueba.
 
 ---
 

@@ -8,6 +8,10 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertStatusCard } from '../components/AlertStatusCard';
 import { AppLayout } from '../components/AppLayout';
+import { Avatar } from '../components/Avatar';
+import { MyBadgesCard } from '../components/MyBadgesCard';
+import { ProfileCompletionCard } from '../components/ProfileCompletionCard';
+import { recordAction } from '../services/badgeService';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { HeaderCompass, MiniCompass } from '../components/MiniCompass';
 import { NetworkBanner } from '../components/NetworkBanner';
@@ -148,7 +152,10 @@ export default function HomePage() {
 
   // Elige el canal (SMS o WhatsApp por contacto) en lugar de depender del enlace SMS.
   const notifySafe = useNotifySafe();
-  const sendSafe = () => notifySafe();
+  const sendSafe = () => {
+    recordAction('avisar_bien');
+    notifySafe();
+  };
 
   const s = t.services;
   const sound: { tone: BadgeTone; status: string } = !isSirenSupported()
@@ -165,9 +172,14 @@ export default function HomePage() {
 
   return (
     <AppLayout title={t.title} headerExtra={compassVisible ? null : <HeaderCompass />}>
-      <section className="greeting">
-        <p className="muted capitalize">{formatLongDate()}</p>
-        <h1>{t.hello(settings.userName)}</h1>
+      <section className="greeting greeting--avatar">
+        <div>
+          <p className="muted capitalize">{formatLongDate()}</p>
+          <h1>{t.hello(settings.userName)}</h1>
+        </div>
+        <button className="greeting__avatar" onClick={() => router.push('/configuracion', 'forward')} aria-label={all.badges.photo.title}>
+          <Avatar name={settings.userName} size="md" />
+        </button>
       </section>
 
       <NetworkBanner />
@@ -221,6 +233,14 @@ export default function HomePage() {
           <p className="small">{reminderText}</p>
           <button className="btn btn--ghost btn--sm" onClick={() => router.push('/simulacro', 'forward')}>{rt.action}</button>
         </section>
+      )}
+
+      {/* Preparación: perfil completado (local, al instante) e insignias. Se ocultan durante una alerta. */}
+      {!activeAlert && (
+        <>
+          <ProfileCompletionCard />
+          <MyBadgesCard />
+        </>
       )}
 
       <section>

@@ -7,6 +7,9 @@ import type {
 import { setLang } from '../i18n';
 import { clearData, createEmptyData, loadData, newId, saveData } from '../services/storageService';
 import { queueChanges, startSync, type ServerState } from '../services/syncService';
+import { forgetBadges, recordAction, startBadges } from '../services/badgeService';
+import { badgeActionsFromDiff } from '../services/badgeActions';
+import { forgetPhoto } from '../services/photoService';
 import { ensureFirstRefresh, getCatalogs, normalizePostQuake, refreshCatalogs, useCatalogs } from '../services/catalogService';
 import { DEMO_ENABLED } from '../utils/env';
 import { demoAlerts, demoContacts } from '../services/demoData';
@@ -62,10 +65,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const skipSyncRef = useRef(false);
   useEffect(() => {
     if (skipSyncRef.current) skipSyncRef.current = false;
-    else queueChanges(prevDataRef.current, data);
+    else {
+      queueChanges(prevDataRef.current, data);
+      // Insignias: lo que hizo la persona (contactos, puntos, mochila, ajustes…), deducido del cambio.
+      for (const a of badgeActionsFromDiff(prevDataRef.current, data)) recordAction(a.clave, { elemento: a.elemento });
+    }
     prevDataRef.current = data;
   }, [data]);
   useEffect(() => startSync(() => dataRef.current), []);
+  // Insignias: ingreso del día, cola pendiente y descarga de las ganadas.
+  useEffect(() => startBadges(), []);
 
   // Catálogos administrables: se descargan al abrir y al recuperar la red; sin red se usa la última copia.
   // Suscribirse aquí vuelve a dibujar toda la app cuando llegan catálogos nuevos.
@@ -345,6 +354,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     stopAlertSignals();
     skipSyncRef.current = true; // la cuenta ya se borró en el servidor: no se encolan cambios
     clearData();
+    forgetBadges();
+    forgetPhoto();
     setData(createEmptyData());
   }, []);
 

@@ -3,6 +3,7 @@ import { IonInput, useIonToast } from '@ionic/react';
 import { CloudUpload, KeyRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAppState } from '../context/appContext';
+import { recordAction } from '../services/badgeService';
 import { useT } from '../i18n/useT';
 import { createRecoveryCode, pendingCount, recoverAccount, syncEnabled } from '../services/syncService';
 import { withLoader } from '../services/loaderService';
@@ -35,8 +36,10 @@ export function BackupCard() {
     setBusy('create');
     const result = await withLoader(createRecoveryCode());
     setBusy(null);
-    if (result) setCode(result);
-    else toast(t.codeError, 'danger');
+    if (result) {
+      setCode(result);
+      recordAction('respaldo');
+    } else toast(t.codeError, 'danger');
   };
 
   const recover = async () => {

@@ -1,0 +1,23 @@
+%% title: Diagrama de secuencia — Foto de perfil (app, backend y bucket) · tercera entrega
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant A as App SISMO
+  participant API as Backend · Sismo::foto
+  participant F as Sismo_foto
+  participant B as Bucket · sismo/perfil/
+  participant PN as Panel / correos
+  P->>A: Configuración → Perfil → Tomar o elegir foto
+  A->>A: Reduce a 512 px JPEG (canvas)
+  A->>API: POST /foto {imagen base64} (máx. 2 MB)
+  API->>F: normalizar(): tipo real, recorte cuadrado, sin metadatos
+  F->>B: subir() y verificar MD5 (sin copia local)
+  API->>API: Guarda la ruta en sismo_usuarios.foto y borra la anterior
+  API-->>A: {url firmada, expira en 15 min}
+  Note over A,PN: Al vencer, la app y el panel piden otra URL (GET /foto, Sismo_admin/foto/{id})
+  PN->>API: Detalle de la persona / alerta
+  API->>F: url() firmada
+  F-->>PN: Foto en el panel
+  PN->>F: Correo a contactos: para_correo()
+  F->>B: descargar()
+  F-->>PN: Foto reducida en base64 dentro del correo

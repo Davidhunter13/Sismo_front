@@ -32,6 +32,9 @@ flowchart LR
     UC20(["Crear código de recuperación"])
     UC21(["Recuperar datos en un teléfono nuevo"])
     UC22(["Eliminar mi cuenta"])
+    UC23(["Poner foto de perfil<br/>(tomar o elegir; se guarda en el bucket)"])
+    UC24(["Ganar insignias<br/>(se ganan solas al prepararse y practicar)"])
+    UC25(["Ver Mis insignias y Perfil completado<br/>(ganadas, por ganar, secretas, vencidas)"])
   end
   C["«actor»<br/><b>Contacto de emergencia</b>"]:::actor
   R["«actor»<br/><b>Rescatista</b>"]:::actor
@@ -63,6 +66,10 @@ flowchart LR
   P --- UC20
   P --- UC21
   P --- UC22
+  P --- UC23
+  P --- UC25
+  UC24 -. «extend» .-> UC25
+  UC23 -. «include» .-> UC24
   UC2 -. «include» .-> UC2a
   UC2 -. «include» .-> UC2b
   UC2 -. «include» .-> UC2c

@@ -10,6 +10,12 @@ export const formatTime = (iso: string) =>
 export const formatLongDate = (d = new Date()) =>
   new Intl.DateTimeFormat(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(d);
 export const formatCoord = (n: number) => n.toFixed(5);
+/** Fecha corta (día, mes y año). «AAAA-MM-DD» se toma como fecha local (sin correrse un día por la zona horaria). */
+export function formatShortDate(value: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(getLocale(), { dateStyle: 'medium' }).format(d);
+}
 
 /** Nombre del tipo de evento (catálogo) en el idioma activo; se lee en el momento de usarse. */
 export const eventTypeLabel = new Proxy({} as Record<string, string>, {

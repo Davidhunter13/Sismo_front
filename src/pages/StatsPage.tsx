@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { useRecordOnEnter } from '../components/useBadges';
 import { IonLabel, IonSegment, IonSegmentButton, useIonRouter, useIonToast } from '@ionic/react';
 import { BarChart3, ClipboardCheck, Download, Info } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -14,6 +15,7 @@ const METRICS: MetricKey[] = ['decision', 'siren', 'torch', 'vibration', 'sms', 
 
 /** Métricas de validación del prototipo, calculadas solo con alertas reales del dispositivo (sin datos de ejemplo). */
 export default function StatsPage() {
+  useRecordOnEnter('ver_estadisticas');
   const router = useIonRouter();
   const [presentToast] = useIonToast();
   const { data } = useAppState();

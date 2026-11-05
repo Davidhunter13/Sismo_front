@@ -28,6 +28,9 @@ Versión 1.0 · 4 de noviembre de 2026.
 | R-16 | El ambiente de desarrollo depende de un túnel a la base de datos en la nube | Operativo | 2 | 1 | **2 Bajo** | Documentado en el manual técnico; reiniciar el túnel si se congela | Desarrollo | Controlado |
 | R-17 | Código generado con IA aceptado sin revisión | Calidad / gobierno | 1 | 2 | **2 Bajo** | Política ODTI012: nota de transparencia, revisión humana, pruebas automáticas en CI | Desarrollo | Controlado |
 | R-18 | Uso del correo de alerta para enviar mensajes no deseados | Baja | Medio | Destinatarios solo desde los contactos guardados, token del teléfono, un envío por alerta y tipo, máximo 8 por hora y nada en simulacros | Mitigado |
+| R-20 | Exposición de la foto de perfil (dato personal) | Baja | Alto | Bucket privado, ruta `sismo/perfil/` sin copia en el servidor, solo URL firmada de 15 min (se pide otra al vencer), imagen reescalada y sin metadatos, se borra al quitarla o al eliminar la cuenta | Mitigado |
+| R-21 | Las insignias distraen durante una emergencia | Baja | Alto | El aviso «¡Ganaste una insignia!» nunca aparece con una alerta activa (queda en cola); las alertas reales no dan insignias | Mitigado |
+| R-22 | Evaluar las insignias hace lenta la sincronización | Media | Medio | Toda la actividad de la persona se trae en 2 consultas por petición e inserción en lote (de ~17 s a < 1 s con 100 insignias y la base de datos remota) | Mitigado |
 | R-19 | El token del servicio de correo queda expuesto | Media | Alto | Se lee de la variable de entorno `CORREO_SERVICIO_TOKEN`; las versiones anteriores de la librería lo tenían en el código: conviene rotarlo | Abierto |
 
 ## Mapa de calor

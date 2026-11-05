@@ -27,7 +27,28 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 
 ## Fase 3 · Backend y monitoreo (26/10 – 06/11)
 
-### [3.3] — 05/11 – 06/11 · Actividad L, adelanto de P · tercera entrega
+### [3.4] — 05/11 – 06/11 · Plus de la tercera entrega: insignias y foto de perfil
+
+Las insignias **no estaban en el plan**: se agregan como un plus para motivar el uso de la app (prepararse, practicar simulacros y volver a la app).
+
+#### Agregado
+- **Insignias dinámicas** (todas automáticas, sin asignación manual): reglas configurables (cantidad, periodo, días seguidos, franja horaria, días de la semana, tiempo del simulacro, porcentaje del perfil y metas), **secretas** con pista, **con fechas** y **con vencimiento** (se pueden volver a ganar).
+- **100 insignias iniciales** con imagen propia (forma por nivel, colores de SISMO) en un script idempotente.
+- **App:** página **Mis insignias** (ganadas, por ganar con progreso, secretas y vencidas), tarjetas **«Perfil completado»** y **«Mis insignias»** en Inicio y aviso **«¡Ganaste una insignia!»** que **nunca aparece con una alerta activa**. Las acciones se guardan sin internet y se envían al reconectar.
+- **Foto de perfil** en Configuración → Perfil (tomar, elegir o quitar), guardada en el bucket `sismo/perfil/` y mostrada con URL firmada de 15 min. Sin internet queda «pendiente de subir» y se sube sola al reconectar. Se ve en la app, en el panel (detalle, alertas y usuarios) y **en los correos a los contactos**.
+- **Panel:** tarjeta «Insignias de la app» (crear, editar, activar/desactivar, ganadores, auditoría) con imagen local hasta **«Subir a bucket»** (`sismo/insignias/`, verifica MD5 y borra la copia del servidor). Detalle de la persona con foto, perfil completado e insignias.
+- 4 tablas nuevas (`sismo_insignias`, `sismo_usuarios_insignias`, `sismo_acciones_usuarios`, `sismo_insignias_auditoria`) y columna `sismo_usuarios.foto`: **19 tablas**.
+
+#### Cambiado
+- **Producción sin «demostración»:** en producción no aparece ningún texto de demo; «Perfil de demostración» pasa a «Perfil», la tarjeta de limitaciones se actualiza con lo que ya funciona y «Borrar todos los datos» solo aparece en desarrollo.
+- La evaluación de insignias trae toda la actividad en 2 consultas (antes, una por insignia): de ~17 s a < 1 s.
+- Aviso «¡Ganaste una insignia!» centrado en la pantalla, con **«Ver mis insignias»**; en Mis insignias no aparece y las nuevas llevan la marca «Nueva» hasta verlas.
+- Página informativa: insignias (como plus) y foto de perfil, composiciones variadas e imagen nueva al compartir el enlace.
+
+#### Corregido
+- La app mostraba una copia vieja de las insignias si el almacenamiento del teléfono estaba lleno: ahora la última respuesta del servidor se guarda en memoria y la copia vieja se borra.
+- La app cortaba la petición de insignias a los 10 s y la reintentaba en bucle (resuelto con la evaluación en 2 consultas).
+
 
 #### Agregado
 - **Correo de alerta a los contactos por el API** (`POST sismo/correo_alerta/{id}`): el backend envía con el servicio de correo de la organización y el remitente «SISMO». Los destinatarios salen de los contactos guardados (nunca de la app).
@@ -48,7 +69,7 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 #### Seguridad
 - Un envío por alerta y tipo, nada en simulacros, máximo 8 correos por persona en una hora, mensaje escapado y bitácora sin direcciones de correo.
 
-**Probado el 05/11:** envío real de los cuatro tipos de correo a una cuenta de prueba (confirmado por el servicio).
+**Probado el 05/11:** envío real de los 7 tipos de correo (alarma, caída, urgente, atrapado, batería, ubicación y centro de monitoreo, con foto de perfil) a una cuenta de prueba, confirmado por el servicio.
 
 **Queda para la actividad P (16/11 – 20/11):** prueba del endpoint completo en producción (con la variable `CORREO_SERVICIO_TOKEN` configurada) y revisión en Gmail, Outlook y Apple Mail.
 

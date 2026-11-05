@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { devOrProd } from '../../utils/env';
 // Pantalla de bienvenida.
 
 const es = {
@@ -17,7 +18,7 @@ const es = {
   demoHint: 'Carga contactos e historial ficticios para explorar la app.',
   demoToggle: 'Cargar modo de demostración',
   start: 'Comenzar',
-  foot: 'Prototipo académico · Politécnico Grancolombiano',
+  foot: devOrProd('Prototipo académico · ', '') + 'Politécnico Grancolombiano',
 };
 
 const en: typeof es = {
@@ -36,7 +37,7 @@ const en: typeof es = {
   demoHint: 'Loads fictitious contacts and history to explore the app.',
   demoToggle: 'Load demo mode',
   start: 'Get started',
-  foot: 'Academic prototype · Politécnico Grancolombiano',
+  foot: devOrProd('Academic prototype · ', '') + 'Politécnico Grancolombiano',
 };
 
 export default { es, en };

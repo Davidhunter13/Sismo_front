@@ -19,8 +19,8 @@ classDiagram
     +recuperar()
     +atencion()
     +correo_alerta(id)
-    -asunto_correo()
-    -cuerpo_correo()
+    +insignias() GET/POST
+    +foto() GET/POST/DELETE
     +catalogos()
     +eliminar_cuenta()
   }
@@ -39,6 +39,12 @@ classDiagram
     +parametro_guardar()
     +plantilla_guardar()
     +correo_contactos()
+    +insignias()
+    +insignia_guardar()
+    +insignia_estado()
+    +insignia_ganadores(id)
+    +insignias_subir_bucket()
+    +foto(id)
   }
   class Sismo_info {
     <<Página pública>>
@@ -100,6 +106,36 @@ classDiagram
     +cuerpo_centro()
     +enviar(Para, CCO)
   }
+  class Sismo_insignias_model {
+    +registrar()
+    +evaluar()
+    +entregar()
+    +perfil()
+    +mis_insignias()
+    +catalogo()
+    +guardar()
+    +imagenes_locales()
+    +auditar()
+    +foto()
+  }
+  class Sismo_insignias_reglas {
+    <<librería>>
+    +ACCIONES / HECHOS
+    +progreso() racha y periodo
+    +validar()
+    +texto()
+  }
+  class Sismo_foto {
+    <<librería>>
+    +normalizar() 512 px JPEG
+    +subir() sismo/perfil/
+    +url() firmada 15 min
+    +para_correo() base64
+  }
+  class Archivos_bucket {
+    <<librería>>
+    +subir() +md5() +firmar() +eliminar()
+  }
   class PHP_Mailer {
     <<librería>>
     +enviarcorreo(correo)
@@ -121,3 +157,12 @@ classDiagram
   Sismo_admin --> Sesion_persona : autoriza
   Sismo_admin --> Html_seguro : limpia mensajes
   Sismo_info --> Sesion_persona : muestra «Ir al panel»
+  CI_Model <|-- Sismo_insignias_model
+  Sismo --> Sismo_insignias_model : acciones e insignias
+  Sismo_admin --> Sismo_insignias_model : catálogo y auditoría
+  Sismo_insignias_model --> Sismo_insignias_reglas : reglas puras
+  Sismo --> Sismo_foto : foto de perfil
+  Sismo_admin --> Sismo_foto : URL firmada
+  Sismo_foto --> Archivos_bucket : sismo/perfil/
+  Sismo_admin --> Archivos_bucket : sismo/insignias/ (Subir a bucket)
+  Sismo_correo ..> Sismo_foto : foto incrustada en el correo

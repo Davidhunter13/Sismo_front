@@ -1,11 +1,13 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { IonInput, IonLabel, IonSegment, IonSegmentButton, IonToggle, useIonRouter, useIonToast } from '@ionic/react';
 import {
-  Activity, AlertTriangle, BatteryLow, Eye, FlaskConical, Languages, MapPin, Palette, Play, RotateCcw, Square, Trash2, User, Volume2,
+  Activity, AlertTriangle, Award, BatteryLow, ChevronRight, Eye, FlaskConical, Languages, MapPin, Palette, Play, RotateCcw, Square, Trash2, User, Volume2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { BackupCard } from '../components/BackupCard';
+import { ProfilePhotoCard } from '../components/ProfilePhotoCard';
+import { badgesVersion, cachedBadges, newBadgeIds, subscribeBadges } from '../services/badgeService';
 import { DeleteAccountCard } from '../components/DeleteAccountCard';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { StatusBadge } from '../components/StatusBadge';
@@ -17,7 +19,7 @@ import { isSirenSupported, previewSound, stopPreview } from '../services/sirenSe
 import { LANGS, type Lang } from '../i18n';
 import { useT } from '../i18n/useT';
 import { useCatalogs } from '../services/catalogService';
-import { DEMO_ENABLED } from '../utils/env';
+import { DEMO_ENABLED, IS_PRODUCTION } from '../utils/env';
 import type { AlarmSound, Settings, ThemePref } from '../types';
 
 type ToggleKey = keyof Pick<Settings, 'soundEnabled' | 'visualSignalEnabled' | 'vibrationEnabled' | 'highContrast' | 'largeText' | 'reduceMotion'>;
@@ -32,7 +34,11 @@ export default function SettingsPage() {
   const { settings } = data;
   // Umbrales del ahorro automático de batería (parámetro administrable; 0 = nunca).
   const catalogs = useCatalogs();
-  const { common: tc, settings: t } = useT();
+  const { common: tc, settings: t, badges: tb } = useT();
+  // Insignias ganadas que aún no ha visto (punto con el número en «Mis insignias»).
+  useSyncExternalStore(subscribeBadges, badgesVersion);
+  const earnedIds = new Set((cachedBadges()?.ganadas ?? []).map((b) => String(b.id)));
+  const unseen = newBadgeIds().filter((id) => earnedIds.has(id)).length;
   const [name, setName] = useState(settings.userName);
   const [dialog, setDialog] = useState<'demo' | 'all' | null>(null);
   const [previewing, setPreviewing] = useState<AlarmSound | null>(null);
@@ -74,9 +80,19 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title={t.title} backTo="/inicio" showSettings={false}>
+      <button className="card link-card" onClick={() => router.push('/insignias', 'forward')}>
+        <Award size={22} aria-hidden="true" />
+        <span>
+          <strong>{tb.settingsLink.title}{unseen > 0 && <span className="new-dot" aria-label={tb.newCount(unseen)}>{unseen}</span>}</strong>
+          <small className="muted">{tb.settingsLink.detail}</small>
+        </span>
+        <ChevronRight size={18} aria-hidden="true" />
+      </button>
+
       {/* Borde rojo si falta el nombre (p. ej. se dio SOS durante el registro). */}
       <section className={`card${setupGaps(data).includes('name') ? ' card--missing' : ''}`}>
         <h2 className="card__title"><User size={18} aria-hidden="true" /> {t.profile.title}</h2>
+        <ProfilePhotoCard />
         <IonInput
           className={nameError ? 'ion-invalid ion-touched' : ''}
           label={t.profile.nameLabel}
@@ -225,9 +241,12 @@ export default function SettingsPage() {
         <ul className="bullets">{t.limitations.map((l) => <li key={l}>{l}</li>)}</ul>
       </section>
 
-      <button className="btn btn--danger-outline btn--block" onClick={() => setDialog('all')}>
-        <Trash2 size={18} aria-hidden="true" /> {t.deleteAll}
-      </button>
+      {/* Solo en desarrollo y pruebas: en producción se borra la cuenta con «Eliminar mi cuenta». */}
+      {!IS_PRODUCTION && (
+        <button className="btn btn--danger-outline btn--block" onClick={() => setDialog('all')}>
+          <Trash2 size={18} aria-hidden="true" /> {t.deleteAll}
+        </button>
+      )}
       <p className="small muted center">{t.version}</p>
 
       <ConfirmationDialog

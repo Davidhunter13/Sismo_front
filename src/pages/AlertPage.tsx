@@ -25,6 +25,7 @@ import { keepScreenOn } from '../services/screenService';
 import { isTrapped, startTrapped, stopTrapped, TRAPPED_INTERVAL_MS } from '../services/trappedService';
 import { refreshNativeSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
+import { drillMinutes, recordAction } from '../services/badgeService';
 import { buildAlertEmail, emailRecipients, locationEmailDue, sendAlertEmail, type EmailKind } from '../services/emailService';
 import { buildAlertMessage, buildLowBatteryMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
 import { useNotifySafe } from '../components/useNotifySafe';
@@ -271,9 +272,15 @@ export default function AlertPage() {
 
   const finish = () => {
     if (!activeAlert) return;
-    const { eventType, isDrill, id, location } = activeAlert;
+    const { eventType, isDrill, id, location, activatedAt, metrics } = activeAlert;
     setFlash(false);
     endAlert();
+    // Insignias: solo la reacción de la persona (nunca la alerta real en sí) y los simulacros con su duración.
+    recordAction('estoy_a_salvo');
+    if (isDrill) {
+      const start = metrics?.drillSignalAt ?? new Date(activatedAt).getTime();
+      recordAction('simulacro', { valor: drillMinutes(start, Date.now()) });
+    }
     presentToast({ message: ta.toast.finished, duration: 2500, color: 'success', position: 'top' });
     // Tras un simulacro no se avisa a la familia: se ofrece la encuesta de usabilidad.
     if (isDrill) {

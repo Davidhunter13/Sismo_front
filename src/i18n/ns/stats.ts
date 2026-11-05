@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { devOrProd } from '../../utils/env';
 // Pantalla de Estadísticas.
 
 const es = {
@@ -30,7 +31,7 @@ const es = {
     { term: 'Confirmación → SMS abierto:', text: ' hasta que se abre la app de mensajes (no confirma el envío).' },
     { term: 'Señal del simulacro → confirmación:', text: ' tiempo de reacción en los simulacros.' },
   ],
-  howNote: 'No incluye los datos de ejemplo del modo de demostración. El CSV no contiene nombres, contactos ni coordenadas.',
+  howNote: devOrProd('No incluye los datos de ejemplo del modo de demostración. ', '') + 'El CSV no contiene nombres, contactos ni coordenadas.',
 };
 
 const en: typeof es = {
@@ -62,7 +63,7 @@ const en: typeof es = {
     { term: 'Confirmation → SMS opened:', text: ' until the messaging app opens (it does not confirm sending).' },
     { term: 'Drill signal → confirmation:', text: ' reaction time in drills.' },
   ],
-  howNote: 'Demo mode sample data is not included. The CSV contains no names, contacts or coordinates.',
+  howNote: devOrProd('Demo mode sample data is not included. ', '') + 'The CSV contains no names, contacts or coordinates.',
 };
 
 export default { es, en };

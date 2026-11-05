@@ -3,6 +3,7 @@ import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 import { ExternalLink, Loader2, Route } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useT } from '../i18n/useT';
+import { recordAction } from '../services/badgeService';
 import { isNative } from '../services/nativeBridge';
 import { useOnline } from '../services/networkService';
 import { fetchRoute, formatDistance, formatDuration, googleMapsUrl, wazeUrl, type RouteResult, type TravelMode } from '../services/routeService';
@@ -50,6 +51,11 @@ export function MeetingRoute({ meetingPoint, from }: Props) {
     // fromKey/toKey resumen las coordenadas para no recalcular en cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, fromKey, toKey, online]);
+
+  // Insignias: se mostró una ruta al punto de encuentro.
+  useEffect(() => {
+    if (status === 'listo') recordAction('ver_ruta');
+  }, [status]);
 
   if (!from) return <p className="small muted">{t.needLocation}</p>;
 

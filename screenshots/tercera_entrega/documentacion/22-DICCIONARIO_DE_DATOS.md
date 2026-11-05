@@ -6,7 +6,7 @@
 
 Los datos de SISMO viven en dos lugares:
 
-1. **Base de datos del backend** (MySQL / MariaDB): 15 tablas `sismo_*` (tercera entrega: bitácoras `sismo_correos_alertas` y `sismo_correos_operador`, y la marca `es_principal_correo` en los contactos).
+1. **Base de datos del backend** (MySQL / MariaDB): 19 tablas `sismo_*` (tercera entrega: bitácoras `sismo_correos_alertas` y `sismo_correos_operador`, la marca `es_principal_correo` en los contactos, las 4 tablas de insignias y la columna `foto` en `sismo_usuarios`).
 2. **Almacenamiento local del teléfono** (`localStorage`): copia de trabajo de la app, cola sin conexión y caché.
 
 ## 1. Base de datos del backend
@@ -27,6 +27,10 @@ El diccionario completo, tabla por tabla, está en **[`../diagramas/BASE_DE_DATO
 | `sismo_catalogos` | Listas administrables | — |
 | `sismo_guia_tarjetas` | Guía de emergencia | — |
 | `sismo_parametros` | Parámetros generales | — |
+| `sismo_insignias` | Catálogo de insignias y su regla (todas automáticas) | — |
+| `sismo_usuarios_insignias` | Insignias ganadas, con vencimiento opcional y aviso pendiente | 0..n |
+| `sismo_acciones_usuarios` | Lo que hace la persona en la app y cuenta para las insignias (máx. una fila por hora) | 0..n |
+| `sismo_insignias_auditoria` | Cambios de los operadores en las insignias | — |
 
 ## 2. Dominios de valores (listas cerradas)
 
@@ -92,6 +96,12 @@ La app pide el correo al backend: `POST {VITE_SISMO_API_URL}/correo_alerta/{aler
 | `sismo_correos_alertas.tipo` | `alerta`, `caida`, `urgente`, `atrapado`, `bateria`, `ubicacion` |
 | `sismo_correos_operador.estado` | `enviado`, `fallido` (correo del centro de monitoreo a los contactos) |
 | `sismo_plantillas_atenciones.estado` | además de los de «Brindar ayuda», `contactos` (plantillas del correo a los contactos) |
+| `sismo_insignias.accion` | `ingreso` (días que abrió la app), `hacer` (un hecho de la app), `simulacro_rapido`, `perfil` (%), `insignias_ganadas` (metas) |
+| `sismo_insignias.nivel` | `bronce`, `plata`, `oro`, `diamante`, `especial` |
+| `sismo_insignias.periodo_unidad` | `hora`, `dia`, `semana`, `mes` (30 días) |
+| `sismo_acciones_usuarios.accion` | `ingreso`, `hecho` (con `referencia = hecho:<clave>` de la lista blanca: registro_completo, ficha_medica, contacto_agregado, contacto_principal, punto_encuentro, mochila_item, mochila_completa, mochila_revisada, foto_perfil, qr_medico, respaldo, simulacro, ver_brujula, ver_ruta, ver_guia, ver_sismos, ver_estadisticas, ver_historial, cambiar_idioma, cambiar_tema, alto_contraste, deteccion_caidas, ahorro_bateria, estoy_a_salvo, avisar_bien, encuesta_sus, post_sismo, mis_insignias) |
+| `sismo_insignias_auditoria.evento` | `crear`, `editar`, `activar`, `desactivar`, `subir_imagen`, `subir_bucket` |
+| `sismo_usuarios.foto` | ruta en el bucket `sismo/perfil/<archivo>.jpg` o NULL (nunca una URL) |
 | `sismo_correos_alertas.estado` | `enviado`, `fallido` |
 | `Contact.emailPrimary` (app) | `true` = principal; ausente o `false` = copia oculta |
 | `AlertRecord.followUpEmails` (app) | estado por aviso: `{urgente?, atrapado?, bateria?, ubicacion?}` con los mismos valores de `estado_correo` |

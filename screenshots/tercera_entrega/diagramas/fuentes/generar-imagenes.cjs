@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-// Uso (desde la raíz del proyecto): npm i --no-save mermaid@11.4.1 && node screenshots/segunda_entrega/diagramas/fuentes/generar-imagenes.cjs [filtro]
-// Convierte cada fuente (.mmd con Mermaid o .html) de screenshots/segunda_entrega/diagramas/fuentes en una imagen PNG individual.
+// Uso (desde la raíz del proyecto): npm i --no-save mermaid@11.4.1 && node screenshots/tercera_entrega/diagramas/fuentes/generar-imagenes.cjs [filtro]
+// Convierte cada fuente (.mmd con Mermaid o .html) de screenshots/tercera_entrega/diagramas/fuentes en una imagen PNG individual.
 const fs = require('fs');
 const path = require('path');
 const ROOT = path.resolve(__dirname, '../../../..');

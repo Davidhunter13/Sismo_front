@@ -9,6 +9,8 @@ import { AppStateProvider } from './context/AppStateProvider';
 import { useAppState } from './context/appContext';
 import AlertDetailPage from './pages/AlertDetailPage';
 import AlertPage from './pages/AlertPage';
+import BadgesPage from './pages/BadgesPage';
+import { BadgeCelebration } from './components/BadgeCelebration';
 import ContactsPage from './pages/ContactsPage';
 import EmergencyGuidePage from './pages/EmergencyGuidePage';
 import HistoryPage from './pages/HistoryPage';
@@ -89,6 +91,8 @@ function Routes() {
       <SplashScreen skip={skipSplash} />
       <RequestOverlay />
       <FallDetector />
+      {/* «¡Ganaste una insignia!»: nunca durante una alerta o un simulacro (queda en cola). */}
+      <BadgeCelebration />
       <IonRouterOutlet>
         <Route exact path="/bienvenida" component={WelcomePage} />
         <Route exact path="/registro" component={SetupPage} />
@@ -107,6 +111,7 @@ function Routes() {
         <Route exact path="/encuesta" component={SurveyPage} />
         <Route exact path="/mochila" component={KitPage} />
         <Route exact path="/despues-del-sismo" component={PostQuakePage} />
+        <Route exact path="/insignias" component={BadgesPage} />
         <Route exact path="/">
           <Redirect to={launch || data.settings.onboarded ? '/inicio' : '/bienvenida'} />
         </Route>

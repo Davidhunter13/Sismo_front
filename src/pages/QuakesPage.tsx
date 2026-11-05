@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { useRecordOnEnter } from '../components/useBadges';
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 import { withLoader } from '../services/loaderService';
 import { Activity, ExternalLink, Info, Loader2, Map as MapIcon, RefreshCw, WifiOff } from 'lucide-react';
@@ -19,6 +20,7 @@ const PERIOD_MS: Record<QuakePeriod, number> = { day: 86_400_000, week: 7 * 86_4
 const magnitudeTone = (m: number) => (m >= 6 ? 'quake-mag--high' : m >= 4.5 ? 'quake-mag--mid' : 'quake-mag--low');
 
 export default function QuakesPage() {
+  useRecordOnEnter('ver_sismos');
   const { data } = useAppState();
   const t = useT().quakes;
   const locale = getLocale(data.settings.language);

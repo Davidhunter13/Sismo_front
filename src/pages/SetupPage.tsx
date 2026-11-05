@@ -5,6 +5,7 @@ import { Activity, ArrowLeft, ArrowRight, BatteryLow, BookUser, CheckCircle2, Cr
 import { useState } from 'react';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { ContactFormModal } from '../components/ContactFormModal';
+import { recordAction } from '../services/badgeService';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { useCatalogs } from '../services/catalogService';
@@ -70,6 +71,7 @@ export default function SetupPage() {
       return;
     }
     updateSettings({ onboarded: true });
+    recordAction('registro_completo');
     router.push('/inicio', 'root', 'replace');
   };
 

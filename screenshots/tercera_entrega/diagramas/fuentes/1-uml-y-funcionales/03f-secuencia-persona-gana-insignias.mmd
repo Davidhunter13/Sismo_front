@@ -1,0 +1,28 @@
+%% title: Diagrama de secuencia — La persona gana insignias (app y backend) · tercera entrega
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant A as App SISMO
+  participant Q as Cola local (sin internet)
+  participant API as Backend · Sismo::insignias
+  participant M as Sismo_insignias_model
+  participant DB as Base de datos
+  P->>A: Hace algo (agrega un contacto, termina un simulacro, abre la app…)
+  A->>Q: recordAction(clave, elemento, valor)
+  Note over A,Q: Las alertas reales no dan insignias
+  A->>API: POST /insignias {acciones} (Bearer del dispositivo)
+  API->>API: Lista blanca de hechos, fechas ≤ 30 días, máx. 50
+  API->>M: registrar() por acción
+  M->>DB: INSERT IGNORE sismo_acciones_usuarios (máx. 1 por hora)
+  API->>M: evaluar()
+  M->>DB: Catálogo activo, ganadas, perfil
+  M->>M: progreso(): cantidad, periodo, racha, horario, días, valor máximo
+  M->>DB: INSERT … ON DUPLICATE KEY (nueva o renovada si venció, con fecha_vencimiento)
+  API->>M: mis_insignias()
+  M->>DB: Marca «nuevas» como notificadas
+  API-->>A: ganadas, por ganar, secretas (solo pista), vencidas, nuevas, perfil
+  alt Hay una alerta activa
+    A->>A: Guarda «¡Ganaste!» en cola (no distrae durante el SOS)
+  else Sin alerta activa
+    A-->>P: «¡Ganaste una insignia!»
+  end

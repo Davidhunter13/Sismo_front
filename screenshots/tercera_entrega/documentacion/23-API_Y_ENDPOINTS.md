@@ -63,6 +63,11 @@ El backend está hecho en **CodeIgniter 3 (PHP 7.3)** y se comunica en **JSON**.
 | `GET` | `/catalogos` | No | — | **200** catálogos, guía y parámetros con su `version` | 503 |
 | `POST` | `/eliminar_cuenta` | Sí | — | **200** borrado lógico en cascada + supresión de datos personales; token y código revocados | 401 |
 | `POST` | `/correo_alerta/{id}` | Sí | `{tipo: alerta\|caida\|urgente\|atrapado\|bateria\|ubicacion, mensaje, idioma}` | **200** `{ok, para, copia}` · **200** `{ok, ya_enviado}` | 404 `alerta_no_encontrada` · 422 `simulacro` · 422 `sin_destinatarios` · 422 `dato_invalido` · 429 `limite_correos` · 502 `envio_fallido` · 503 `correo_no_disponible` |
+| `GET` | `/insignias` | Sí | — | **200** `{ganadas, por_ganar, secretas, vencidas, nuevas, perfil:{porcentaje, items}, total}` (evalúa antes; las «nuevas» quedan notificadas; las secretas sin nombre ni imagen) | 401 |
+| `POST` | `/insignias` | Sí | `{acciones:[{accion: ingreso\|hecho, clave?, elemento?, valor?, momento?}]}` (máx. 50; `momento` ≤ 30 días atrás; `clave` de la lista blanca) | **200** igual que el GET | 401, 422 `acciones` / `clave` / `momento` |
+| `GET` | `/foto` | Sí | — | **200** `{foto:{url, expira}\|null}` (URL firmada de 15 min; pedir otra al vencer) | 401 |
+| `POST` | `/foto` | Sí | `{imagen: base64}` (JPEG/PNG/WebP, máx. 2 MB) | **200** `{foto:{url, expira}}` (se guarda en el bucket `sismo/perfil/` y se borra la anterior) | 401, 413, 422 `imagen`, 503 `bucket_no_disponible` |
+| `DELETE` | `/foto` | Sí | — | **200** `{foto:null}` (se borra del bucket) | 401 |
 
 ### Ejemplo: registrar el dispositivo y subir un contacto
 
@@ -100,7 +105,7 @@ Sin sesión, las páginas redirigen al inicio de sesión y las consultas respond
 | `GET` | `/Sismo_admin` | — | Página del panel (HTML) con el token CSRF |
 | `GET` | `/Sismo_admin/datos` | — | **200** `{resumen, activas, alertas, usuarios, ahora}` |
 | `GET` | `/Sismo_admin/pulso` | — | **200** `{firma}`: huella de alertas y atenciones; el panel la pide cada 3 s y descarga `datos` solo si cambia |
-| `GET` | `/Sismo_admin/usuario/{id}` | — | **200** detalle de la persona (contactos, ficha descifrada, puntos, alertas, kit, encuestas, bitácora). La consulta queda en el log · 404 |
+| `GET` | `/Sismo_admin/usuario/{id}` | — | **200** detalle de la persona (contactos, ficha descifrada, puntos, alertas, kit, encuestas, bitácora, correos, **foto** firmada, **insignias** y **perfil**). La consulta queda en el log · 404 |
 | `POST` | `/Sismo_admin/atender` | `{id_alerta, estado: en_atencion\|ayuda_enviada\|resuelta, nota}` (`nota` en HTML; el servidor deja solo p, br, strong, em, u, s, ul, ol, li; máx. 500 caracteres visibles) | **200** `{"ok":true}` · 404 `alerta_no_encontrada` · 422 |
 | `POST` | `/Sismo_admin/codigo` | `{id_usuario}` | **201** `{codigo, horas: 48}` · 404 `usuario_no_encontrado` |
 | `GET` | `/Sismo_admin/sismos?dias=1\|7` | `dias` | **200** `{dias, sismos[]}` (USGS, caché de 5 min) · 502 `usgs_no_disponible` |
@@ -110,6 +115,12 @@ Sin sesión, las páginas redirigen al inicio de sesión y las consultas respond
 | `POST` | `/Sismo_admin/parametro_guardar` | `{clave, valor, activo}` | **200** · 422 `{campo}` (valida números y listas) |
 | `POST` | `/Sismo_admin/plantilla_guardar` | `{id?, estado: general\|en_atencion\|ayuda_enviada\|resuelta, titulo, mensaje (HTML con la misma lista blanca), orden, activo}` | **200** `{"ok":true}` · 422 `{campo}` · 422 `titulo_repetido` · 422 `no_encontrado` |
 | `POST` | `/Sismo_admin/correo_contactos` | `{id_usuario, asunto, mensaje}` (mensaje en HTML con lista blanca, máx. 2000 caracteres) | **200** `{ok, para, copia}` · 404 `usuario_no_encontrado` · 422 `dato_invalido` / `mensaje_largo` / `sin_destinatarios` · 429 `limite_correos` · 502 `envio_fallido` · 503 `correo_no_disponible` |
+| `GET` | `/Sismo_admin/insignias` | — | **200** `{insignias (con ganadores, imagen_url, regla, local), auditoria, locales, acciones, hechos, niveles}` |
+| `POST` | `/Sismo_admin/insignia_guardar` | multipart: campos de la regla + `imagen` (PNG/JPEG/WebP, máx. 512 KB; obligatoria al crear) | **200** `{ok, id}` · 422 `{campos}` (incluye `nombre_repetido`) · 404 |
+| `POST` | `/Sismo_admin/insignia_estado` | `{id, activo}` | **200** · 404 |
+| `GET` | `/Sismo_admin/insignia_ganadores/{id}` | — | **200** `{ganadores[]}` (máx. 200) · 404 |
+| `POST` | `/Sismo_admin/insignias_subir_bucket` | `{}` | **200** `{ok, subidas, fallidas}`: sube a `sismo/insignias/`, verifica MD5 y borra la copia del servidor · 502 si ninguna subió |
+| `GET` | `/Sismo_admin/foto/{id}` | — | **200** `{foto:{url, expira}\|null}` (URL firmada de 15 min) |
 
 ## 4. Página informativa (`Sismo_info`)
 

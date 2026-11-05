@@ -2,6 +2,7 @@
 import { QrCode } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useT } from '../i18n/useT';
+import { recordAction } from '../services/badgeService';
 import { medicalQrDataUrl, medicalQrText } from '../services/medicalQrService';
 import type { MedicalInfo } from '../types';
 
@@ -35,7 +36,14 @@ export function MedicalQr({ userName, medical, initiallyOpen = false }: Props) {
   return (
     <div className="medical-qr">
       {!initiallyOpen && (
-        <button className="btn btn--outline btn--block" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <button
+          className="btn btn--outline btn--block"
+          onClick={() => {
+            if (!open) recordAction('qr_medico');
+            setOpen((o) => !o);
+          }}
+          aria-expanded={open}
+        >
           <QrCode size={18} aria-hidden="true" /> {open ? t.hide : t.show}
         </button>
       )}

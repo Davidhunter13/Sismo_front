@@ -12,6 +12,7 @@ import { useT } from '../i18n/useT';
 import { useAppState } from '../context/appContext';
 import { setupGaps } from '../utils/setupGaps';
 import { testLocation } from '../services/demoData';
+import { DEMO_ENABLED } from '../utils/env';
 import { searchAddress, type AddressResult } from '../services/geocodeService';
 import { withLoader } from '../services/loaderService';
 import { checkLocationPermission, requestDeviceLocation } from '../services/locationService';
@@ -159,9 +160,12 @@ export default function LocationPage() {
           {loading ? <Loader2 size={18} className="spin" aria-hidden="true" /> : <Crosshair size={18} aria-hidden="true" />}
           {loading ? t.refining : t.request}
         </button>
-        <button className="btn btn--outline btn--block" onClick={useTest}>
-          <FlaskConical size={18} aria-hidden="true" /> {t.useTest}
-        </button>
+        {/* Coordenadas de prueba: solo en desarrollo y pruebas, nunca en producción. */}
+        {DEMO_ENABLED && (
+          <button className="btn btn--outline btn--block" onClick={useTest}>
+            <FlaskConical size={18} aria-hidden="true" /> {t.useTest}
+          </button>
+        )}
         {lastLocation && (
           <div className="btn-pair">
             {osmUrl && (

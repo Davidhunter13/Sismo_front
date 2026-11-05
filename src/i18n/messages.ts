@@ -1,5 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import alert from './ns/alert';
+import badges from './ns/badges';
 import common from './ns/common';
 import components from './ns/components';
 import contacts from './ns/contacts';
@@ -23,6 +24,7 @@ import welcome from './ns/welcome';
 /** Registro de espacios de nombres. Al crear uno nuevo en ns/, agréguelo aquí. */
 export const messages = {
   alert,
+  badges,
   common,
   components,
   contacts,

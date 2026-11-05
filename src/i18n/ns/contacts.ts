@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { devOrProd } from '../../utils/env';
 // Contactos de confianza: página, tarjeta y formulario.
 
 const es = {
@@ -6,7 +7,8 @@ const es = {
   infoPre: 'Sus contactos ',
   infoStrong: 'no reciben alertas automáticamente',
   infoPost:
-    ': durante una alerta SISMO abre la app de mensajes con el aviso listo y usted confirma el envío, y les envía un correo (salvo que usted responda «No»). Los contactos del modo de demostración son ficticios y nunca reciben SMS ni correos.',
+    ': durante una alerta SISMO abre la app de mensajes con el aviso listo y usted confirma el envío, y les envía un correo (salvo que usted responda «No»).' +
+    devOrProd(' Los contactos del modo de demostración son ficticios y nunca reciben SMS ni correos.', ''),
   myContacts: (n: number) => `Mis contactos (${n})`,
   fromAgenda: 'De la agenda',
   add: 'Agregar',
@@ -34,7 +36,7 @@ const es = {
     close: 'Cerrar',
     note: 'Recibirá el aviso por SMS (usted confirma el envío) y el correo de alerta.',
     name: 'Nombre',
-    namePlaceholder: 'Ej.: Ana (demo)',
+    namePlaceholder: devOrProd('Ej.: Ana (demo)', 'Ej.: Ana'),
     relationship: 'Relación',
     phone: 'Teléfono',
     phonePlaceholder: 'Ej.: 300 000 0004',
@@ -64,7 +66,8 @@ const en: typeof es = {
   infoPre: 'Your contacts ',
   infoStrong: 'do not receive alerts automatically',
   infoPost:
-    ': during an alert, SISMO opens the messaging app with the message ready and you confirm sending it, and emails them (unless you answer “No”). Demo mode contacts are fictitious and never receive SMS or emails.',
+    ': during an alert, SISMO opens the messaging app with the message ready and you confirm sending it, and emails them (unless you answer “No”).' +
+    devOrProd(' Demo mode contacts are fictitious and never receive SMS or emails.', ''),
   myContacts: (n: number) => `My contacts (${n})`,
   fromAgenda: 'From address book',
   add: 'Add',
@@ -92,7 +95,7 @@ const en: typeof es = {
     close: 'Close',
     note: 'They will get the SMS (you confirm sending it) and the alert email.',
     name: 'Name',
-    namePlaceholder: 'E.g.: Ana (demo)',
+    namePlaceholder: devOrProd('E.g.: Ana (demo)', 'E.g.: Ana'),
     relationship: 'Relationship',
     phone: 'Phone',
     phonePlaceholder: 'E.g.: 300 000 0004',

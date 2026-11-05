@@ -22,6 +22,9 @@ flowchart LR
     A17(["Priorizar y filtrar por criticidad<br/>(urgente, caída sin respuesta, atrapado, batería)"])
     A18(["Enviar correo a los contactos de la persona<br/>(mensaje propio o plantilla «contactos»)"])
     A19(["Ver los correos enviados a sus contactos"])
+    A20(["Administrar insignias<br/>(reglas, fechas, vencimiento, secretas, imagen)"])
+    A21(["Subir imágenes de insignias al bucket<br/>(y borrarlas del servidor)"])
+    A22(["Ver foto, insignias y perfil de la persona"])
   end
   P["«actor»<br/><b>Persona usuaria</b>"]:::actor
   U["«sistema»<br/><b>USGS</b>"]:::sys
@@ -41,6 +44,10 @@ flowchart LR
   O --- A16
   O --- A17
   O --- A18
+  O --- A20
+  A21 -. «extend» .-> A20
+  A22 -. «extend» .-> A5
+  A20 -. «include» .-> A1
   A18 -. «extend» .-> A5
   A19 -. «extend» .-> A5
   A17 -. «extend» .-> A2

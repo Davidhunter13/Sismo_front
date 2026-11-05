@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { devOrProd } from '../../utils/env';
 // Vista de alerta activa y detalle de una alerta del historial.
 
 const es = {
@@ -80,7 +81,7 @@ const es = {
     whatsappTo: (name: string) => `WhatsApp: ${name}`,
     warningStrong: 'Activada localmente ≠ mensaje entregado.',
     warningText:
-      'Solo un canal con estado «Enviada» real confirmaría que un destinatario recibió el aviso. Este prototipo no contacta servicios de emergencia.',
+      'El SMS y WhatsApp se envían desde su teléfono y SISMO no puede confirmar que lleguen; el correo a sus contactos lo envía SISMO automáticamente. SISMO no contacta automáticamente a los servicios de emergencia: use el botón para llamar al {emergencyNumber}.',
   },
   email: {
     dialogTitle: "¿Enviar correo a sus contactos?",
@@ -161,7 +162,7 @@ const es = {
   detail: {
     shortTitle: 'Detalle',
     notFound: 'Registro no encontrado',
-    notFoundText: 'Es posible que los datos de demostración se hayan restablecido.',
+    notFoundText: devOrProd('Es posible que los datos de demostración se hayan restablecido.', 'Es posible que la alerta se haya borrado de este teléfono.'),
     title: 'Detalle de alerta',
     finished: 'Finalizada',
     seed: 'Registro de ejemplo (ficticio)',
@@ -261,7 +262,7 @@ const en: typeof es = {
     whatsappTo: (name: string) => `WhatsApp: ${name}`,
     warningStrong: 'Activated locally ≠ message delivered.',
     warningText:
-      'Only a channel with a real «Sent» status would confirm that a recipient got the message. This prototype does not contact emergency services.',
+      'SMS and WhatsApp are sent from your phone and SISMO cannot confirm they arrive; SISMO sends the email to your contacts automatically. SISMO does not contact emergency services automatically: use the button to call {emergencyNumber}.',
   },
   email: {
     dialogTitle: "Email your contacts?",
@@ -342,7 +343,7 @@ const en: typeof es = {
   detail: {
     shortTitle: 'Details',
     notFound: 'Record not found',
-    notFoundText: 'The demo data may have been reset.',
+    notFoundText: devOrProd('The demo data may have been reset.', 'The alert may have been deleted from this phone.'),
     title: 'Alert details',
     finished: 'Ended',
     seed: 'Sample record (fictitious)',

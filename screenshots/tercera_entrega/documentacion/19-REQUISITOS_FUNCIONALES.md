@@ -56,6 +56,28 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | RF-CO-10 | Desde el detalle de la persona en el panel, el operador debe poder enviar un correo a sus contactos (mensaje propio o plantilla, con editor y comodines), con los mismos destinatarios, como máximo 10 por persona en una hora, y quedar registrado quién lo envió. | OP | Alta |
 | RF-CO-11 | El panel debe permitir administrar plantillas de correo para los contactos (estado «Correo a contactos»), separadas de las de «Brindar ayuda». | OP | Media |
 
+## RF-IG · Insignias (plus de la tercera entrega)
+
+| ID | Requisito | Actor | Prioridad |
+|---|---|---|---|
+| RF-IG-01 | La app debe entregar insignias **automáticamente** cuando la persona se prepara, practica y usa la app (registro, contactos, puntos de encuentro, ficha médica, mochila, simulacros, brújula, guía, «Estoy a salvo», encuesta, etc.). No hay insignias manuales. | SIS | Media |
+| RF-IG-02 | Las reglas deben ser configurables: cantidad, periodo, días seguidos, franja horaria, días de la semana, tiempo máximo del simulacro, porcentaje del perfil y metas de otras insignias. | OP | Media |
+| RF-IG-03 | Una insignia puede ser **secreta** (solo muestra una pista), **con fechas** (solo se gana entre `fecha_inicio` y `fecha_fin`) y **con vencimiento** (dura N días y se puede volver a ganar). | OP | Media |
+| RF-IG-04 | La app debe mostrar **Mis insignias** (ganadas, por ganar con progreso, secretas y vencidas), la tarjeta **«Perfil completado»** (porcentaje y qué falta) y el aviso **«¡Ganaste una insignia!»**. | PU | Media |
+| RF-IG-05 | El aviso «¡Ganaste una insignia!» **nunca debe aparecer con una alerta activa**: se guarda y se muestra cuando la alerta termina. Las alertas reales no dan insignias. | SIS | Alta |
+| RF-IG-06 | La app debe guardar las acciones sin internet y enviarlas al sincronizar (máximo 50 por envío, hasta 30 días atrás); el servidor solo acepta los hechos de una lista blanca. | SIS | Media |
+| RF-IG-07 | El panel debe permitir crear, editar, activar y desactivar insignias con su imagen, ver quién las ganó y la auditoría. Las imágenes nuevas quedan en el servidor hasta que el operador presione **«Subir a bucket»**, que las sube a `sismo/insignias/` y las borra del servidor. | OP | Media |
+
+## RF-FP · Foto de perfil
+
+| ID | Requisito | Actor | Prioridad |
+|---|---|---|---|
+| RF-FP-01 | En Configuración → Perfil la persona debe poder **tomar una foto**, **elegirla de la galería** o **quitarla**, con un aviso de quién la verá. | PU | Media |
+| RF-FP-02 | La foto se reduce a 512 px, se valida su tipo real, se le quitan los metadatos y se guarda en el bucket (`sismo/perfil/`, sin copia en el servidor). | SIS | Alta |
+| RF-FP-03 | La foto se muestra con **URL firmada de 15 minutos**; la app y el panel piden una nueva cuando vence. Nunca con URL pública. | SIS | Alta |
+| RF-FP-04 | La foto debe verse en la app, en el detalle de la persona y en las alertas del panel, y en los **correos a los contactos** (incrustada y reducida). | PU, OP | Media |
+| RF-FP-05 | Al eliminar la cuenta, la foto se borra del bucket. | SIS | Alta |
+
 ## RF-CT · Contactos y puntos de encuentro
 
 | ID | Requisito | Rol | Prioridad |

@@ -1,4 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
+import { devOrProd } from '../../utils/env';
 // Historial de alertas y sus filas.
 
 const es = {
@@ -7,7 +8,7 @@ const es = {
   active: 'Activas',
   samples: 'De ejemplo',
   emptyTitle: 'Sin registros',
-  emptyText: 'Las alertas que active aparecerán aquí. También puede activar el modo de demostración en Configuración.',
+  emptyText: 'Las alertas que active aparecerán aquí.' + devOrProd(' También puede activar el modo de demostración en Configuración.', ''),
   simNote: '«(sim.)» indica un estado del canal digital simulado: no se envió ningún mensaje real.',
   item: {
     finished: 'Finalizada',
@@ -22,7 +23,7 @@ const en: typeof es = {
   active: 'Active',
   samples: 'Samples',
   emptyTitle: 'No records',
-  emptyText: 'The alerts you start will appear here. You can also turn on demo mode in Settings.',
+  emptyText: 'The alerts you start will appear here.' + devOrProd(' You can also turn on demo mode in Settings.', ''),
   simNote: '«(sim.)» marks a simulated digital channel status: no real message was sent.',
   item: {
     finished: 'Ended',

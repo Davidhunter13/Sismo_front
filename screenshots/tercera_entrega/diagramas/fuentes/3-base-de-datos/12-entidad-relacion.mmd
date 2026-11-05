@@ -9,14 +9,18 @@ erDiagram
   sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
   sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe"
   operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
-  sismo_plantillas_atenciones }o..o{ sismo_atenciones_alertas : "sugiere el mensaje (por estado, sin FK)"
   sismo_alertas_usuarios ||--o{ sismo_correos_alertas : "avisa por correo"
   sismo_usuarios ||--o{ sismo_correos_operador : "sus contactos reciben"
   operadores_panel ||--o{ sismo_correos_operador : "escribe"
+  sismo_usuarios ||--o{ sismo_usuarios_insignias : "gana"
+  sismo_insignias ||--o{ sismo_usuarios_insignias : "se entrega en"
+  sismo_usuarios ||--o{ sismo_acciones_usuarios : "hace en la app"
+  sismo_insignias |o--o{ sismo_insignias_auditoria : "se audita en"
   sismo_usuarios {
     entero id PK
     texto uuid_dispositivo
     texto nombre
+    texto foto
     texto plataforma
   }
   sismo_ajustes_usuarios {
@@ -115,6 +119,37 @@ erDiagram
     entero cantidad_para
     entero cantidad_copia
     texto estado
+  }
+  sismo_insignias {
+    entero id PK
+    texto nombre
+    texto accion
+    entero cantidad_requerida
+    booleano secreta
+    fecha fecha_fin
+    entero dias_vigencia
+  }
+  sismo_usuarios_insignias {
+    entero id PK
+    entero id_usuario FK
+    entero id_insignia FK
+    fecha_hora fecha_obtenida
+    fecha_hora fecha_vencimiento
+    fecha_hora fecha_notificada
+  }
+  sismo_acciones_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto accion
+    texto referencia
+    entero valor
+    fecha fecha_accion
+  }
+  sismo_insignias_auditoria {
+    entero id PK
+    entero id_insignia FK
+    texto evento
+    texto execution_id
   }
   operadores_panel {
     entero id PK

@@ -4,7 +4,7 @@
 
 # Base de datos de SISMO: tablas, columnas y relaciones
 
-Diccionario de datos del backend (CodeIgniter 3 + MySQL/MariaDB). Describe las **15 tablas `sismo_*`** que guardan lo que la app tenía en el teléfono, la bitácora de ayuda del panel de monitoreo y el contenido administrable (catálogos, guía, parámetros y plantillas de mensaje).
+Diccionario de datos del backend (CodeIgniter 3 + MySQL/MariaDB). Describe las **19 tablas `sismo_*`** que guardan lo que la app tenía en el teléfono, la bitácora de ayuda del panel de monitoreo y el contenido administrable (catálogos, guía, parámetros y plantillas de mensaje).
 
 - **Motor y juego de caracteres:** InnoDB, `utf8mb4`.
 - **Convención de nombres (CCS):** tablas en plural y `snake_case`; claves foráneas con prefijo `id_`; fechas de negocio con prefijo `fecha_`; todo comentado.
@@ -32,6 +32,10 @@ erDiagram
     sismo_alertas_usuarios ||--o{ sismo_correos_alertas : "avisa por correo"
     sismo_usuarios ||--o{ sismo_correos_operador : "sus contactos reciben"
     operadores_panel ||--o{ sismo_correos_operador : "escribe"
+    sismo_usuarios ||--o{ sismo_usuarios_insignias : "gana"
+    sismo_insignias ||--o{ sismo_usuarios_insignias : "se entrega en"
+    sismo_usuarios ||--o{ sismo_acciones_usuarios : "hace en la app"
+    sismo_insignias |o--o{ sismo_insignias_auditoria : "se audita en"
 
     sismo_usuarios {
         INT id PK
@@ -182,6 +186,10 @@ erDiagram
 | 12 | `sismo_parametros` | Parámetros generales (número de emergencia, topes, tiempos, textos) | Sin FK |
 | 15 | `sismo_correos_operador` | Correos del centro de monitoreo a los contactos (asunto, operador y cantidades) | Muchos a 1 con usuarios y con operadores |
 | 14 | `sismo_correos_alertas` | Correos de alerta enviados a los contactos (uno por alerta y tipo, sin direcciones) | Muchos a 1 con alertas |
+| 16 | `sismo_insignias` | Catálogo de insignias y su regla (todas automáticas; secretas, con fechas o con vencimiento) | Sin FK hacia otras tablas |
+| 17 | `sismo_usuarios_insignias` | Insignias que ganó cada persona (vencimiento y aviso pendiente) | Muchos a 1 con usuarios y con insignias |
+| 18 | `sismo_acciones_usuarios` | Lo que hace la persona en la app y cuenta para las insignias (máx. una fila por hora) | Muchos a 1 con usuarios |
+| 19 | `sismo_insignias_auditoria` | Cambios de los operadores en las insignias | Muchos a 1 con insignias |
 | 13 | `sismo_plantillas_atenciones` | Plantillas del mensaje de «Brindar ayuda» (general y por estado) | Sin FK (se copia el texto a la atención) |
 
 ---
@@ -205,6 +213,7 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `uuid_dispositivo` | `CHAR(36)` | No | — | UUID v4 público del dispositivo, generado por el servidor al registrarse |
 | `hash_token` | `CHAR(64)` | No | — | SHA-256 del token de acceso (el token nunca se guarda en claro) |
 | `nombre` | `VARCHAR(120)` | Sí | — | Nombre que la persona escribió en la app |
+| `foto` | `VARCHAR(255)` | Sí | — | Ruta de la foto de perfil en el bucket (`sismo/perfil/<archivo>.jpg`); NULL = sin foto. Nunca una URL: se entrega firmada por 15 min |
 | `plataforma` | `VARCHAR(20)` | No | `'web'` | `android` \| `ios` \| `web` |
 | `fecha_ultima_sincronizacion` | `DATETIME` | Sí | — | Última vez que la app envió datos |
 | `hash_codigo_recuperacion` | `CHAR(64)` | Sí | — | SHA-256 del código de recuperación vigente (un solo uso); NULL = sin código |
@@ -410,6 +419,36 @@ Además, `sismo_plantillas_atenciones.estado` admite **`contactos`**: plantillas
 
 ---
 
+### 2.12 `sismo_usuarios_insignias`: insignias ganadas
+
+| Columna | Tipo | Nulo | Por defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `INT UNSIGNED` (PK) | No | — | Identificador del logro |
+| `id_usuario` | `INT UNSIGNED` (FK → `sismo_usuarios.id`) | No | — | Quién la ganó |
+| `id_insignia` | `INT UNSIGNED` (FK → `sismo_insignias.id`) | No | — | Qué insignia |
+| `fecha_obtenida` | `DATETIME` | No | — | Cuándo cumplió la regla (UTC); se renueva si la vuelve a ganar tras vencer |
+| `fecha_vencimiento` | `DATETIME` | Sí | — | Cuándo vence (UTC); NULL = no vence |
+| `fecha_notificada` | `DATETIME` | Sí | — | Cuándo se mostró «¡Ganaste!»; NULL = pendiente |
+| `activo` | `TINYINT(1)` | No | `1` | 1 = vigente, 0 = inactiva |
+
+Índice único `uq_sismo_usuarios_insignias (id_usuario, id_insignia)`: una fila por persona e insignia (al vencer y volver a ganarla se renueva la misma fila).
+
+### 2.13 `sismo_acciones_usuarios`: lo que hace la persona en la app
+
+| Columna | Tipo | Nulo | Por defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `INT UNSIGNED` (PK) | No | — | Identificador |
+| `id_usuario` | `INT UNSIGNED` (FK → `sismo_usuarios.id`) | No | — | Persona |
+| `accion` | `VARCHAR(20)` | No | — | `ingreso` \| `hecho` |
+| `referencia` | `VARCHAR(80)` | No | `''` | `hecho:<clave>` de la lista blanca; vacío para `ingreso` |
+| `detalle` | `CHAR(40)` | No | `''` | Huella SHA-1 del elemento (para contar contactos, puntos o ítems distintos); **nunca datos personales** |
+| `valor` | `SMALLINT UNSIGNED` | Sí | — | Medida (minutos del simulacro) |
+| `fecha_accion` | `DATE` | No | — | Día (hora de Colombia) |
+| `hora_accion` | `TINYINT UNSIGNED` | No | — | Hora 0–23 |
+| `activo` | `TINYINT(1)` | No | `1` | 1 = activo |
+
+Índice único `uq_sismo_acciones_usuarios_hora (id_usuario, accion, referencia, detalle, fecha_accion, hora_accion)`: como máximo una fila por hora y elemento (`INSERT IGNORE`).
+
 ## 3. Contenido administrable desde el panel
 
 ### 3.1 `sismo_catalogos`: listas de la app
@@ -528,6 +567,36 @@ Si la persona no registró nombre, se quita el comodín y se corrige la puntuaci
 
 ---
 
+### 3.5 `sismo_insignias`: catálogo de insignias (todas automáticas)
+
+| Columna | Tipo | Nulo | Por defecto | Descripción |
+|---|---|---|---|---|
+| `id` | `INT UNSIGNED` (PK) | No | — | Identificador |
+| `nombre` | `VARCHAR(80)` (único) | No | — | Nombre visible |
+| `descripcion` | `VARCHAR(255)` | Sí | — | Texto al ganarla |
+| `imagen` | `VARCHAR(255)` | No | — | `sismo/insignias/<archivo>`: si el archivo sigue en el servidor se sirve de ahí; si no, del bucket (misma ruta) |
+| `accion` | `VARCHAR(30)` | No | — | `ingreso` \| `hacer` \| `simulacro_rapido` \| `perfil` \| `insignias_ganadas` |
+| `referencia` | `VARCHAR(80)` | Sí | — | `hecho:<clave>` o `familia:<familia>` |
+| `cantidad_requerida` | `SMALLINT UNSIGNED` | No | `1` | Eventos distintos (perfil: %; metas de familia: 0 = todas) |
+| `valor_maximo` | `SMALLINT UNSIGNED` | Sí | — | Minutos máximos del simulacro |
+| `periodo_cantidad` / `periodo_unidad` | `SMALLINT` / `VARCHAR(10)` | Sí | — | Ventana de tiempo (`hora`, `dia`, `semana`, `mes`) |
+| `racha` | `TINYINT(1)` | No | `0` | 1 = días seguidos |
+| `hora_desde` / `hora_hasta` | `TIME` | Sí | — | Franja horaria (puede cruzar la medianoche) |
+| `dias_semana` | `VARCHAR(20)` | Sí | — | 1 = lunes … 7 = domingo |
+| `nivel` | `VARCHAR(10)` | No | `'bronce'` | `bronce` \| `plata` \| `oro` \| `diamante` \| `especial` |
+| `familia` | `VARCHAR(40)` | Sí | — | Escalera de niveles |
+| `secreta` / `pista` | `TINYINT(1)` / `VARCHAR(160)` | No / Sí | `0` | Secreta: solo se ve la pista hasta ganarla |
+| `fecha_inicio` / `fecha_fin` | `DATE` | Sí | — | Solo se gana en esas fechas |
+| `dias_vigencia` | `SMALLINT UNSIGNED` | Sí | — | Días que dura la ganada; NULL = no vence |
+| `orden` | `SMALLINT` | No | `0` | Orden |
+| `activo` | `TINYINT(1)` | No | `1` | 1 = activa, 0 = inactiva (quien la ganó la conserva) |
+
+**100 insignias iniciales** en `2026-11-05-sismo-insignias-iniciales.sql` (idempotente por nombre), con imagen propia en `assets/sismo/insignias/` hasta subirlas al bucket.
+
+### 3.6 `sismo_insignias_auditoria`: cambios de los operadores
+
+`id`, `id_insignia` (FK, NULL en `subir_bucket`), `evento` (`crear` \| `editar` \| `activar` \| `desactivar` \| `subir_imagen` \| `subir_bucket`), `detalle` (JSON sin datos personales), `execution_id` (UUID v4), `activo` y auditoría (`created_by` = operador).
+
 ## 4. Datos personales y seguridad
 
 | Dato | Dónde está | Protección |
@@ -537,6 +606,8 @@ Si la persona no registró nombre, se quita el comodín y se corrige la puntuaci
 | Ficha médica (dato de salud) | `sismo_fichas_medicas_usuarios.datos_cifrados` | Cifrada AES-256-GCM; llave fuera de la base de datos |
 | Nombre, teléfono y correo de contactos | `sismo_contactos_usuarios` | Acceso solo por el dueño (token) y por operadores autorizados del panel |
 | Ubicaciones | `sismo_ajustes_usuarios`, `sismo_alertas_usuarios`, `sismo_puntos_encuentro_usuarios` | Igual que arriba |
+| Foto de perfil | Bucket `sismo/perfil/` (la BD solo guarda la ruta) | Reescalada y sin metadatos; solo URL firmada de 15 min; se borra al quitarla o al eliminar la cuenta |
+| Acciones para insignias | `sismo_acciones_usuarios` | Solo claves de una lista blanca y huellas SHA-1; sin datos personales |
 
 **Eliminar mi cuenta:** borrado lógico en cascada (`activo = 0`) de todas las tablas del usuario y **supresión** de los datos personales y de salud (se vacían nombre, contactos, ficha cifrada, ubicaciones, puntos, notas y mensajes). Solo quedan métricas anónimas (tiempos y SUS) para la tesis.
 
