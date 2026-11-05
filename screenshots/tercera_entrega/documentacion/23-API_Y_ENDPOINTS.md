@@ -68,6 +68,7 @@ El backend está hecho en **CodeIgniter 3 (PHP 7.3)** y se comunica en **JSON**.
 | `GET` | `/foto` | Sí | — | **200** `{foto:{url, expira}\|null}` (URL firmada de 15 min; pedir otra al vencer) | 401 |
 | `POST` | `/foto` | Sí | `{imagen: base64}` (JPEG/PNG/WebP, máx. 2 MB) | **200** `{foto:{url, expira}}` (se guarda en el bucket `sismo/perfil/` y se borra la anterior) | 401, 413, 422 `imagen`, 503 `bucket_no_disponible` |
 | `DELETE` | `/foto` | Sí | — | **200** `{foto:null}` (se borra del bucket) | 401 |
+| `GET` | `/version` | No | — | **200** `{actual, minima, nombre, enlace, tienda}`: versión publicada de la app Android (`actual`/`minima` son `versionCode`; `enlace` es la tienda si está configurada o `Sismo_info/android`) | — |
 
 ### Ejemplo: registrar el dispositivo y subir un contacto
 
@@ -121,12 +122,16 @@ Sin sesión, las páginas redirigen al inicio de sesión y las consultas respond
 | `GET` | `/Sismo_admin/insignia_ganadores/{id}` | — | **200** `{ganadores[]}` (máx. 200) · 404 |
 | `POST` | `/Sismo_admin/insignias_subir_bucket` | `{}` | **200** `{ok, subidas, fallidas}`: sube a `sismo/insignias/`, verifica MD5 y borra la copia del servidor · 502 si ninguna subió |
 | `GET` | `/Sismo_admin/foto/{id}` | — | **200** `{foto:{url, expira}\|null}` (URL firmada de 15 min) |
+| `GET` | `/Sismo_admin/apk_estado` | — | **200** `{publicado, descarga, version}` · 403 si no es superadministrador · 502 `bucket` |
+| `POST` | `/Sismo_admin/apk_subir` | multipart: `apk` (`.apk`, máx. 150 MB; ZIP con `AndroidManifest.xml`) | **200** `{ok, bytes, descarga, version_apk:{codigo, nombre}\|null, version}`: sube a `sismo/app/sismo.apk`, verifica MD5, sin copia local · 403 · 422 `no_es_apk` / `muy_grande` / `archivo` · 502 `bucket` |
+| `POST` | `/Sismo_admin/apk_version_guardar` | `{actual, minima, nombre, tienda}` (`minima` ≤ `actual`; `tienda` vacía o `https://`) | **200** `{ok, version}` · 403 · 422 `{campos}` |
 
 ## 4. Página informativa (`Sismo_info`)
 
 | Método | Ruta | Respuesta |
 |---|---|---|
 | `GET` | `/Sismo_info` | Página HTML pública; «Ir al panel» solo para operadores autorizados |
+| `GET` | `/Sismo_info/android` | **302** a una URL firmada de 10 min del APK (se descarga como `SISMO.apk`) · **404** «estará disponible pronto» si aún no se ha subido |
 
 ## 5. Correo de alerta a los contactos
 

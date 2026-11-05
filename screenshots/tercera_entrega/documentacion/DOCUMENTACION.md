@@ -10,5 +10,5 @@ En la tercera entrega **solo están los documentos que cambiaron**, copiados de 
 | 22 | [Diccionario de datos](22-DICCIONARIO_DE_DATOS.md) | 19 tablas; contrato del correo y dominios de valores (correo, insignias, foto) |
 | 23 | [API y endpoints](23-API_Y_ENDPOINTS.md) | Nuevos `POST /correo_alerta/{id}`, `GET\|POST /insignias`, `GET\|POST\|DELETE /foto` y los del panel (`correo_contactos`, insignias, `foto/{id}`) |
 | 28 | [Registro de riesgos](28-REGISTRO_DE_RIESGOS.md) | R-18 (correo), R-19 (token, abierto), R-20 (foto de perfil), R-21 (insignias durante una alerta) y R-22 (rendimiento de las insignias) |
-| 29 | [Evidencias visuales](29-EVIDENCIAS_VISUALES.md) | Las 54 evidencias de la tercera entrega |
-| 30 | [Registro de cambios y versiones](30-REGISTRO_DE_CAMBIOS_Y_VERSIONES.md) | Versiones 3.3 (correo) y 3.4 (plus: insignias y foto de perfil) |
+| 29 | [Evidencias visuales](29-EVIDENCIAS_VISUALES.md) | Las 63 evidencias de la tercera entrega |
+| 30 | [Registro de cambios y versiones](30-REGISTRO_DE_CAMBIOS_Y_VERSIONES.md) | Versiones 3.3 (correo), 3.4 (plus: insignias y foto de perfil) y 3.5 (descarga del APK y versiones) |

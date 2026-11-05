@@ -1,0 +1,32 @@
+%% title: Diagrama de secuencia — Publicar el APK y avisar a la persona que actualice · tercera entrega
+sequenceDiagram
+  autonumber
+  actor S as Superadministrador
+  participant PN as Panel · Sismo_admin
+  participant B as Bucket · sismo/app/
+  participant API as Backend · Sismo::version
+  participant A as App SISMO (Android)
+  actor P as Persona usuaria
+  participant I as Página informativa · Sismo_info
+  S->>PN: Subir APK (tarjeta «App para Android»)
+  PN->>PN: Valida .apk, ≤150 MB y AndroidManifest.xml y lee assets/public/version.json
+  PN->>B: subir() y verificar MD5 (sin copia en el servidor)
+  PN-->>S: ¿Poner la versión del APK como actual?
+  S->>PN: Guardar versión (actual, mínima, nombre, tienda)
+  PN->>PN: sismo_parametros (claves app_*)
+  A->>API: GET /version (al abrir y al volver a la app)
+  API-->>A: {actual, minima, nombre, enlace, tienda}
+  alt versionCode < mínima
+    A-->>P: Pantalla «Actualice SISMO para seguir» + «Tengo una emergencia»
+  else versionCode < actual
+    A-->>P: Aviso «Hay una versión nueva» («Ahora no» la omite)
+  end
+  Note over A,P: Nunca con una alerta activa, en la pantalla de alerta ni en un simulacro
+  P->>A: Actualizar
+  alt Con enlace de tienda
+    A->>P: Abre la tienda
+  else Sin tienda
+    A->>I: GET Sismo_info/android
+    I->>B: firmar() 10 min (descarga como SISMO.apk)
+    I-->>P: Redirección 302 → descarga del APK
+  end

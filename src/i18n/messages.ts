@@ -19,6 +19,7 @@ import settings from './ns/settings';
 import setup from './ns/setup';
 import stats from './ns/stats';
 import survey from './ns/survey';
+import update from './ns/update';
 import welcome from './ns/welcome';
 
 /** Registro de espacios de nombres. Al crear uno nuevo en ns/, agréguelo aquí. */
@@ -43,6 +44,7 @@ export const messages = {
   setup,
   stats,
   survey,
+  update,
   welcome,
 };
 

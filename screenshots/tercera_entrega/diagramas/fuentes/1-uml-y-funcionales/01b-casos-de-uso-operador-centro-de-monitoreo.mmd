@@ -25,6 +25,7 @@ flowchart LR
     A20(["Administrar insignias<br/>(reglas, fechas, vencimiento, secretas, imagen)"])
     A21(["Subir imágenes de insignias al bucket<br/>(y borrarlas del servidor)"])
     A22(["Ver foto, insignias y perfil de la persona"])
+    A23(["Publicar el APK y la versión<br/>(solo superadministrador: actual, mínima, tienda)"])
   end
   P["«actor»<br/><b>Persona usuaria</b>"]:::actor
   U["«sistema»<br/><b>USGS</b>"]:::sys
@@ -45,6 +46,7 @@ flowchart LR
   O --- A17
   O --- A18
   O --- A20
+  O --- A23
   A21 -. «extend» .-> A20
   A22 -. «extend» .-> A5
   A20 -. «include» .-> A1

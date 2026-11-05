@@ -833,3 +833,14 @@ html[data-a11y-contrast] .level-tag { border-width: 2px; }
 .avatar { overflow: visible; }
 .avatar img, .avatar__initials { border-radius: 50%; }
 .pending-tag { align-self: flex-start; font-size: 0.75rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; color: var(--warning); background: var(--warning-bg); border: 1px solid var(--warning); }
+
+/* Aviso de actualización de la app Android */
+.update-notice__icon { color: var(--navy); }
+.update-notice__hint { font-size: 0.85rem; color: var(--muted); }
+.update-blocker { position: fixed; inset: 0; z-index: 26000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  background: var(--bg, #f3f5f9); color: var(--text); text-align: center; overflow-y: auto; }
+.update-blocker h2 { font-size: 1.4rem; color: var(--navy); }
+.update-blocker p { max-width: 360px; color: var(--muted); }
+.update-blocker__actions { width: min(100%, 360px); display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.update-blocker__sos { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); width: min(100%, 360px); display: flex; flex-direction: column; gap: 6px; }

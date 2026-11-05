@@ -21,6 +21,7 @@ classDiagram
     +correo_alerta(id)
     +insignias() GET/POST
     +foto() GET/POST/DELETE
+    +version() versión publicada
     +catalogos()
     +eliminar_cuenta()
   }
@@ -45,10 +46,14 @@ classDiagram
     +insignia_ganadores(id)
     +insignias_subir_bucket()
     +foto(id)
+    +apk_estado()
+    +apk_subir() superadmin
+    +apk_version_guardar() superadmin
   }
   class Sismo_info {
     <<Página pública>>
     +index()
+    +android() descarga del APK
   }
   class Sismo_model {
     +registrar()
@@ -71,6 +76,8 @@ classDiagram
     +guardar_catalogo()
     +guardar_guia()
     +guardar_parametro()
+    +version_app()
+    +guardar_version_app()
     +catalogos_admin()
     +tiene_correos()
     +destinatarios_correo()
@@ -166,3 +173,5 @@ classDiagram
   Sismo_foto --> Archivos_bucket : sismo/perfil/
   Sismo_admin --> Archivos_bucket : sismo/insignias/ (Subir a bucket)
   Sismo_correo ..> Sismo_foto : foto incrustada en el correo
+  Sismo_admin --> Archivos_bucket : sismo/app/sismo.apk (Subir APK)
+  Sismo_info --> Archivos_bucket : URL firmada del APK (10 min)

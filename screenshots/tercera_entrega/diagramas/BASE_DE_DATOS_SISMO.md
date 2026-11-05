@@ -522,6 +522,15 @@ Semilla: 11 tarjetas (3 de «antes», 4 de «durante», 4 de «después»). En l
 | `guia_intro_despues_es` / `_en` | texto | texto | Introducción de «después» en la guía |
 | `guia_aviso_es` / `_en` | texto | texto | Aviso final de la guía |
 
+**Versión de la app Android** (script `2026-11-05-sismo-version-app.sql`; solo las edita el superadministrador en la tarjeta «App para Android (APK)» del panel; no aparecen en el editor de parámetros ni en `/catalogos`; la app las lee en `GET sismo/version`):
+
+| Clave | Valor inicial | Tipo | Qué controla |
+|---|---|---|---|
+| `app_version_actual` | `1` | numero | `versionCode` de la última versión publicada (más vieja: aviso que se puede cerrar) |
+| `app_version_minima` | `1` | numero | `versionCode` mínimo (más vieja: actualización obligatoria) |
+| `app_version_nombre` | `1.0` | texto | Nombre visible de la última versión |
+| `app_enlace_tienda` | vacío | texto | Enlace `https://` de la tienda; vacío = descarga del APK |
+
 ### 3.4 `sismo_plantillas_atenciones`: plantillas de mensaje para «Brindar ayuda»
 
 Se administran en el panel, en **Catálogos de la app → Mensajes de ayuda**. Solo las usa el panel: la app no las descarga, porque recibe el mensaje ya escrito.

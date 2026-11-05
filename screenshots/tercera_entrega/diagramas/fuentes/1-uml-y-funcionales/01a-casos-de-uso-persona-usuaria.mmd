@@ -35,6 +35,8 @@ flowchart LR
     UC23(["Poner foto de perfil<br/>(tomar o elegir; se guarda en el bucket)"])
     UC24(["Ganar insignias<br/>(se ganan solas al prepararse y practicar)"])
     UC25(["Ver Mis insignias y Perfil completado<br/>(ganadas, por ganar, secretas, vencidas)"])
+    UC26(["Descargar la app para Android<br/>(APK desde la página informativa)"])
+    UC27(["Actualizar la app<br/>(aviso sugerido u obligatorio; tienda o APK)"])
   end
   C["«actor»<br/><b>Contacto de emergencia</b>"]:::actor
   R["«actor»<br/><b>Rescatista</b>"]:::actor
@@ -68,6 +70,9 @@ flowchart LR
   P --- UC22
   P --- UC23
   P --- UC25
+  P --- UC26
+  P --- UC27
+  UC27 -. «include» .-> UC26
   UC24 -. «extend» .-> UC25
   UC23 -. «include» .-> UC24
   UC2 -. «include» .-> UC2a

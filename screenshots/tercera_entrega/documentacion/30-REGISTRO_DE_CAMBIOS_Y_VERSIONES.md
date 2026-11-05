@@ -10,7 +10,9 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 
 | Versión | Periodo | Fase · actividad del plan | Resumen |
 |---|---|---|---|
-| **3.3** | 05/11 – 06/11 (en curso) · **tercera entrega** | Fase 3 · L, con adelanto de la actividad P | Correo de alerta a los contactos por el API: contacto principal (Para) y copia oculta, caída, urgente, atrapado, batería y ubicación; correo del centro de monitoreo con plantillas |
+| **3.5** | 05/11 – 06/11 (en curso) · **tercera entrega** | Fase 3 · L | Descarga del APK desde la página informativa, APK en el bucket subido desde el panel y aviso de actualización (sugerido u obligatorio; tienda o APK) |
+| **3.4** | 05/11 – 06/11 | Fase 3 · L | Plus: insignias dinámicas y foto de perfil |
+| **3.3** | 05/11 – 06/11 | Fase 3 · L, con adelanto de la actividad P | Correo de alerta a los contactos por el API: contacto principal (Para) y copia oculta, caída, urgente, atrapado, batería y ubicación; correo del centro de monitoreo con plantillas |
 | **3.2** | 05/11 – 06/11 (en curso) | Fase 3 · L | Plantillas y editor de mensajes, prioridad de alertas, evento masivo, sismos con gráfica y mapa, página informativa y documentación |
 | **3.0** | 04/11 | Fase 3 · J y K | Panel de monitoreo, catálogos administrables, recuperación, eliminar cuenta y servicio de correo · **entrega v3** |
 | **2.1** | 26/10 – 03/11 | Fase 3 · I | Backend, base de datos y sincronización sin conexión |
@@ -26,6 +28,15 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 ---
 
 ## Fase 3 · Backend y monitoreo (26/10 – 06/11)
+
+### [3.5] — 05/11 – 06/11 · Descarga del APK y versiones de la app
+
+#### Agregado
+- Botón **«Descargar para Android»** en la página informativa (estilo de tienda, indica que es un APK), con descarga por **URL firmada de 10 min** (`Sismo_info/android`).
+- Panel, tarjeta **«App para Android (APK)»** (solo superadministrador): subir o reemplazar el APK en el bucket (`sismo/app/sismo.apk`, valida el APK y el MD5, sin copia local) y definir **versión actual**, **mínima**, nombre y **enlace de tienda**.
+- `GET sismo/version` y **aviso de actualización** en la app Android: «Hay una versión nueva» (se puede cerrar) o «Actualice SISMO para seguir» (con «Tengo una emergencia»); nunca durante una alerta o un simulacro. Tienda si está configurada; si no, APK.
+- La versión sale de `android/app/build.gradle` y queda en `version.json` dentro del APK; el panel la lee al subirlo.
+- Script `2026-11-05-sismo-version-app.sql`: 4 claves `app_*` en `sismo_parametros` (sin tablas nuevas).
 
 ### [3.4] — 05/11 – 06/11 · Plus de la tercera entrega: insignias y foto de perfil
 

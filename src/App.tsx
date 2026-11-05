@@ -17,6 +17,7 @@ import HistoryPage from './pages/HistoryPage';
 import HomePage from './pages/HomePage';
 import LocationPage from './pages/LocationPage';
 import { FallDetector } from './components/FallDetector';
+import { UpdateNotice } from './components/UpdateNotice';
 import { useLocationAutoRefresh } from './components/useLocationAutoRefresh';
 import KitPage from './pages/KitPage';
 import MedicalPage from './pages/MedicalPage';
@@ -93,6 +94,8 @@ function Routes() {
       <FallDetector />
       {/* «¡Ganaste una insignia!»: nunca durante una alerta o un simulacro (queda en cola). */}
       <BadgeCelebration />
+      {/* Aviso de actualización (solo Android): tampoco aparece durante una alerta o un simulacro. */}
+      <UpdateNotice />
       <IonRouterOutlet>
         <Route exact path="/bienvenida" component={WelcomePage} />
         <Route exact path="/registro" component={SetupPage} />

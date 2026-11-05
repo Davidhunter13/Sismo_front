@@ -5,6 +5,10 @@ interface ImportMetaEnv {
   readonly VITE_SISMO_API_URL?: string;
   /** 'true' habilita el modo de demostración en una compilación de producción (solo pruebas). */
   readonly VITE_DEMO?: string;
+  /** versionCode de android/app/build.gradle (lo inyecta vite.config.ts). */
+  readonly VITE_APP_VERSION_CODE?: string;
+  /** versionName de android/app/build.gradle (lo inyecta vite.config.ts). */
+  readonly VITE_APP_VERSION_NAME?: string;
 }
 
 interface ImportMeta {

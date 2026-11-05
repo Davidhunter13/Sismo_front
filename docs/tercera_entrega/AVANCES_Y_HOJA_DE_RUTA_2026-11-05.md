@@ -2,7 +2,7 @@
 
 # SISMO — Avances de la tercera entrega
 
-**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.4 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
+**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.5 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
 
 Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshots/tercera_entrega/`. Cuando un diagrama o un documento cambia, se copia el de la segunda entrega como base y se actualiza la copia (los de la segunda entrega no se tocan); en la sección 4 se explica qué cambió y por qué. Lo anterior está en [`../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md`](../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
@@ -24,6 +24,7 @@ Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshot
 | **Plus: insignias** | — (no estaba en el plan) | **100 insignias automáticas** (secretas, con fechas y con vencimiento), Mis insignias, «Perfil completado» y su administración en el panel |
 | **Foto de perfil** | — | Tomar o elegir la foto; se guarda en el bucket, se ve en la app, en el panel y **en los correos** |
 | Producción | Textos de «demostración» visibles | En producción **no aparece nada de demo**; «Borrar todos los datos» solo en desarrollo |
+| **App Android: descarga y versiones** | El APK se compartía a mano | Botón **«Descargar para Android»** en la página informativa, **APK en el bucket** subido desde el panel y **aviso de actualización** (sugerido u obligatorio; tienda o APK) |
 
 ---
 
@@ -122,6 +123,19 @@ Las insignias **no estaban en el plan**: se agregaron como un plus para que la g
 - Bitácoras **sin direcciones**. Logs en JSON con `execution_id`.
 - El **token del servicio de correo** se lee de la variable de entorno `CORREO_SERVICIO_TOKEN` (y la URL, opcional, de `CORREO_SERVICIO_URL`); ya no está en el código.
 
+### 2.14 Descarga del APK y aviso de actualización
+
+- **Página informativa:** botón **«Descargar para Android»** (estilo de tienda, dice «Descárgala como APK» e «Instalación directa · Android 7 o superior»), debajo de «Ver lo que hace» y «Cómo funciona», y otra vez al final. Lleva a `Sismo_info/android`, que redirige a una **URL firmada de 10 minutos** del bucket y descarga el archivo como `SISMO.apk`. Si aún no hay APK, muestra «La app para Android estará disponible pronto».
+- **Panel → «App para Android (APK)»** (solo el superadministrador, la misma lista que «Vaciar todos los usuarios»): **Subir / Reemplazar APK** (`.apk`, máx. 150 MB, se valida que sea un APK de verdad), verifica el MD5 y lo guarda en `intranet/{desarrollo|produccion}/sismo/app/sismo.apk` sin copia en el servidor; **Probar descarga**.
+- **Versión publicada** en la misma tarjeta: **versión actual** y **versión mínima** (códigos `versionCode`), **nombre visible** (p. ej. 1.1) y **enlace de la tienda** (opcional). Al subir un APK, el panel lee su versión y ofrece ponerla como actual.
+- **App Android:** consulta `GET sismo/version` al abrir y al volver a la app (y guarda la última respuesta para cuando no hay internet):
+  - más vieja que la **actual** → aviso **«Hay una versión nueva»** con «Descargar la nueva versión» y «Ahora no» (no vuelve a salir para esa versión);
+  - más vieja que la **mínima** → pantalla **«Actualice SISMO para seguir»**, con el botón rojo **«Tengo una emergencia»**, que lleva a Inicio (SOS) y deja usar la app 30 minutos;
+  - **nunca** aparece con una alerta activa, en la pantalla de alerta ni en un simulacro.
+- **Tienda o APK:** si el panel tiene enlace de tienda, el botón dice «Abrir la tienda»; si no, descarga el APK. Así, cuando la app esté en una tienda basta con pegar el enlace.
+- **Una sola fuente de versión:** `versionCode` y `versionName` de `android/app/build.gradle`. La compilación los inyecta en la app y escribe `version.json` dentro del APK, que es lo que lee el panel.
+- La versión web no muestra el aviso (siempre es la última).
+
 ---
 
 ## 3. Base de datos
@@ -138,7 +152,9 @@ Script idempotente `2026-11-05-sismo-insignias.sql` y semilla `2026-11-05-sismo-
 - `sismo_usuarios.foto`: ruta de la foto en el bucket.
 - `sismo_insignias` (catálogo y regla), `sismo_usuarios_insignias` (ganadas, con vencimiento y aviso pendiente), `sismo_acciones_usuarios` (lo que hace la persona, máximo una fila por hora, sin datos personales) y `sismo_insignias_auditoria`.
 
-En total, **19 tablas**. Si el script aún no se ejecutó, la API responde `correo_no_disponible` y la app muestra «sin servidor»; el resto sigue funcionando.
+Script idempotente `2026-11-05-sismo-version-app.sql` (**no crea tablas**): 4 filas en `sismo_parametros` para la versión de la app (`app_version_actual`, `app_version_minima`, `app_version_nombre`, `app_enlace_tienda`). Estas claves no aparecen en el editor de parámetros de los operadores ni en los catálogos que descarga la app; solo las edita el superadministrador.
+
+En total, **19 tablas** (sin cambios). Si el script aún no se ejecutó, la API responde `correo_no_disponible` y la app muestra «sin servidor»; el resto sigue funcionando.
 
 ---
 
@@ -148,22 +164,24 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 
 | Diagrama o documento | Por qué cambió |
 |---|---|
-| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos, marcar el contacto principal, poner foto de perfil, ganar insignias y ver Mis insignias |
-| `01b` Casos de uso del operador | Nuevos casos: enviar correo a los contactos, ver los correos enviados, administrar insignias, subirlas al bucket y ver foto, insignias y perfil |
+| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos, marcar el contacto principal, poner foto de perfil, ganar insignias, ver Mis insignias, **descargar la app (APK) y actualizarla** |
+| `01b` Casos de uso del operador | Nuevos casos: enviar correo a los contactos, ver los correos enviados, administrar insignias, subirlas al bucket, ver foto, insignias y perfil, y **publicar el APK y la versión** (superadministrador) |
 | `02b` Actividades: alerta SOS y correo | El correo se pide al API (alarma o caída), con sus respuestas y los avisos por urgente, atrapado y batería |
 | `03a` Secuencia: alerta SOS y correo | Nuevo recorrido: app → API → modelo (destinatarios, bitácora, límite) → librería `Sismo_correo` → servicio de correo |
 | `03e` Secuencia: correo del operador a los contactos (**nuevo**) | No existía: panel → `Sismo_admin` → lista blanca → modelo → `Sismo_correo` → servicio de correo |
-| `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
+| `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()`, `version()`, `Sismo_info::android()`, `apk_estado()`, `apk_subir()`, `apk_version_guardar()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
 | `12`, `13`, `14` Modelos de base de datos | Bitácoras de correo, 4 tablas de insignias y columnas `es_principal_correo` y `foto` (19 tablas) |
 | `BASE_DE_DATOS_SISMO.md` | Mismas razones que los modelos, y el estado «contactos» de las plantillas |
-| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias) y RF-FP-01 a 05 (foto) |
-| 22 Diccionario de datos | Contrato del correo y dominios de valores (tipos de correo, estado «contactos») |
-| 23 API y endpoints | Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto` y los del panel (correo, insignias, foto) |
+| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias), RF-FP-01 a 05 (foto) y RF-AV-01 a 05 (descarga y versiones de la app) |
+| 22 Diccionario de datos | Contrato del correo y dominios de valores (tipos de correo, estado «contactos», claves `app_*` de la versión) |
+| 23 API y endpoints | Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto`, `GET /version`, `Sismo_info/android` y los del panel (correo, insignias, foto, APK y versión) |
 | `03f` Secuencia: la persona gana insignias (**nuevo**) | No existía: acciones con cola sin internet → API → registrar y evaluar → aviso (en cola si hay alerta activa) |
 | `03g` Secuencia: foto de perfil (**nuevo**) | No existía: app → API → `Sismo_foto` → bucket `sismo/perfil/` → URL firmada → panel y correos |
-| 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta) y R-22 (rendimiento) |
+| `03h` Secuencia: publicar el APK y actualizar la app (**nuevo**) | No existía: panel → bucket `sismo/app/` → versión en `sismo_parametros` → `GET /version` → aviso sugerido u obligatorio → tienda o descarga firmada |
+| `BASE_DE_DATOS_SISMO.md` (parámetros) | Claves `app_*` de la versión de la app en `sismo_parametros` |
+| 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta), R-22 (rendimiento), R-23 (actualización obligatoria en una emergencia) y R-24 (APK fuera de una tienda) |
 | 29 Evidencias visuales | Evidencias de la tercera entrega |
-| 30 Registro de cambios | Versiones 3.3 (correo) y 3.4 (plus: insignias y foto) |
+| 30 Registro de cambios | Versiones 3.3 (correo), 3.4 (plus: insignias y foto) y 3.5 (descarga del APK y versiones) |
 
 ---
 
@@ -177,6 +195,10 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 - **Nada de insignias durante una alerta:** el aviso queda en cola; las alertas reales no dan insignias.
 - **Foto en el bucket con URL firmada:** es un dato personal; nunca URL pública ni copia en el servidor. En los correos va incrustada porque una URL firmada vencería.
 - **Imágenes de insignias locales hasta «Subir a bucket»:** el operador decide cuándo publicarlas; al subirlas se verifica el MD5 y solo entonces se borran del servidor.
+- **Actualización obligatoria que nunca bloquea una emergencia:** no sale durante una alerta ni en un simulacro, y la pantalla tiene «Tengo una emergencia».
+- **Versión por `versionCode` (entero) y una sola fuente (`build.gradle`):** comparar enteros evita errores con nombres como «1.10» y «1.9».
+- **Tienda si existe, si no APK:** el mismo aviso sirve hoy (APK en el bucket) y cuando la app esté en una tienda.
+- **APK en el bucket con URL firmada y solo el superadministrador lo publica:** no queda en el servidor ni en el repositorio, y cada descarga usa un enlace temporal.
 - **Una librería para armar y enviar correos** (`Sismo_correo`): la usan el API de la app y el panel, así el diseño y el remitente son siempre iguales.
 
 ---
@@ -187,12 +209,15 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 - **Logo en base64:** no se muestra en Gmail ni Outlook web (sí en Apple Mail, Outlook de escritorio y apps móviles). Alternativa: imagen publicada por URL.
 - **Token anterior:** versiones anteriores de la librería de correo tenían el token en el código; conviene rotarlo (riesgo R-19).
 - El correo depende de internet en el teléfono; sin red, la alerta local y los SMS siguen funcionando.
+- **APK sin firma de publicación:** por ahora se publica el APK firmado con la clave de depuración de Android Studio; el teléfono pide permitir «orígenes desconocidos». Para la tienda hará falta una firma de publicación.
+- **Tamaño de subida en producción:** el servidor debe aceptar archivos del tamaño del APK (`upload_max_filesize` y `post_max_size`; hoy ~5,6 MB). Si no, el panel dice «El APK es demasiado grande para el servidor».
+- La subida del APK y el guardado de la versión desde el panel se probaron con la API simulada; falta probarlos con una sesión real de superadministrador.
 
 ---
 
 ## 7. Evidencias
 
-Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
+Carpeta `screenshots/tercera_entrega/2026-11-05/` (**63 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
 
 **`visual/visual_front/`** (app, 390×844):
 
@@ -209,6 +234,8 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos fict
 | `09-configuracion-foto-de-perfil.png` | Configuración → Perfil: tomar, elegir o quitar la foto y aviso de privacidad (§2.11) |
 | `10-configuracion-lo-que-debe-saber.png` | Producción: «Lo que debe saber» actualizado, sin textos de demostración (§2.12) |
 | `11-inicio-perfil-completado-y-mis-insignias.png` | Inicio: «Perfil completado» con lo que falta y «Mis insignias» (§2.10) |
+| `12-aviso-version-nueva.png` | Aviso «Hay una versión nueva» con «Descargar la nueva versión» y «Ahora no» (§2.14) |
+| `13-actualizacion-obligatoria.png` | «Actualice SISMO para seguir» con «Abrir la tienda» y «Tengo una emergencia» (§2.14) |
 
 **`visual/visual_back/`** (correos y panel):
 
@@ -226,6 +253,8 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos fict
 | `10-panel-insignias.png` | Panel: tarjeta «Insignias de la app» con filtros, chips y «Subir a bucket» (§2.10) |
 | `11-panel-editor-insignia.png` | Panel: editor de insignia con los campos de su tipo de regla e imagen (§2.10) |
 | `12-panel-usuario-foto-insignias.png` | Panel: detalle de la persona con foto, perfil completado e insignias (§2.11) |
+| `13-pagina-informativa-descargar-android.png` | Página informativa: botón «Descargar para Android» (APK) debajo de los otros dos (§2.14) |
+| `14-panel-app-android-apk-y-version.png` | Panel: tarjeta «App para Android (APK)» con la versión actual, la mínima y el enlace de tienda (§2.14) |
 
 **`codigo/codigo_front/`**:
 
@@ -245,6 +274,8 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos fict
 | `12-foto-reescalada-y-url-firmada.png` | `photoService.ts`: validar, reducir y renovar la URL firmada |
 | `13-perfil-completado.png` | `profileCompletion.ts`: los 7 puntos del perfil |
 | `14-produccion-sin-demo.png` | `env.ts`: en producción no aparece nada de demostración |
+| `15-aviso-de-actualizacion.png` | `versionService.ts`: versión sugerida u obligatoria según el `versionCode` |
+| `16-version-desde-build-gradle.png` | `vite.config.ts`: versión desde `build.gradle` y `version.json` dentro del APK |
 
 **`codigo/codigo_back/`**:
 
@@ -267,17 +298,22 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos fict
 | `15-foto-bucket-url-firmada.png` | `Sismo_foto`: sin metadatos, bucket `sismo/perfil/` y URL firmada |
 | `16-panel-subir-a-bucket.png` | «Subir a bucket»: verifica MD5 y solo entonces borra del servidor |
 | `17-sql-insignias.png` | Script SQL de las insignias (convención CCS) |
+| `18-api-version-de-la-app.png` | `GET sismo/version`: tienda si existe, si no el APK |
+| `19-subir-apk-al-bucket.png` | `Sismo_admin::apk_subir()`: valida el APK, lee su versión y verifica MD5 |
+| `20-descarga-apk-url-firmada.png` | `Sismo_info::android()`: URL firmada de 10 min |
 
 ---
 
 ## 8. Estado de verificación
 
-- Pruebas unitarias: **192 de 192** (27 archivos; incluye correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
-- Pruebas e2e (celular y escritorio): **130 de 130** el 05/11 (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
+- Pruebas unitarias: **199 de 199** (28 archivos; incluye el aviso de actualización, correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
+- Pruebas e2e (celular y escritorio): **130 de 130** el 05/11, repetidas después de agregar el aviso de actualización (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
 - `eslint` y `tsc -b` sin errores; PHP sin errores de sintaxis.
 - API de insignias y foto probados contra el backend local con una cuenta de prueba que se eliminó al final (acciones inválidas → 422, sin token → 401, foto inválida → 422, foto subida y descargada con URL firmada).
 - Evaluación de 100 insignias: < 1 s por petición.
 - Envío real de los 7 tipos de correo a una cuenta de prueba.
+- Aviso de actualización revisado en pantalla (sugerido, obligatorio, «Ahora no» y «Tengo una emergencia») con la respuesta del backend simulada; `GET sismo/version` probado contra el backend local; el APK trae `version.json` y el backend lo lee.
+- Página informativa con el botón de Android sin desbordes en 1440 px y 390 px.
 
 ---
 
@@ -286,6 +322,9 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**54 evidencias**, datos fict
 1. Ejecutar `docs/superpowers/sql/2026-11-05-sismo-correos-alertas.sql` (además de los scripts anteriores).
 2. Crear en el servidor la variable de entorno `CORREO_SERVICIO_TOKEN` (y, si cambia, `CORREO_SERVICIO_URL`).
 3. Recompilar la app (`npm run build` / APK); ya no se usa `VITE_ALERT_EMAIL_URL`.
+4. Ejecutar `docs/superpowers/sql/2026-11-05-sismo-version-app.sql` (versión de la app).
+5. Revisar que `upload_max_filesize` y `post_max_size` del servidor acepten el APK, y subirlo desde el panel (tarjeta «App para Android (APK)»).
+6. Para cada versión nueva: subir `versionCode`/`versionName` en `android/app/build.gradle`, compilar, subir el APK desde el panel y aceptar ponerlo como versión actual (la mínima solo si la anterior ya no debe usarse).
 
 ---
 

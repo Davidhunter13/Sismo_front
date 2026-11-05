@@ -78,6 +78,16 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | RF-FP-04 | La foto debe verse en la app, en el detalle de la persona y en las alertas del panel, y en los **correos a los contactos** (incrustada y reducida). | PU, OP | Media |
 | RF-FP-05 | Al eliminar la cuenta, la foto se borra del bucket. | SIS | Alta |
 
+## RF-AV · Descarga y versiones de la app Android
+
+| ID | Requisito | Actor | Prioridad |
+|---|---|---|---|
+| RF-AV-01 | La página informativa debe ofrecer **«Descargar para Android»**, que entrega el APK del bucket con una URL firmada temporal; si no hay APK, debe decir que estará disponible pronto. | VI | Media |
+| RF-AV-02 | Solo el superadministrador debe poder **subir o reemplazar el APK** desde el panel; el servidor valida que sea un APK (máx. 150 MB), verifica el MD5 y no deja copia local. | OP | Media |
+| RF-AV-03 | El panel debe permitir definir la **versión actual**, la **versión mínima**, el nombre visible y el **enlace de la tienda** (opcional); al subir un APK ofrece usar su versión como actual. | OP | Media |
+| RF-AV-04 | La app Android debe avisar **«Hay una versión nueva»** (se puede cerrar) si es más vieja que la actual, y **exigir la actualización** si es más vieja que la mínima; «Actualizar» abre la tienda si está configurada y, si no, descarga el APK. | SIS | Media |
+| RF-AV-05 | El aviso de actualización **nunca debe aparecer con una alerta activa**, en la pantalla de alerta ni en un simulacro, y la pantalla obligatoria debe ofrecer **«Tengo una emergencia»** para llegar al SOS. | SIS | Alta |
+
 ## RF-CT · Contactos y puntos de encuentro
 
 | ID | Requisito | Rol | Prioridad |

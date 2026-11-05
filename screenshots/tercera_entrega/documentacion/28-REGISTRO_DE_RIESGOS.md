@@ -31,6 +31,8 @@ Versión 1.0 · 4 de noviembre de 2026.
 | R-20 | Exposición de la foto de perfil (dato personal) | Baja | Alto | Bucket privado, ruta `sismo/perfil/` sin copia en el servidor, solo URL firmada de 15 min (se pide otra al vencer), imagen reescalada y sin metadatos, se borra al quitarla o al eliminar la cuenta | Mitigado |
 | R-21 | Las insignias distraen durante una emergencia | Baja | Alto | El aviso «¡Ganaste una insignia!» nunca aparece con una alerta activa (queda en cola); las alertas reales no dan insignias | Mitigado |
 | R-22 | Evaluar las insignias hace lenta la sincronización | Media | Medio | Toda la actividad de la persona se trae en 2 consultas por petición e inserción en lote (de ~17 s a < 1 s con 100 insignias y la base de datos remota) | Mitigado |
+| R-23 | La actualización obligatoria impide pedir ayuda | Baja | Alto | La pantalla obligatoria nunca aparece con una alerta activa, en la pantalla de alerta ni en un simulacro, y tiene «Tengo una emergencia» (lleva al SOS y pausa 30 min); la versión mínima la cambia solo el superadministrador | Mitigado |
+| R-24 | APK distribuido fuera de una tienda (firma de depuración, instalación de orígenes desconocidos) | Media | Medio | Solo el superadministrador lo publica; se valida que sea un APK y su MD5; descarga con URL firmada temporal; cuando haya tienda, el enlace se configura en el panel y el aviso la usa | Abierto |
 | R-19 | El token del servicio de correo queda expuesto | Media | Alto | Se lee de la variable de entorno `CORREO_SERVICIO_TOKEN`; las versiones anteriores de la librería lo tenían en el código: conviene rotarlo | Abierto |
 
 ## Mapa de calor

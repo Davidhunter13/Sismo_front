@@ -51,6 +51,7 @@ El diccionario completo, tabla por tabla, está en **[`../diagramas/BASE_DE_DATO
 | `sismo_catalogos.tipo` | `tipo_evento`, `parentesco`, `item_kit`, `paso_post_sismo`, `tipo_sangre` |
 | `sismo_guia_tarjetas.momento` | `antes`, `durante`, `despues` |
 | `sismo_parametros.tipo` | `texto`, `numero`, `lista` |
+| `sismo_parametros.clave` (versión de la app) | `app_version_actual` y `app_version_minima` (`versionCode` entero), `app_version_nombre` (p. ej. `1.1`), `app_enlace_tienda` (vacío o `https://…`). Solo las edita el superadministrador; no se envían en `/catalogos` |
 | `activo` (todas las tablas) | `1` = activo, `0` = inactivo (borrado lógico) |
 
 ## 3. Almacenamiento local de la app (`localStorage`)
