@@ -1,0 +1,47 @@
+%% title: Diagrama de secuencia — Persona usuaria: alerta SOS y correo a los contactos por el API (tercera entrega)
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant UI as App (AlertPage)
+  participant ES as emailService
+  participant SY as syncService (cola)
+  participant API as API Sismo (CI3)
+  participant MD as Sismo_model
+  participant DB as MySQL
+  participant SC2 as Sismo_correo
+  participant ML as PHP_Mailer
+  participant SC as Servicio de correo
+  actor C as Contactos
+  P->>UI: Toca SOS y confirma el tipo de evento
+  UI->>UI: Crea alerta «activa», sirena, linterna, vibración, GPS
+  UI->>SY: queueChanges(alerta)
+  UI->>P: «¿Enviar correo?» (cuenta regresiva 20 s)
+  P-->>UI: Sí / silencio
+  UI->>ES: sendAlertEmail({tipo: alerta o caida, mensaje, idioma})
+  ES->>SY: flush() — sube contactos y alerta
+  SY->>API: PUT /contactos/{id}, PUT /alertas/{id}
+  API->>DB: INSERT … ON DUPLICATE KEY UPDATE
+  ES->>API: POST /correo_alerta/{id} (Bearer token)
+  API->>MD: alerta_de_usuario(), correo_ya_enviado(), correos_ultima_hora()
+  MD->>DB: SELECT alerta y bitácora de correos
+  alt simulacro, ya enviado o límite por hora
+    API-->>ES: 422 simulacro · 200 ya_enviado · 429 límite
+  else envío
+    API->>MD: destinatarios_correo()
+    MD->>DB: SELECT contactos con correo (principales primero)
+    MD-->>API: Para = principales · CCO = el resto
+    API->>SC2: asunto() y cuerpo_automatico() — diseño de la app,<br/>mensaje escapado, logo en base64
+    API->>SC2: enviar(Para, CCO)
+    SC2->>ML: enviarcorreo({email, addbcc, subject, body, remitente: SISMO})
+    ML->>SC: POST con token de variable de entorno
+    SC-->>C: Correo «SISMO <aplicaciones@…>»
+    SC-->>ML: success
+    API->>MD: registrar_correo(tipo, cantidades, estado)
+    MD->>DB: INSERT sismo_correos_alertas (sin direcciones)
+    API-->>ES: 200 {para, copia}
+  end
+  ES-->>UI: estado «enviado» / «sin destinatarios» / «fallido»
+  opt Durante la alerta: ayuda urgente, modo atrapado o batería baja
+    UI->>ES: sendAlertEmail({tipo: urgente | atrapado | bateria})
+    ES->>API: POST /correo_alerta/{id} (una vez por tipo)
+  end

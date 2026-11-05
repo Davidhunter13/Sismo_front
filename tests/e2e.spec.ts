@@ -78,8 +78,8 @@ test('activar y finalizar alerta actualiza el historial (modo demo)', async ({ p
 test('sin modo demo el canal digital no se simula', async ({ page }) => {
   await onboard(page, false);
   await activateAlert(page);
-  await expect(view(page).locator('.badge', { hasText: 'Sin canal digital' })).toBeVisible();
-  await expect(view(page).getByText('Nadie ha sido notificado')).toBeVisible();
+  await expect(view(page).locator('.badge', { hasText: 'SMS sin enviar' })).toBeVisible();
+  await expect(view(page).getByText('nadie ha recibido el SMS')).toBeVisible();
   const data = await readStorage(page);
   expect(data.alerts[0]).toMatchObject({ digitalStatus: 'no_disponible', simulatedDelivery: false });
 });

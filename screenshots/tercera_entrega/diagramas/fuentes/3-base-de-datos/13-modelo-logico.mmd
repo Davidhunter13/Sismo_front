@@ -1,0 +1,207 @@
+%% title: Modelo lógico de base de datos — SISMO · tercera entrega (entidades, atributos, claves)
+erDiagram
+  sismo_usuarios ||--o| sismo_ajustes_usuarios : "configura"
+  sismo_usuarios ||--o{ sismo_contactos_usuarios : "registra"
+  sismo_usuarios ||--o{ sismo_alertas_usuarios : "activa"
+  sismo_usuarios ||--o| sismo_fichas_medicas_usuarios : "tiene"
+  sismo_usuarios ||--o{ sismo_puntos_encuentro_usuarios : "define"
+  sismo_usuarios ||--o{ sismo_encuestas_sus_usuarios : "responde"
+  sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
+  sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe"
+  operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
+  sismo_alertas_usuarios ||--o{ sismo_correos_alertas : "avisa por correo"
+  sismo_usuarios ||--o{ sismo_correos_operador : "sus contactos reciben"
+  operadores_panel ||--o{ sismo_correos_operador : "escribe"
+  sismo_usuarios {
+    entero id PK
+    texto uuid_dispositivo UK
+    texto hash_token UK
+    texto nombre
+    texto plataforma
+    fecha_hora fecha_ultima_sincronizacion
+    texto hash_codigo_recuperacion UK
+    fecha_hora fecha_expiracion_codigo
+    booleano activo
+  }
+  sismo_ajustes_usuarios {
+    entero id PK
+    entero id_usuario FK
+    booleano sonido_activo
+    booleano senal_visual_activa
+    booleano vibracion_activa
+    texto sonido_alarma
+    texto idioma
+    texto tema
+    booleano deteccion_caidas
+    entero ahorro_bateria_porcentaje
+    booleano alto_contraste
+    booleano texto_grande
+    booleano reducir_movimiento
+    booleano modo_demostracion
+    booleano configuracion_completada
+    texto permiso_ubicacion
+    decimal latitud_ultima
+    decimal longitud_ultima
+    decimal precision_ultima_m
+    texto origen_ultima_ubicacion
+    fecha_hora fecha_ultima_ubicacion
+    texto pasos_practica_post_sismo
+    fecha_hora fecha_ultima_revision_kit
+    booleano activo
+  }
+  sismo_contactos_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto id_cliente
+    texto nombre
+    texto parentesco
+    texto telefono
+    texto correo
+    booleano es_principal_correo
+    fecha_hora fecha_registro
+    booleano activo
+  }
+  sismo_alertas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto id_cliente
+    texto tipo_evento
+    texto estado
+    fecha_hora fecha_activacion
+    fecha_hora fecha_finalizacion
+    decimal latitud
+    decimal longitud
+    decimal precision_m
+    texto origen_ubicacion
+    fecha_hora fecha_ubicacion
+    entero actualizaciones_ubicacion
+    texto estado_canal_digital
+    booleano entrega_simulada
+    entero cantidad_contactos
+    texto estado_correo
+    booleano es_simulacro
+    texto origen_activacion
+    booleano es_urgente
+    fecha_hora fecha_urgente
+    booleano caida_sin_respuesta
+    booleano modo_atrapado
+    entero nivel_bateria
+    fecha_hora fecha_bateria
+    texto nota
+    texto pasos_post_sismo
+    entero ms_sos_presionado
+    entero ms_confirmado
+    entero ms_sirena
+    entero ms_linterna
+    entero ms_vibracion
+    entero ms_sms
+    entero ms_senal_simulacro
+    booleano activo
+  }
+  sismo_fichas_medicas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto datos_cifrados
+    booleano mostrar_en_alerta
+    booleano activo
+  }
+  sismo_puntos_encuentro_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto id_cliente
+    texto etiqueta
+    decimal latitud
+    decimal longitud
+    booleano activo
+  }
+  sismo_encuestas_sus_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto id_cliente
+    fecha_hora fecha_respuesta
+    texto respuestas
+    decimal puntaje
+    texto id_cliente_alerta
+    booleano activo
+  }
+  sismo_inventarios_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto id_cliente
+    texto nombre
+    booleano marcado
+    fecha fecha_vencimiento
+    booleano es_predeterminado
+    booleano activo
+  }
+  sismo_atenciones_alertas {
+    entero id PK
+    entero id_alerta FK
+    entero id_persona FK
+    texto estado
+    texto nota
+    booleano activo
+  }
+  sismo_catalogos {
+    entero id PK
+    texto tipo
+    texto clave
+    texto nombre_es
+    texto nombre_en
+    texto icono
+    entero orden
+    booleano activo
+  }
+  sismo_guia_tarjetas {
+    entero id PK
+    texto clave UK
+    texto momento
+    texto titulo_es
+    texto titulo_en
+    texto pasos_es
+    texto pasos_en
+    texto icono
+    entero orden
+    booleano activo
+  }
+  sismo_parametros {
+    entero id PK
+    texto clave UK
+    texto valor
+    texto tipo
+    texto descripcion
+    booleano activo
+  }
+  sismo_plantillas_atenciones {
+    entero id PK
+    texto estado
+    texto titulo
+    texto mensaje
+    entero orden
+    booleano activo
+  }
+  sismo_correos_alertas {
+    entero id PK
+    entero id_alerta FK
+    texto tipo
+    entero cantidad_para
+    entero cantidad_copia
+    texto estado
+    texto detalle_error
+    fecha_hora fecha_envio
+    booleano activo
+  }
+  sismo_correos_operador {
+    entero id PK
+    entero id_usuario FK
+    entero id_persona FK
+    texto asunto
+    entero cantidad_para
+    entero cantidad_copia
+    texto estado
+    fecha_hora fecha_envio
+    booleano activo
+  }
+  operadores_panel {
+    entero id PK
+  }

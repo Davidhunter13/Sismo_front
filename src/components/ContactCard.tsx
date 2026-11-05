@@ -4,7 +4,8 @@ import { getLang } from '../i18n';
 import { useT } from '../i18n/useT';
 import { labelOf, useCatalogs } from '../services/catalogService';
 import type { Contact } from '../types';
-import { DemoBadge } from './StatusBadge';
+import { emailRole } from '../utils/contactEmail';
+import { DemoBadge, StatusBadge } from './StatusBadge';
 
 interface ContactCardProps {
   contact: Contact;
@@ -23,6 +24,8 @@ export function ContactCard({ contact, onEdit, onDelete }: ContactCardProps) {
         <div className="contact-card__name">
           <strong>{contact.name}</strong>
           {contact.isSeed && <DemoBadge label={t.card.fictitious} />}
+          {emailRole(contact) === 'principal' && <StatusBadge tone="info" label={t.card.emailPrimary} />}
+          {emailRole(contact) === 'copia' && <StatusBadge tone="neutral" label={t.card.emailCopy} />}
         </div>
         <small>{labelOf(catalogs.relationships, contact.relationship, getLang())}</small>
         <span className="contact-card__phone"><Phone size={14} aria-hidden="true" /> {contact.phone}</span>

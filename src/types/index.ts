@@ -38,6 +38,8 @@ export interface Contact {
   phone: string;
   /** Obligatorio en contactos nuevos; los guardados antes de existir el campo pueden no tenerlo. */
   email?: string;
+  /** Correo de alerta: true = lo recibe en «Para» (principal); false o ausente = en copia oculta. */
+  emailPrimary?: boolean;
   isSeed: boolean;
   createdAt: string;
 }
@@ -129,16 +131,20 @@ export interface AlertRecord {
   /** Última batería leída durante la alerta (0–100 %) y cuándo. */
   batteryLevel?: number;
   batteryAt?: string;
+  /** Avisos por correo durante la alerta (además del correo de «activó la alarma»), con su resultado. */
+  followUpEmails?: Partial<Record<'urgente' | 'atrapado' | 'bateria' | 'ubicacion', EmailStatus>>;
+  /** Última ubicación enviada por correo a los contactos (para avisar solo si se desplaza lo suficiente). */
+  lastEmailedLocation?: { latitude: number; longitude: number; at: string };
 }
 
 /** Datos de prioridad que la pantalla de alerta actualiza mientras la alerta está activa. */
-export type AlertPriorityPatch = Partial<Pick<AlertRecord, 'urgent' | 'urgentAt' | 'trapped' | 'batteryLevel' | 'batteryAt'>>;
+export type AlertPriorityPatch = Partial<Pick<AlertRecord, 'urgent' | 'urgentAt' | 'trapped' | 'batteryLevel' | 'batteryAt' | 'followUpEmails' | 'lastEmailedLocation'>>;
 
 /**
  * Estado del correo de alerta a los contactos:
  * - 'enviado': el servidor confirmó la recepción de la solicitud.
  * - 'cancelado': la persona respondió «No».
- * - 'sin_servidor': aún no hay servidor de correo configurado (VITE_ALERT_EMAIL_URL); no se envió nada.
+ * - 'sin_servidor': no hay API configurada (VITE_SISMO_API_URL) o el servidor aún no tiene el correo habilitado; no se envió nada.
  * - 'sin_destinatarios': ningún contacto real tiene correo.
  * - 'fallido': el servidor no respondió o devolvió error.
  */
@@ -199,4 +205,4 @@ export interface AppData {
   postQuakeDone: string[];
 }
 
-export type ContactInput = Pick<Contact, 'name' | 'relationship' | 'phone'> & { email: string };
+export type ContactInput = Pick<Contact, 'name' | 'relationship' | 'phone'> & { email: string; emailPrimary?: boolean };

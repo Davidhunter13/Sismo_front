@@ -15,6 +15,7 @@ import { isContactPickerSupported, pickContact } from '../services/contactPicker
 import { requestSosDialog } from '../services/sosRequestService';
 import { defaultSettings } from '../services/storageService';
 import type { Contact, ContactInput } from '../types';
+import { emailRole } from '../utils/contactEmail';
 import { maxMeetingPoints } from '../utils/meetingPoints';
 import { goToRoot } from '../utils/navigation';
 
@@ -320,6 +321,7 @@ export default function SetupPage() {
                           <span>
                             {c.name}
                             <small>{c.phone}{c.email ? ` · ${c.email}` : ''}</small>
+                            {emailRole(c) && <small className="muted">{emailRole(c) === 'principal' ? tc.card.emailPrimary : tc.card.emailCopy}</small>}
                           </span>
                           <button className="btn btn--ghost btn--sm" onClick={() => openEditContact(c)} aria-label={tc.card.edit(c.name)}>
                             <Pencil size={16} aria-hidden="true" />

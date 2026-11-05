@@ -387,6 +387,11 @@ export async function fetchHelpStatus(): Promise<HelpStatus | null> {
   }
 }
 
+/** Token del dispositivo registrado, o null (sin registrar). Lo usan servicios que llaman al API directamente. */
+export function deviceToken(): string | null {
+  return read<Device | null>(DEVICE_KEY, null)?.token ?? null;
+}
+
 /** Solo para pruebas. */
 export function __resetSyncForTests(): void {
   memoryOutbox = null;

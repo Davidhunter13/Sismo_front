@@ -124,15 +124,13 @@ La primera vez que use Playwright, ejecute `npx playwright install chromium`.
 
 Desde Inicio también se puede **avisar que está bien** por SMS sin activar una alerta.
 
-## Correo de alerta (servidor pendiente)
+## Correo de alerta a los contactos
 
-Al activar el SOS la app pregunta «¿Enviar correo a sus contactos?» y, si no hay respuesta en 20 s, lo envía. El correo lo envía **un servidor propio** (aún por conectar):
+Al activar el SOS («activó la alarma») la app pregunta «¿Enviar correo a sus contactos?» y, si no hay respuesta en 20 s, lo envía. Durante la alerta también avisa por correo si la persona pide **ayuda urgente**, entra en **modo atrapado** o se queda **sin batería** (una vez por alerta y tipo; nunca en simulacros).
 
-1. Use `.env.development` (lo lee `npm run dev`) y `.env.production` (lo leen `npm run build` y el APK). Ambos son locales y no se suben a git; si no existen, cópielos de `.env.example`.
-2. Ponga en `VITE_ALERT_EMAIL_URL` la URL del servidor (en producción, HTTPS). Las variables `VITE_` quedan dentro de la app: nunca ponga claves allí. La app le hace un POST JSON con asunto, destinatarios, cuerpo y ubicación (contrato en `src/services/emailService.ts`).
-3. Vuelva a compilar (`npm run build` / `npm run android`).
-
-Sin URL configurada, la alerta muestra «No se envió: falta conectar el servidor de correo». El correo es obligatorio al crear un contacto (los contactos guardados antes muestran «Falta el correo»). No se pregunta en simulacros ni si ningún contacto real tiene correo.
+- El correo lo envía **el backend** por el mismo API de sincronización (`VITE_SISMO_API_URL`): `POST {URL}/correo_alerta/{id}` con el token del teléfono. Contrato en `src/services/emailService.ts`.
+- La app **no decide a quién se escribe**: el servidor toma los contactos guardados. Los marcados como **principales** van en «Para» y los demás en **copia oculta**; si ninguno está marcado, el primero es el principal (al crear o editar un contacto se elige con «Contacto principal del correo»).
+- Sin API configurada, la alerta muestra «No se envió: el servidor de correo no está disponible». El correo es obligatorio al crear un contacto (los guardados antes muestran «Falta el correo»).
 
 ## Base de datos y sincronización
 

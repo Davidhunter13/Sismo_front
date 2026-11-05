@@ -1,0 +1,31 @@
+%% title: Diagrama de actividades — Persona usuaria: alerta SOS y correos a los contactos (tercera entrega)
+flowchart TD
+  S((●)):::ini --> A["Tocar SOS<br/>(app, widget, acceso rápido o detección de caída)"]
+  A --> B["Elegir tipo de evento y confirmar"]
+  B --> C["Crear la alerta «activa»"]
+  C --> D1["Sirena, linterna, vibración<br/>y pantalla encendida"]
+  C --> D2["Afinar GPS (hasta 10 s)<br/>y actualizar cada 2 min"]
+  C --> G["Encolar la alerta para el servidor"]
+  G --> G1["El centro de monitoreo la ve en el panel"]
+  C --> D3{"¿Simulacro o sin<br/>contactos con correo?"}
+  D3 -- Sí --> NE["No se envían correos"]
+  D3 -- No --> E["«¿Enviar correo a sus contactos?»<br/>cuenta regresiva de 20 s<br/>(principales en Para y el resto en copia oculta)"]
+  E -- "No enviar" --> EC["Correo cancelado<br/>(se puede reintentar)"]
+  E -- "Sí, enviar ahora / silencio 20 s" --> EM["Subir lo pendiente y pedir al API el correo inicial:<br/>«caída sin respuesta» si la activó una caída,<br/>si no, «activó la alarma»"]
+  EM --> EV{"¿Respuesta del servidor?"}
+  EV -- "200" --> EOK["Correo «enviado»"]
+  EV -- "Sin contactos con correo" --> ESD["«Sin destinatarios»"]
+  EV -- "Error (2 reintentos)" --> EF["Correo «fallido»<br/>(se puede reintentar)"]
+  EOK & ESD & EF & EC --> AV{"Durante la alerta,<br/>¿cambió la gravedad?"}
+  AV -- "Pidió ayuda urgente" --> AU["Correo «ayuda urgente»<br/>(aunque haya cancelado el inicial)"]
+  AV -- "Entró en modo atrapado" --> AA["Correo «modo atrapado»<br/>(si no canceló el inicial)"]
+  AV -- "Batería en el umbral" --> AB["Correo «batería baja» con el %<br/>(si no canceló el inicial)"]
+  AU & AA & AB --> UNA["Una vez por alerta y tipo<br/>(el servidor evita repetidos)"]
+  G1 --> H["Consultar ayuda cada 15 s"]
+  H --> H1["Mostrar aviso fijo del centro de monitoreo"]
+  D1 & D2 & NE & AV & UNA & H1 --> J["Opcional: SMS / WhatsApp,<br/>llamar a emergencias"]
+  J --> K["Finalizar la alerta"]
+  K --> L["«Después del sismo» y «Estoy bien»"]
+  L --> F1((◉)):::fin
+  classDef ini fill:#0b2545,color:#fff
+  classDef fin fill:#d62828,color:#fff

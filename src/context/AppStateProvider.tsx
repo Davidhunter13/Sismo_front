@@ -16,6 +16,7 @@ import { maxMeetingPoints } from '../utils/meetingPoints';
 import { keepScreenOn, showOverLockScreen } from '../services/screenService';
 import { stopAlertSignals } from '../services/signalsService';
 import { AppStateContext, type AppStateValue, type DrillState } from './appContext';
+import { ensureEmailPrimary } from '../utils/contactEmail';
 
 /** Tiempo de la entrega SIMULADA del canal digital en modo de demostración. */
 const SIMULATED_DELIVERY_MS = 3500;
@@ -119,16 +120,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const addContact = useCallback((input: ContactInput) => {
     const contact = { ...input, id: newId(), isSeed: false, createdAt: new Date().toISOString() };
-    setData((d) => ({ ...d, contacts: [...d.contacts, contact] }));
+    setData((d) => ({ ...d, contacts: ensureEmailPrimary([...d.contacts, contact]) }));
     return contact;
   }, []);
 
   const updateContact = useCallback((id: string, input: ContactInput) => {
-    setData((d) => ({ ...d, contacts: d.contacts.map((c) => (c.id === id ? { ...c, ...input } : c)) }));
+    setData((d) => ({ ...d, contacts: ensureEmailPrimary(d.contacts.map((c) => (c.id === id ? { ...c, ...input } : c))) }));
   }, []);
 
   const deleteContact = useCallback((id: string) => {
-    setData((d) => ({ ...d, contacts: d.contacts.filter((c) => c.id !== id) }));
+    setData((d) => ({ ...d, contacts: ensureEmailPrimary(d.contacts.filter((c) => c.id !== id)) }));
   }, []);
 
   const activateAlert = useCallback(

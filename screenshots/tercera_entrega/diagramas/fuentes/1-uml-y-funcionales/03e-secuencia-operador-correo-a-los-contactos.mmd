@@ -1,0 +1,32 @@
+%% title: Diagrama de secuencia — Operador: correo del centro de monitoreo a los contactos de la persona (tercera entrega)
+sequenceDiagram
+  autonumber
+  actor O as Operador
+  participant PV as Panel (navegador)
+  participant CA as Sismo_admin
+  participant HS as Html_seguro
+  participant MD as Sismo_model
+  participant DB as MySQL
+  participant SC as Sismo_correo
+  participant ML as PHP_Mailer
+  participant SV as Servicio de correo
+  actor C as Contactos
+  O->>PV: Detalle de la persona → «Enviar correo a sus contactos»
+  PV-->>O: Para (principales) y copia oculta, plantillas «contactos»
+  O->>PV: Elige plantilla o escribe, asunto y mensaje con formato
+  PV->>PV: Reemplaza [nombre], [hora_alerta], [numero_emergencia]…
+  PV->>CA: POST correo_contactos {id_usuario, asunto, mensaje} (X-CSRF-Token)
+  CA->>HS: limpiar(mensaje) — lista blanca, máx. 2000 caracteres
+  CA->>MD: correos_operador_ultima_hora() — máx. 10 por persona y hora
+  CA->>MD: destinatarios_correo(persona)
+  MD->>DB: SELECT contactos con correo
+  MD-->>CA: Para = principales · CCO = el resto
+  CA->>SC: cuerpo_centro() — franja azul «Centro de monitoreo SISMO» y botón del mapa
+  CA->>SC: enviar(Para, CCO)
+  SC->>ML: enviarcorreo(remitente: SISMO)
+  ML->>SV: POST (token desde variable de entorno)
+  SV-->>C: Correo «SISMO: asunto»
+  CA->>MD: registrar_correo_operador(asunto, cantidades, operador)
+  MD->>DB: INSERT sismo_correos_operador (sin direcciones ni cuerpo)
+  CA-->>PV: 200 {para, copia}
+  PV-->>O: «Correo enviado» y aparece en «Correos a sus contactos»

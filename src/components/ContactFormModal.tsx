@@ -1,5 +1,5 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
-import { IonInput, IonModal } from '@ionic/react';
+import { IonInput, IonModal, IonToggle } from '@ionic/react';
 import { Save, X } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useT } from '../i18n/useT';
@@ -31,7 +31,7 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
 
   useEffect(() => {
     if (isOpen) {
-      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone, email: contact.email ?? '' } : initial ?? empty);
+      setForm(contact ? { name: contact.name, relationship: contact.relationship, phone: contact.phone, email: contact.email ?? '', emailPrimary: !!contact.emailPrimary } : initial ?? empty);
       setTouched(false);
     }
   }, [isOpen, contact, initial]);
@@ -43,7 +43,7 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
     e.preventDefault();
     setTouched(true);
     if (Object.keys(errors).length > 0) return;
-    onSave({ name: form.name.trim(), relationship: form.relationship, phone: form.phone.trim(), email: form.email.trim() });
+    onSave({ name: form.name.trim(), relationship: form.relationship, phone: form.phone.trim(), email: form.email.trim(), emailPrimary: !!form.emailPrimary });
   };
 
   return (
@@ -116,6 +116,11 @@ export function ContactFormModal({ isOpen, contact, initial, onSave, onClose }: 
           helperText={t.emailHelper}
           onIonInput={(e) => setForm((f) => ({ ...f, email: String(e.detail.value ?? '') }))}
         />
+        {/* Principal: recibe el correo de alerta en «Para»; los demás contactos, en copia oculta. */}
+        <div className="toggle-row toggle-row--plain">
+          <span><strong>{t.emailPrimary}</strong><small>{t.emailPrimaryHint}</small></span>
+          <IonToggle checked={!!form.emailPrimary} onIonChange={(e) => setForm((f) => ({ ...f, emailPrimary: e.detail.checked }))} aria-label={t.emailPrimary} />
+        </div>
         {touched && Object.keys(errors).length > 0 && (
           <p className="form-error" role="alert">{t.reviewFields}</p>
         )}

@@ -1,0 +1,121 @@
+%% title: Diagrama entidad-relación (DER) — base de datos SISMO · tercera entrega
+erDiagram
+  sismo_usuarios ||--o| sismo_ajustes_usuarios : "configura"
+  sismo_usuarios ||--o{ sismo_contactos_usuarios : "registra"
+  sismo_usuarios ||--o{ sismo_alertas_usuarios : "activa"
+  sismo_usuarios ||--o| sismo_fichas_medicas_usuarios : "tiene"
+  sismo_usuarios ||--o{ sismo_puntos_encuentro_usuarios : "define"
+  sismo_usuarios ||--o{ sismo_encuestas_sus_usuarios : "responde"
+  sismo_usuarios ||--o{ sismo_inventarios_usuarios : "arma"
+  sismo_alertas_usuarios ||--o{ sismo_atenciones_alertas : "recibe"
+  operadores_panel ||--o{ sismo_atenciones_alertas : "registra"
+  sismo_plantillas_atenciones }o..o{ sismo_atenciones_alertas : "sugiere el mensaje (por estado, sin FK)"
+  sismo_alertas_usuarios ||--o{ sismo_correos_alertas : "avisa por correo"
+  sismo_usuarios ||--o{ sismo_correos_operador : "sus contactos reciben"
+  operadores_panel ||--o{ sismo_correos_operador : "escribe"
+  sismo_usuarios {
+    entero id PK
+    texto uuid_dispositivo
+    texto nombre
+    texto plataforma
+  }
+  sismo_ajustes_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto idioma
+    texto tema
+    booleano deteccion_caidas
+  }
+  sismo_contactos_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto nombre
+    texto parentesco
+    texto telefono
+    texto correo
+    booleano es_principal_correo
+  }
+  sismo_alertas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto tipo_evento
+    texto estado
+    fecha_hora fecha_activacion
+    texto estado_correo
+  }
+  sismo_fichas_medicas_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto datos_cifrados
+    booleano mostrar_en_alerta
+  }
+  sismo_puntos_encuentro_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto etiqueta
+    decimal latitud
+    decimal longitud
+  }
+  sismo_encuestas_sus_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto respuestas
+    decimal puntaje
+  }
+  sismo_inventarios_usuarios {
+    entero id PK
+    entero id_usuario FK
+    texto nombre
+    booleano marcado
+    fecha fecha_vencimiento
+  }
+  sismo_atenciones_alertas {
+    entero id PK
+    entero id_alerta FK
+    entero id_persona FK
+    texto estado
+    texto nota
+  }
+  sismo_catalogos {
+    entero id PK
+    texto tipo
+    texto clave
+    texto nombre_es
+  }
+  sismo_guia_tarjetas {
+    entero id PK
+    texto clave
+    texto momento
+    texto titulo_es
+  }
+  sismo_parametros {
+    entero id PK
+    texto clave
+    texto valor
+  }
+  sismo_plantillas_atenciones {
+    entero id PK
+    texto estado
+    texto titulo
+    texto mensaje
+  }
+  sismo_correos_alertas {
+    entero id PK
+    entero id_alerta FK
+    texto tipo
+    entero cantidad_para
+    entero cantidad_copia
+    texto estado
+  }
+  sismo_correos_operador {
+    entero id PK
+    entero id_usuario FK
+    entero id_persona FK
+    texto asunto
+    entero cantidad_para
+    entero cantidad_copia
+    texto estado
+  }
+  operadores_panel {
+    entero id PK
+  }

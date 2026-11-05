@@ -98,6 +98,13 @@ const es = {
   email: {
     subject: (who: string) => `ALERTA SISMO: ${who} necesita ayuda`,
     defaultWho: 'Un contacto suyo',
+    leadFall: (who: string) => `Se detectó una caída de ${who} y no respondió «¿Está bien?»: la alerta se activó sola.`,
+    lead: {
+      urgente: (who: string) => `${who} pidió AYUDA URGENTE desde la app SISMO.`,
+      atrapado: (who: string) => `${who} activó el modo atrapado: está ahorrando batería y emitiendo señales de rescate.`,
+      bateria: (who: string, level: number | null) => `A ${who} se le está acabando la batería${level != null ? ` (${level} %)` : ''}: puede perder contacto pronto.`,
+      ubicacion: (who: string) => `${who} se desplazó durante la alerta: esta es su ubicación actualizada.`,
+    },
   },
   quakes: {
     unknownPlace: 'Lugar no informado',
@@ -202,6 +209,13 @@ const en: typeof es = {
   email: {
     subject: (who: string) => `SISMO ALERT: ${who} needs help`,
     defaultWho: 'One of your contacts',
+    leadFall: (who: string) => `A fall was detected for ${who} and they did not answer “Are you OK?”: the alert started on its own.`,
+    lead: {
+      urgente: (who: string) => `${who} asked for URGENT HELP from the SISMO app.`,
+      atrapado: (who: string) => `${who} turned on trapped mode: saving battery and sending rescue signals.`,
+      bateria: (who: string, level: number | null) => `${who} is running out of battery${level != null ? ` (${level}%)` : ''}: they may lose contact soon.`,
+      ubicacion: (who: string) => `${who} moved during the alert: this is their updated location.`,
+    },
   },
   quakes: {
     unknownPlace: 'Place not reported',

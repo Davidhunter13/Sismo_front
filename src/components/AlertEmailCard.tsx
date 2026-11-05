@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { getBatteryLevel } from '../services/batteryService';
-import { buildAlertEmail, EMAIL_COUNTDOWN_S, emailRecipients, sendAlertEmail } from '../services/emailService';
+import { buildAlertEmail, EMAIL_COUNTDOWN_S, emailRecipients, initialEmailKind, sendAlertEmail } from '../services/emailService';
 import type { AlertRecord, EmailStatus } from '../types';
 import { StatusBadge, type BadgeTone } from './StatusBadge';
 
@@ -40,11 +40,12 @@ export function AlertEmailCard({ alert }: { alert: AlertRecord }) {
     setRemaining(null);
     setSending(true);
     const battery = await getBatteryLevel();
-    const request = buildAlertEmail(alert, data.settings.userName, recipients, data.meetingPoints, data.medical, battery);
+    // Caída sin respuesta: el correo inicial es el de «se detectó una caída» (la persona quizá no puede responder).
+    const request = buildAlertEmail(alert, data.settings.userName, data.meetingPoints, data.medical, battery, initialEmailKind(alert));
     const status = await sendAlertEmail(request);
     setSending(false);
     setEmailStatus(alert.id, status);
-  }, [alert, data.settings.userName, data.meetingPoints, data.medical, recipients, setEmailStatus]);
+  }, [alert, data.settings.userName, data.meetingPoints, data.medical, setEmailStatus]);
 
   // Primera vez que se ve la alerta: sin destinatarios se registra sin preguntar; si hay, empieza la cuenta.
   useEffect(() => {
@@ -104,7 +105,7 @@ export function AlertEmailCard({ alert }: { alert: AlertRecord }) {
           <div className="fall-dialog">
             <Mail size={44} aria-hidden="true" />
             <h2 id="email-title">{t.dialogTitle}</h2>
-            <p id="email-desc">{t.dialogText(recipients.length)}</p>
+            <p id="email-desc">{t.dialogText(recipients.length, Math.max(1, recipients.filter((c) => c.emailPrimary).length))}</p>
             <strong className="fall-count fall-count--text" aria-live="polite">{t.countdown(remaining)}</strong>
             <button className="btn btn--primary btn--lg btn--block" onClick={() => void send()}>{t.yes}</button>
             <button className="btn btn--outline btn--block" onClick={cancel}>{t.no}</button>

@@ -1,7 +1,7 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { useIonRouter } from '@ionic/react';
 import {
-  Activity, AlertTriangle, Backpack, BarChart3, BookOpen, CheckCircle2, ClipboardList, HeartPulse, History, MapPin, MessageSquare, Navigation, Radio, Timer,
+  Activity, AlertTriangle, Backpack, BarChart3, BookOpen, CheckCircle2, ClipboardList, HeartPulse, History, Mail, MapPin, MessageSquare, Navigation, Radio, Timer,
   Users,
   Volume2, Wifi, WifiOff, type LucideIcon,
 } from 'lucide-react';
@@ -20,7 +20,9 @@ import { useAppState } from '../context/appContext';
 import { useT } from '../i18n/useT';
 import { useCatalogs } from '../services/catalogService';
 import { drillReminder } from '../services/drillReminderService';
+import { emailRecipients } from '../services/emailService';
 import { kitStatus } from '../services/kitService';
+import { syncEnabled } from '../services/syncService';
 import { beginTrace, mark } from '../services/metricsService';
 import { useOnline } from '../services/networkService';
 import { adoptNativeAlertSignals, startAlertSignals } from '../services/signalsService';
@@ -153,6 +155,12 @@ export default function HomePage() {
     ? { tone: 'neutral', status: s.notSupported }
     : settings.soundEnabled ? { tone: 'success', status: s.available } : { tone: 'warning', status: s.disabled };
   const perm = permissionBadge[locationPermission];
+  // Correo a contactos: lo envía el servidor; requiere API configurada, internet y algún contacto real con correo.
+  const emailService: { tone: BadgeTone; status: string } = !syncEnabled()
+    ? { tone: 'neutral', status: s.emailNoServer }
+    : emailRecipients(contacts).length === 0
+      ? { tone: 'warning', status: s.emailNoContacts }
+      : online ? { tone: 'success', status: s.emailReady } : { tone: 'warning', status: s.emailOffline };
   const net = all.features.network;
 
   return (
@@ -244,6 +252,12 @@ export default function HomePage() {
             detail={settings.demoMode ? s.digitalDemo : s.digitalSms}
             tone={settings.demoMode ? 'demo' : 'info'}
             status={settings.demoMode ? s.simulated : s.sms}
+          />
+          <ServiceIndicator
+            icon={Mail}
+            name={s.email}
+            detail={s.emailDetail}
+            {...emailService}
           />
           <ServiceIndicator
             icon={online ? Wifi : WifiOff}

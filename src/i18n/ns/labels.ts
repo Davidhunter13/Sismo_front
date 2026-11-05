@@ -7,7 +7,7 @@ const es = {
     pendiente: 'Pendiente',
     enviada: 'Enviada',
     fallida: 'Fallida',
-    no_disponible: 'Sin canal digital',
+    no_disponible: 'SMS sin enviar',
     sms_abierto: 'SMS abierto',
   },
   permission: {
@@ -24,7 +24,7 @@ const en: typeof es = {
     pendiente: 'Pending',
     enviada: 'Sent',
     fallida: 'Failed',
-    no_disponible: 'No digital channel',
+    no_disponible: 'SMS not sent',
     sms_abierto: 'SMS opened',
   },
   permission: {

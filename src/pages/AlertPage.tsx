@@ -4,7 +4,7 @@ import {
   BatteryLow, BellOff, CheckCircle2, ClipboardList, Navigation, Eye, Flashlight, FlashlightOff, HeartPulse, MessageCircle, MessageSquare, Phone, Radio, Send, ShieldCheck, Siren, Smartphone,
   Timer, Volume2, VolumeX,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { ConfirmationDialog } from '../components/ConfirmationDialog';
 import { AlertEmailCard } from '../components/AlertEmailCard';
@@ -25,6 +25,7 @@ import { keepScreenOn } from '../services/screenService';
 import { isTrapped, startTrapped, stopTrapped, TRAPPED_INTERVAL_MS } from '../services/trappedService';
 import { refreshNativeSignals, startAlertSignals } from '../services/signalsService';
 import { isSirenPlaying, isSirenSupported, startSiren, stopSiren } from '../services/sirenService';
+import { buildAlertEmail, emailRecipients, locationEmailDue, sendAlertEmail, type EmailKind } from '../services/emailService';
 import { buildAlertMessage, buildLowBatteryMessage, openSmsComposer, openWhatsapp } from '../services/smsService';
 import { useNotifySafe } from '../components/useNotifySafe';
 import { useContactChannel } from '../components/useContactChannel';
@@ -41,6 +42,9 @@ const BATTERY_CHECK_MS = 60_000;
  * Alerta en la que ya se activó el ahorro automático: no se repite aunque se salga de esta vista o la app se
  * reinicie. Se guarda aparte (solo el id de la alerta), sin tocar los datos de la alerta.
  */
+/** Avisos por correo ya pedidos en esta sesión (alerta:tipo); el servidor además evita repetirlos. */
+const followUpsRequested = new Set<string>();
+
 const AUTO_SAVER_KEY = 'sismo:v1:ahorro-automatico';
 const autoSaverDone = {
   has: (id: string) => {
@@ -120,6 +124,63 @@ export default function AlertPage() {
     const t = window.setInterval(() => void read(), BATTERY_CHECK_MS);
     return () => window.clearInterval(t);
   }, [activeId, savedBattery, updateActiveAlert]);
+
+  // Avisos por correo durante la alerta (además del de «activó la alarma»): ayuda urgente, modo atrapado y batería
+  // baja. Una vez por alerta y tipo, nunca en simulacros. Si la persona canceló el correo inicial, no se envían los
+  // automáticos (atrapado y batería); el de ayuda urgente sí, porque lo pide ella.
+  const alertRef = useRef(activeAlert);
+  alertRef.current = activeAlert;
+  const hasEmailContacts = emailRecipients(data.contacts).length > 0;
+  const sendFollowUp = useCallback(async (kind: Exclude<EmailKind, 'alerta' | 'caida' | 'ubicacion'>, battery: number | null) => {
+    const a = alertRef.current;
+    if (!a || a.isDrill || !hasEmailContacts) return;
+    if (kind !== 'urgente' && a.emailStatus === 'cancelado') return;
+    const key = `${a.id}:${kind}`;
+    if (followUpsRequested.has(key) || a.followUpEmails?.[kind] === 'enviado') return;
+    followUpsRequested.add(key);
+    const status = await sendAlertEmail(buildAlertEmail(a, data.settings.userName, data.meetingPoints, data.medical, battery, kind));
+    const latest = alertRef.current;
+    if (latest?.id === a.id) updateActiveAlert({ followUpEmails: { ...latest.followUpEmails, [kind]: status } });
+  }, [hasEmailContacts, data.settings.userName, data.meetingPoints, data.medical, updateActiveAlert]);
+  const urgentNow = !!activeAlert?.urgent;
+  useEffect(() => {
+    if (urgentNow) void getBatteryLevel().then((b) => sendFollowUp('urgente', b));
+  }, [activeId, urgentNow, sendFollowUp]);
+  useEffect(() => {
+    // Si lo activó el ahorro automático por batería, basta el aviso de batería baja.
+    if (trapped && activeId && !autoSaverDone.has(activeId)) void getBatteryLevel().then((b) => sendFollowUp('atrapado', b));
+  }, [activeId, trapped, sendFollowUp]);
+  useEffect(() => {
+    if (lowBattery != null) void sendFollowUp('bateria', lowBattery);
+  }, [activeId, lowBattery, sendFollowUp]);
+
+  // Ubicación actualizada por correo (sin cron: se decide con cada ubicación nueva que registra la alerta). Solo si el
+  // correo inicial se envió, la persona se desplazó al menos LOCATION_EMAIL_MIN_METERS y pasaron LOCATION_EMAIL_MIN_MINUTES
+  // desde la última ubicación enviada (el servidor también exige ese intervalo).
+  const loc = activeAlert?.location;
+  useEffect(() => {
+    const a = alertRef.current;
+    if (!a || a.isDrill || !loc || a.emailStatus !== 'enviado' || !hasEmailContacts) return;
+    const due = locationEmailDue(a.lastEmailedLocation, loc);
+    if (due === 'base') {
+      // Punto de partida: la ubicación que llevaba el correo inicial.
+      updateActiveAlert({ lastEmailedLocation: { latitude: loc.latitude, longitude: loc.longitude, at: new Date().toISOString() } });
+      return;
+    }
+    if (due !== 'enviar') return;
+    const key = `${a.id}:ubicacion:${a.lastEmailedLocation?.at}`;
+    if (followUpsRequested.has(key)) return;
+    followUpsRequested.add(key);
+    void getBatteryLevel().then(async (battery) => {
+      const status = await sendAlertEmail(buildAlertEmail(a, data.settings.userName, data.meetingPoints, data.medical, battery, 'ubicacion'));
+      const latest = alertRef.current;
+      if (latest?.id !== a.id) return;
+      updateActiveAlert({
+        followUpEmails: { ...latest.followUpEmails, ubicacion: status },
+        ...(status === 'enviado' ? { lastEmailedLocation: { latitude: loc.latitude, longitude: loc.longitude, at: new Date().toISOString() } } : {}),
+      });
+    });
+  }, [loc, activeAlert?.emailStatus, hasEmailContacts, data.settings.userName, data.meetingPoints, data.medical, updateActiveAlert]);
 
   const askUrgentHelp = (urgent: boolean) => {
     updateActiveAlert(urgent ? { urgent: true, urgentAt: new Date().toISOString() } : { urgent: false });

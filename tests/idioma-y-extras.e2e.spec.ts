@@ -248,7 +248,7 @@ test('correo: sin respuesta en 20 s se envía; sin servidor configurado lo indic
   await activateAlert(page);
   await expect(page.getByRole('alertdialog', { name: '¿Enviar correo a sus contactos?' })).toBeVisible();
   await expect(page.getByRole('alertdialog')).toHaveCount(0, { timeout: 25_000 });
-  await expect(view(page).getByText('No se envió: falta conectar el servidor de correo.')).toBeVisible();
+  await expect(view(page).getByText('No se envió: el servidor de correo no está disponible.')).toBeVisible();
   expect((await readStorage(page)).alerts[0].emailStatus).toBe('sin_servidor');
 });
 

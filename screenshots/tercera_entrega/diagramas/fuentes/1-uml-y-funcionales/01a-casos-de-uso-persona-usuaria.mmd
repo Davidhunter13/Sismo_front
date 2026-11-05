@@ -1,0 +1,78 @@
+%% title: Diagrama de casos de uso — Persona usuaria (app móvil) · tercera entrega
+flowchart LR
+  P["«actor»<br/><b>Persona usuaria</b>"]:::actor
+  subgraph APP["App SISMO"]
+    direction TB
+    UC1(["Registrarse<br/>(nombre, ubicación, puntos de encuentro, contacto)"])
+    UC2(["Activar alerta SOS"])
+    UC2a(["Elegir tipo de evento"])
+    UC2b(["Emitir señales locales<br/>(sirena, linterna, vibración)"])
+    UC2c(["Registrar y actualizar ubicación"])
+    UC2d(["Pedir ayuda urgente<br/>(prioridad en el panel)"])
+    UC2f(["Avisar por correo a los contactos<br/>(activó la alarma, urgente, atrapado, batería)"])
+    UC2g(["Marcar contacto principal del correo<br/>(Para; el resto en copia oculta)"])
+    UC2e(["Informar batería y modo atrapado"])
+    UC3(["Enviar correo de alerta a contactos"])
+    UC4(["Enviar SMS o WhatsApp a contactos"])
+    UC5(["Llamar a la línea de emergencias"])
+    UC6(["Avisar «Estoy bien»"])
+    UC7(["Ver aviso del centro de monitoreo"])
+    UC8(["Activar modo atrapado / silbato"])
+    UC9(["Gestionar contactos de emergencia"])
+    UC10(["Gestionar puntos de encuentro"])
+    UC11(["Ver ubicación, mapa, brújula y ruta"])
+    UC12(["Registrar ficha médica y QR"])
+    UC13(["Consultar guía de emergencia"])
+    UC14(["Consultar sismos recientes"])
+    UC15(["Gestionar mochila de emergencia"])
+    UC16(["Completar «Después del sismo»"])
+    UC17(["Hacer simulacro y encuesta SUS"])
+    UC18(["Consultar historial y estadísticas"])
+    UC19(["Configurar la app<br/>(idioma, tema, accesibilidad, sonidos, caídas, batería)"])
+    UC20(["Crear código de recuperación"])
+    UC21(["Recuperar datos en un teléfono nuevo"])
+    UC22(["Eliminar mi cuenta"])
+  end
+  C["«actor»<br/><b>Contacto de emergencia</b>"]:::actor
+  R["«actor»<br/><b>Rescatista</b>"]:::actor
+  M["«sistema»<br/><b>Servicio de correo</b>"]:::sys
+  U["«sistema»<br/><b>USGS</b>"]:::sys
+
+  P --- UC1
+  P --- UC2
+  UC2d -. «extend» .-> UC2
+  UC2f -. «extend» .-> UC2
+  P --- UC2g
+  UC2 -. «include» .-> UC2e
+  P --- UC4
+  P --- UC5
+  P --- UC6
+  P --- UC7
+  P --- UC8
+  P --- UC9
+  P --- UC10
+  P --- UC11
+  P --- UC12
+  P --- UC13
+  P --- UC14
+  P --- UC15
+  P --- UC16
+  P --- UC17
+  P --- UC18
+  P --- UC19
+  P --- UC20
+  P --- UC21
+  P --- UC22
+  UC2 -. «include» .-> UC2a
+  UC2 -. «include» .-> UC2b
+  UC2 -. «include» .-> UC2c
+  UC3 -. «extend» .-> UC2
+  UC4 -. «extend» .-> UC2
+  UC3 --- M
+  M --- C
+  UC4 --- C
+  UC6 --- C
+  UC12 --- R
+  UC14 --- U
+  classDef actor fill:#0b2545,color:#fff,stroke:#0b2545
+  classDef sys fill:#fff3dc,color:#5a3a00,stroke:#8f5300
