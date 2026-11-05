@@ -15,7 +15,7 @@ Diagramas técnicos del proyecto (app, backend en CodeIgniter 3 y base de datos)
 
 > **Envío de correos:** se representa como función del sistema, según el alcance pedido. La app arma la solicitud y la envía por `POST` a `VITE_ALERT_EMAIL_URL` (contrato en `src/services/emailService.ts`); el **servicio de correo de alertas** valida los destinatarios y envía por medio del proveedor de correo.
 >
-> **Planificación (Gantt, PERT, ruta crítica, línea de tiempo):** las fechas salen de las entregas registradas en el proyecto (capturas del 24/10/2026, 17 commits del 02/11/2026 y entregas del 04/11/2026). La duración de cada actividad dentro de una entrega es aproximada. La holgura y la ruta crítica se calculan con el método CPM.
+> **Planificación (Gantt, PERT, ruta crítica, línea de tiempo):** el proyecto va del **martes 6 de octubre al viernes 11 de diciembre de 2026** (49 días hábiles, de lunes a viernes), en 5 fases. Las fases 1 a 3 ya están hechas y respetan las entregas reales: versión 1 el 23/10 (capturas del 24/10), versión 2 el 02/11 y versión 3 el 04/11. Las fases 4 y 5 (noviembre y diciembre) son el plan para lo que falta según la hoja de ruta. La holgura y la ruta crítica se calculan con el método CPM.
 
 ---
 
@@ -69,12 +69,20 @@ El diccionario de datos completo está en [`BASE_DE_DATOS_SISMO.md`](BASE_DE_DAT
 
 | # | Imagen | Qué muestra |
 |---|---|---|
-| 15 | `15-gantt.png` | Gantt de las tres entregas (24/10 → 04/11/2026), con hitos y actividades críticas en rojo |
+| 15 | `15-gantt.png` | Gantt de las 5 fases (06/10 → 11/12/2026, días hábiles): hecho en azul, en curso con borde, planeado en blanco, crítico en rojo, hitos de entrega y la fecha de hoy |
 | 16 | `16-pert.png` | Red PERT con ES, D, EF, LS, H (holgura) y LF por actividad |
-| 17 | `17-ruta-critica.png` | Ruta crítica (A → B·C·D·E → F → G·H → J, 12 días); las actividades con holgura van punteadas |
+| 17 | `17-ruta-critica.png` | Ruta crítica A → B → C → I → J·K → L → Q → S → T → U (49 días hábiles); las actividades con holgura van punteadas |
 | 18 | `18-linea-de-tiempo.png` | Línea de tiempo por versión y próximos pasos de la hoja de ruta |
 
-**Actividades de la red:** A prototipo web · B app Android y widget · C alertas avanzadas y comunicación · D ubicación, mapas y puntos de encuentro · E supervivencia y validación · F backend, base de datos y sincronización · G panel de monitoreo · H catálogos administrables · I recuperación y eliminar cuenta · K servicio de correo de alertas · J página informativa y evidencias.
+**Actividades:**
+
+| Fase | Actividades | Fechas | Estado |
+|---|---|---|---|
+| 1 · Análisis, diseño y prototipo | A análisis y requisitos · B diseño UX/UI e identidad visual · C prototipo web v1 | 06/10 – 23/10 | Hecho |
+| 2 · App completa | D app Android, widget y acceso rápido · E alertas avanzadas y comunicación · F ubicación, mapas, rutas y puntos · G supervivencia y validación · H pruebas, CI y APK | 26/10 – 02/11 | Hecho |
+| 3 · Backend y monitoreo | I backend, BD y sincronización · J panel de monitoreo · K catálogos, recuperación y servicio de correo · L página informativa y documentación | 26/10 – 06/11 | Hecho / en curso |
+| 4 · Producción y pruebas reales | N puesta en producción · O prueba en dispositivo físico · P correo en producción · Q aprobación Ley 1581 | 09/11 – 27/11 | Planeado |
+| 5 · Validación y cierre | S validación con usuarios (SUS) · T ajustes · U documentación final y entrega | 30/11 – 11/12 | Planeado |
 
 ---
 

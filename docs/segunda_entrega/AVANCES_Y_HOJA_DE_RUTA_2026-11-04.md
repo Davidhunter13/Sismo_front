@@ -424,7 +424,7 @@ Se creó una **página web informativa para presentar y «vender» SISMO**, serv
 | 7 | Funcionamiento sin conexión (PWA / service worker) | La guía y la alerta local disponibles sin red (los **datos** ya se guardan sin red y se suben al volver la conexión, §2.14) |
 | 8 | **Poner en marcha la base de datos:** ejecutar el SQL de las tablas `sismo_*`, definir `SISMO_LLAVE_CIFRADO` y `SISMO_CORS_ORIGENES` en el servidor y `VITE_SISMO_API_URL` en la app | Los datos empiezan a guardarse en la base de datos |
 | 9 | Aprobación del tratamiento de datos de salud y de contactos (Ley 1581) | Requisito legal antes de usar la ficha médica en el servidor con usuarios reales |
-| 10 | Notificaciones push a la app cuando el centro de monitoreo registra ayuda | La persona se entera aunque no tenga la pantalla de alerta abierta |
+| 10 | ~~Notificaciones push a la app cuando el centro de monitoreo registra ayuda~~ | **Fuera del alcance** de este proyecto: la ayuda se ve como aviso fijo con la alerta abierta (consulta cada 15 s) |
 | 10b | Protocolo de atención con el equipo de emergencias y prueba del panel con varios operadores | Uso real del centro de monitoreo |
 | 11 | Estadísticas de la tesis consultando la base de datos (tiempos de reacción, SUS) | Análisis con todos los participantes, no teléfono por teléfono |
 
@@ -452,7 +452,7 @@ screenshots/<primera|segunda>_entrega/AAAA-MM-DD/
 - **Base de datos:** DER, modelo lógico y modelo físico (este último generado desde el script SQL).
 - **Planificación y tiempos:** Gantt, PERT, ruta crítica y línea de tiempo.
 
-El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). Las fechas de planificación salen de las tres entregas registradas (24/10, 02/11 y 04/11/2026), y la ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/segunda_entrega/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
+El envío de correos de alerta aparece como función del sistema (servicio de correo + proveedor). La planificación va del 6 de octubre al 11 de diciembre de 2026 (49 días hábiles, 5 fases). Lo hecho respeta las entregas reales (23/10, 02/11 y 04/11) y lo que falta queda como plan de noviembre y diciembre. La ruta crítica se calcula con CPM. Las fuentes Mermaid están en `screenshots/segunda_entrega/diagramas/fuentes/` y las imágenes se regeneran con `generar-imagenes.cjs`.
 
 **Documentación técnica y funcional:** `screenshots/segunda_entrega/documentacion/DOCUMENTACION.md` es el índice de los documentos 19 a 30: requisitos funcionales (48) y no funcionales, historias de usuario (21), diccionario de datos, API y endpoints, manual técnico, manual de usuario, plan y casos de prueba, informe de resultados (04/11/2026: 116 de 116 unitarias, 114 de 114 e2e, lint y tipos sin errores), registro de riesgos (17), índice de evidencias visuales (125) y registro de cambios y versiones (1.0 a 3.1).
 

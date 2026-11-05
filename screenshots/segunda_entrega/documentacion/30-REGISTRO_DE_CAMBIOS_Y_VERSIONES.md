@@ -86,13 +86,16 @@ Formato basado en *Keep a Changelog*. Las fechas salen de las evidencias y del h
 
 ---
 
-## Pendiente (hoja de ruta)
+## Planeado hasta el 11/12/2026
 
-- Prueba en dispositivo físico.
-- Puesta en marcha de la base de datos en producción.
-- Aprobación del tratamiento de datos (Ley 1581).
-- Notificaciones push.
-- Proyecto iOS.
-- Alertas del Servicio Geológico Colombiano.
-- Funcionamiento sin conexión como PWA.
-- Estadísticas de la tesis desde la base de datos.
+| Fechas | Actividad |
+|---|---|
+| 09/11 – 13/11 | Puesta en producción (base de datos, llave de cifrado, despliegue) |
+| 09/11 – 20/11 | Prueba en dispositivo físico y ajustes nativos |
+| 16/11 – 20/11 | Correo de alertas en producción y pruebas reales |
+| 09/11 – 27/11 | Aprobación del tratamiento de datos (Ley 1581) |
+| 30/11 – 04/12 | Validación con usuarios: simulacros y encuesta SUS |
+| 07/12 – 09/12 | Ajustes por los resultados de la validación |
+| 10/12 – 11/12 | Documentación final, informe y **entrega final (11/12)** |
+
+**Fuera del alcance de este proyecto** (posibles mejoras futuras): notificaciones push, proyecto iOS, alertas del Servicio Geológico Colombiano, funcionamiento sin conexión como PWA y estadísticas de la tesis consultando la base de datos.

@@ -1,38 +1,56 @@
-%% title: Diagrama PERT — red de actividades (días desde el 24/10/2026)
+%% title: Diagrama PERT — red de actividades (días hábiles desde el 06/10/2026; 49 días)
 flowchart LR
-  INI((Inicio))
-  FIN((Fin<br/>día 12))
-  A["<b>A</b> · Prototipo web v1<br/>(SOS, guía, contactos, historial)<br/><span>ES 0 · D 1 · EF 1</span><br/><span>LS 0 · H 0 · LF 1</span>"]
-  B["<b>B</b> · App Android (Capacitor),<br/>widget y acceso rápido<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
-  C["<b>C</b> · Alertas avanzadas y comunicación<br/>(señales, 123, SMS, WhatsApp, correo en la app)<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
-  D["<b>D</b> · Ubicación, mapa real, rutas,<br/>brújula y puntos de encuentro<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
-  E["<b>E</b> · Supervivencia y validación<br/>(atrapado, caídas, SUS, mochila, simulacro)<br/><span>ES 1 · D 9 · EF 10</span><br/><span>LS 1 · H 0 · LF 10</span>"]
-  F["<b>F</b> · Backend: API, base de datos<br/>y sincronización sin conexión<br/><span>ES 10 · D 1 · EF 11</span><br/><span>LS 10 · H 0 · LF 11</span>"]
-  G["<b>G</b> · Panel de monitoreo<br/>en tiempo real<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11 · H 0 · LF 11,5</span>"]
-  H["<b>H</b> · Catálogos administrables,<br/>guía y parámetros<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11 · H 0 · LF 11,5</span>"]
-  I["<b>I</b> · Recuperación y<br/>eliminar cuenta<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11,5 · H 0,5 · LF 12</span>"]
-  K["<b>K</b> · Servicio de correo<br/>de alertas<br/><span>ES 11 · D 0,5 · EF 11,5</span><br/><span>LS 11,5 · H 0,5 · LF 12</span>"]
-  J["<b>J</b> · Página informativa<br/>y evidencias<br/><span>ES 11,5 · D 0,5 · EF 12</span><br/><span>LS 11,5 · H 0 · LF 12</span>"]
+  INI((Inicio<br/>06/10))
+  FIN((Fin<br/>11/12))
+  A["<b>A</b> · Análisis y<br/>requisitos<br/><span>06/10 → 09/10 · 4 d</span><br/><span>ES 0 · EF 4 · LS 0 · LF 4 · H 0</span>"]
+  B["<b>B</b> · Diseño UX/UI e<br/>identidad visual<br/><span>12/10 → 16/10 · 5 d</span><br/><span>ES 4 · EF 9 · LS 4 · LF 9 · H 0</span>"]
+  C["<b>C</b> · Prototipo web v1<br/>(SOS, guía, contactos)<br/><span>19/10 → 23/10 · 5 d</span><br/><span>ES 9 · EF 14 · LS 9 · LF 14 · H 0</span>"]
+  D["<b>D</b> · App Android,<br/>widget y acceso rápido<br/><span>26/10 → 30/10 · 5 d</span><br/><span>ES 14 · EF 19 · LS 16 · LF 21 · H 2</span>"]
+  E["<b>E</b> · Alertas avanzadas<br/>y comunicación<br/><span>26/10 → 30/10 · 5 d</span><br/><span>ES 14 · EF 19 · LS 16 · LF 21 · H 2</span>"]
+  F["<b>F</b> · Ubicación, mapas,<br/>rutas y puntos<br/><span>26/10 → 30/10 · 5 d</span><br/><span>ES 14 · EF 19 · LS 16 · LF 21 · H 2</span>"]
+  G["<b>G</b> · Supervivencia<br/>y validación<br/><span>26/10 → 30/10 · 5 d</span><br/><span>ES 14 · EF 19 · LS 16 · LF 21 · H 2</span>"]
+  H["<b>H</b> · Calidad v2:<br/>pruebas, CI y APK<br/><span>02/11 → 02/11 · 1 d</span><br/><span>ES 19 · EF 20 · LS 21 · LF 22 · H 2</span>"]
+  I["<b>I</b> · Backend: API, BD<br/>y sincronización<br/><span>26/10 → 03/11 · 7 d</span><br/><span>ES 14 · EF 21 · LS 14 · LF 21 · H 0</span>"]
+  J["<b>J</b> · Panel de<br/>monitoreo<br/><span>04/11 → 04/11 · 1 d</span><br/><span>ES 21 · EF 22 · LS 21 · LF 22 · H 0</span>"]
+  K["<b>K</b> · Catálogos, recuperación<br/>y servicio de correo<br/><span>04/11 → 04/11 · 1 d</span><br/><span>ES 21 · EF 22 · LS 21 · LF 22 · H 0</span>"]
+  L["<b>L</b> · Página informativa<br/>y documentación<br/><span>05/11 → 06/11 · 2 d</span><br/><span>ES 22 · EF 24 · LS 22 · LF 24 · H 0</span>"]
+  N["<b>N</b> · Puesta en<br/>producción<br/><span>09/11 → 13/11 · 5 d</span><br/><span>ES 24 · EF 29 · LS 29 · LF 34 · H 5</span>"]
+  O["<b>O</b> · Prueba en dispositivo<br/>físico y ajustes<br/><span>09/11 → 20/11 · 10 d</span><br/><span>ES 24 · EF 34 · LS 29 · LF 39 · H 5</span>"]
+  P["<b>P</b> · Correo en producción<br/>y pruebas reales<br/><span>16/11 → 20/11 · 5 d</span><br/><span>ES 29 · EF 34 · LS 34 · LF 39 · H 5</span>"]
+  Q["<b>Q</b> · Aprobación<br/>Ley 1581<br/><span>09/11 → 27/11 · 15 d</span><br/><span>ES 24 · EF 39 · LS 24 · LF 39 · H 0</span>"]
+  S["<b>S</b> · Validación con<br/>usuarios (SUS)<br/><span>30/11 → 04/12 · 5 d</span><br/><span>ES 39 · EF 44 · LS 39 · LF 44 · H 0</span>"]
+  T["<b>T</b> · Ajustes por<br/>resultados<br/><span>07/12 → 09/12 · 3 d</span><br/><span>ES 44 · EF 47 · LS 44 · LF 47 · H 0</span>"]
+  U["<b>U</b> · Documentación final<br/>y entrega<br/><span>10/12 → 11/12 · 2 d</span><br/><span>ES 47 · EF 49 · LS 47 · LF 49 · H 0</span>"]
   INI --> A
   A --> B
-  A --> C
-  A --> D
-  A --> E
-  B --> F
+  B --> C
+  C --> D
+  C --> E
   C --> F
-  D --> F
-  E --> F
-  F --> G
+  C --> G
+  D --> H
+  E --> H
   F --> H
-  F --> I
-  F --> K
-  C --> K
-  G --> J
-  H --> J
-  I --> FIN
-  K --> FIN
-  J --> FIN
+  G --> H
+  C --> I
+  I --> J
+  I --> K
+  H --> L
+  J --> L
+  K --> L
+  L --> N
+  L --> O
+  N --> P
+  L --> Q
+  O --> S
+  P --> S
+  Q --> S
+  S --> T
+  T --> U
+  U --> FIN
   classDef crit fill:#fdecec,stroke:#d62828,stroke-width:3px
-  classDef norm fill:#e8f0fa,stroke:#1d4e89
-  class A,B,C,D,E,F,G,H,J crit
-  class I,K norm
+  classDef hecho fill:#e5f4ec,stroke:#1b7a4b
+  classDef plan fill:#e8f0fa,stroke:#1d4e89,stroke-dasharray:5 3
+  class A,B,C,I,J,K,L,Q,S,T,U crit
+  class D,E,F,G,H hecho
+  class N,O,P plan

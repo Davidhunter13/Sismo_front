@@ -1,39 +1,55 @@
-%% title: Diagrama de ruta crítica — duración total 12 días (24/10/2026 – 04/11/2026)
+%% title: Diagrama de ruta crítica — 49 días hábiles (06/10/2026 – 11/12/2026)
 flowchart LR
-  INI((Inicio))
-  FIN((Fin<br/>12 días))
-  A["<b>A</b> · Prototipo web v1<br/>(SOS, guía, contactos, historial)<br/>1 día(s) · holgura 0"]
-  B["<b>B</b> · App Android (Capacitor),<br/>widget y acceso rápido<br/>9 día(s) · holgura 0"]
-  C["<b>C</b> · Alertas avanzadas y comunicación<br/>(señales, 123, SMS, WhatsApp, correo en la app)<br/>9 día(s) · holgura 0"]
-  D["<b>D</b> · Ubicación, mapa real, rutas,<br/>brújula y puntos de encuentro<br/>9 día(s) · holgura 0"]
-  E["<b>E</b> · Supervivencia y validación<br/>(atrapado, caídas, SUS, mochila, simulacro)<br/>9 día(s) · holgura 0"]
-  F["<b>F</b> · Backend: API, base de datos<br/>y sincronización sin conexión<br/>1 día(s) · holgura 0"]
-  G["<b>G</b> · Panel de monitoreo<br/>en tiempo real<br/>0,5 día(s) · holgura 0"]
-  H["<b>H</b> · Catálogos administrables,<br/>guía y parámetros<br/>0,5 día(s) · holgura 0"]
-  I["<b>I</b> · Recuperación y<br/>eliminar cuenta<br/>0,5 día(s) · holgura 0,5"]
-  K["<b>K</b> · Servicio de correo<br/>de alertas<br/>0,5 día(s) · holgura 0,5"]
-  J["<b>J</b> · Página informativa<br/>y evidencias<br/>0,5 día(s) · holgura 0"]
+  INI((Inicio<br/>06/10))
+  FIN((Fin<br/>11/12))
+  A["<b>A</b> · Análisis y<br/>requisitos<br/>06/10 → 09/10 · holgura 0 d"]
+  B["<b>B</b> · Diseño UX/UI e<br/>identidad visual<br/>12/10 → 16/10 · holgura 0 d"]
+  C["<b>C</b> · Prototipo web v1<br/>(SOS, guía, contactos)<br/>19/10 → 23/10 · holgura 0 d"]
+  D["<b>D</b> · App Android,<br/>widget y acceso rápido<br/>26/10 → 30/10 · holgura 2 d"]
+  E["<b>E</b> · Alertas avanzadas<br/>y comunicación<br/>26/10 → 30/10 · holgura 2 d"]
+  F["<b>F</b> · Ubicación, mapas,<br/>rutas y puntos<br/>26/10 → 30/10 · holgura 2 d"]
+  G["<b>G</b> · Supervivencia<br/>y validación<br/>26/10 → 30/10 · holgura 2 d"]
+  H["<b>H</b> · Calidad v2:<br/>pruebas, CI y APK<br/>02/11 → 02/11 · holgura 2 d"]
+  I["<b>I</b> · Backend: API, BD<br/>y sincronización<br/>26/10 → 03/11 · holgura 0 d"]
+  J["<b>J</b> · Panel de<br/>monitoreo<br/>04/11 → 04/11 · holgura 0 d"]
+  K["<b>K</b> · Catálogos, recuperación<br/>y servicio de correo<br/>04/11 → 04/11 · holgura 0 d"]
+  L["<b>L</b> · Página informativa<br/>y documentación<br/>05/11 → 06/11 · holgura 0 d"]
+  N["<b>N</b> · Puesta en<br/>producción<br/>09/11 → 13/11 · holgura 5 d"]
+  O["<b>O</b> · Prueba en dispositivo<br/>físico y ajustes<br/>09/11 → 20/11 · holgura 5 d"]
+  P["<b>P</b> · Correo en producción<br/>y pruebas reales<br/>16/11 → 20/11 · holgura 5 d"]
+  Q["<b>Q</b> · Aprobación<br/>Ley 1581<br/>09/11 → 27/11 · holgura 0 d"]
+  S["<b>S</b> · Validación con<br/>usuarios (SUS)<br/>30/11 → 04/12 · holgura 0 d"]
+  T["<b>T</b> · Ajustes por<br/>resultados<br/>07/12 → 09/12 · holgura 0 d"]
+  U["<b>U</b> · Documentación final<br/>y entrega<br/>10/12 → 11/12 · holgura 0 d"]
   INI ==> A
   A ==> B
-  A ==> C
-  A ==> D
-  A ==> E
-  B ==> F
-  C ==> F
-  D ==> F
-  E ==> F
-  F ==> G
-  F ==> H
-  F -.-> I
-  F -.-> K
-  C -.-> K
-  G ==> J
-  H ==> J
-  I -.-> FIN
-  K -.-> FIN
-  J ==> FIN
+  B ==> C
+  C -.-> D
+  C -.-> E
+  C -.-> F
+  C -.-> G
+  D -.-> H
+  E -.-> H
+  F -.-> H
+  G -.-> H
+  C ==> I
+  I ==> J
+  I ==> K
+  H -.-> L
+  J ==> L
+  K ==> L
+  L -.-> N
+  L -.-> O
+  N -.-> P
+  L ==> Q
+  O -.-> S
+  P -.-> S
+  Q ==> S
+  S ==> T
+  T ==> U
+  U ==> FIN
   classDef crit fill:#d62828,color:#fff,stroke:#a61e1e,stroke-width:2px
   classDef norm fill:#f3f5f9,color:#5b6578,stroke:#c9d2df,stroke-dasharray:4 3
-  class A,B,C,D,E,F,G,H,J crit
-  class I,K norm
-  linkStyle 0,1,2,3,4,5,6,7,8,9,10,14,15,18 stroke:#d62828,stroke-width:4px
+  class A,B,C,I,J,K,L,Q,S,T,U crit
+  class D,E,F,G,H,N,O,P norm
+  linkStyle 0,1,2,11,12,13,15,16,20,23,24,25,26 stroke:#d62828,stroke-width:4px

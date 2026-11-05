@@ -182,5 +182,4 @@ inválido y el código no se puede reutilizar) y CORS.
 - Ejecutar el script SQL y configurar las variables en el servidor; probar los endpoints de punta a punta.
 - **Aprobación del tratamiento de datos de salud** (ficha médica) y de datos personales de contactos (Ley 1581 de 2012).
 - Límite de registros por IP en `POST /registro`.
-- Notificaciones push a la app cuando se registra ayuda (hoy la app consulta cada 15 s con la alerta abierta).
 - Probar el panel con varios operadores a la vez y definir el protocolo de atención con el equipo de emergencias.

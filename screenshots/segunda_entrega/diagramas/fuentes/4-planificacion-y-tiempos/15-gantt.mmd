@@ -1,22 +1,35 @@
-%% title: Diagrama de Gantt — desarrollo de SISMO (24/10/2026 – 04/11/2026)
+%% title: Diagrama de Gantt — SISMO (06/10/2026 – 11/12/2026) · días hábiles
 gantt
-  dateFormat YYYY-MM-DD HH:mm
+  dateFormat YYYY-MM-DD
   axisFormat %d/%m
-  todayMarker off
-  section Versión 1 · prototipo web
-    A · Prototipo web (SOS, guía, contactos, historial)        :done, a, 2026-10-24 00:00, 1d
-    Entrega v1 (evidencias 24/10)                               :milestone, m1, 2026-10-24 23:00, 0d
-  section Versión 2 · app completa
-    B · App Android, widget y acceso rápido                     :done, b, 2026-10-25 00:00, 9d
-    C · Alertas avanzadas y comunicación (incl. correo en la app) :done, c, 2026-10-25 00:00, 9d
-    D · Ubicación, mapa real, rutas, brújula y puntos           :done, d, 2026-10-25 00:00, 9d
-    E · Supervivencia y validación (SUS, simulacro, mochila)    :done, e, 2026-10-25 00:00, 9d
-    Entrega v2 (17 commits 02/11)                               :milestone, m2, 2026-11-02 23:00, 0d
-  section Versión 3 · backend y monitoreo
-    F · Backend — API, base de datos y sincronización           :done, crit, f, 2026-11-03 00:00, 1d
-    G · Panel de monitoreo en tiempo real                       :done, crit, g, 2026-11-04 00:00, 12h
-    H · Catálogos administrables, guía y parámetros             :done, crit, h, 2026-11-04 00:00, 12h
-    I · Recuperación y eliminar cuenta                          :done, i, 2026-11-04 00:00, 12h
-    K · Servicio de correo de alertas                           :done, k, 2026-11-04 00:00, 12h
-    J · Página informativa y evidencias                         :done, crit, j, 2026-11-04 12:00, 12h
-    Entrega v3 (04/11)                                          :milestone, m3, 2026-11-04 23:00, 0d
+  excludes weekends
+  tickInterval 1week
+  weekday monday
+  section Fase 1 · Análisis, diseño y prototipo (versión 1)
+    A · Análisis y requisitos :done, crit, a, 2026-10-06, 4d
+    B · Diseño UX/UI e identidad visual :done, crit, b, 2026-10-12, 5d
+    C · Prototipo web v1 (SOS, guía, contactos, historial) :done, crit, c, 2026-10-19, 5d
+    Entrega v1 (23/10) :milestone, mc, 2026-10-23, 0d
+  section Fase 2 · App completa (versión 2)
+    D · App Android, widget y acceso rápido :done, d, 2026-10-26, 5d
+    E · Alertas avanzadas y comunicación (SMS, WhatsApp, correo) :done, e, 2026-10-26, 5d
+    F · Ubicación, mapas, rutas y puntos de encuentro :done, f, 2026-10-26, 5d
+    G · Supervivencia y validación (atrapado, caídas, SUS, simulacro) :done, g, 2026-10-26, 5d
+    H · Calidad v2 — pruebas unitarias, e2e, CI y APK :done, h, 2026-11-02, 1d
+    Entrega v2 (02/11) :milestone, mh, 2026-11-02, 0d
+  section Fase 3 · Backend y monitoreo (versión 3)
+    I · Backend — API, base de datos y sincronización sin conexión :done, crit, i, 2026-10-26, 7d
+    J · Panel de monitoreo en tiempo real :done, crit, j, 2026-11-04, 1d
+    K · Catálogos, recuperación, eliminar cuenta y servicio de correo :done, crit, k, 2026-11-04, 1d
+    L · Página informativa, diagramas y documentación técnica :active, crit, l, 2026-11-05, 2d
+    Entrega v3 (04/11) :milestone, ml, 2026-11-04, 0d
+  section Fase 4 · Producción y pruebas reales (planeado)
+    N · Puesta en producción (BD, llave de cifrado, despliegue) :n, 2026-11-09, 5d
+    O · Prueba en dispositivo físico y ajustes nativos :o, 2026-11-09, 10d
+    P · Correo de alertas en producción y pruebas reales :p, 2026-11-16, 5d
+    Q · Aprobación del tratamiento de datos (Ley 1581) :crit, q, 2026-11-09, 15d
+  section Fase 5 · Validación y cierre (planeado)
+    S · Validación con usuarios — simulacros y encuesta SUS :crit, s, 2026-11-30, 5d
+    T · Ajustes por resultados de la validación :crit, t, 2026-12-07, 3d
+    U · Documentación final, informe y entrega :crit, u, 2026-12-10, 2d
+    Entrega final (11/12) :milestone, mu, 2026-12-11, 0d
