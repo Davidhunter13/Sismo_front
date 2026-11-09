@@ -151,7 +151,7 @@ El token del servicio de correo se lee de la variable de entorno `CORREO_SERVICI
 
 | Servicio | Uso | Quién lo llama |
 |---|---|---|
-| USGS (`earthquake.usgs.gov`) | Sismos M2,5+ de 24 h y 7 días | App y backend (panel) |
+| USGS (`earthquake.usgs.gov`) | Sismos M2,5+ de 24 h y 7 días (cerca y panel) y M4,5+ de 24 h y 7 días («Todo el mundo» en la app) | App y backend (panel) |
 | OpenStreetMap (`tile.openstreetmap.org`) | Mapas | App y panel |
 | `routing.openstreetmap.de` | Rutas al punto de encuentro | App |
 | ArcGIS / Photon | Buscar una dirección | App |

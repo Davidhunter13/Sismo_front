@@ -10,7 +10,8 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 
 | Versión | Periodo | Fase · actividad del plan | Resumen |
 |---|---|---|---|
-| **3.5** | 05/11 – 06/11 (en curso) · **tercera entrega** | Fase 3 · L | Descarga del APK desde la página informativa, APK en el bucket subido desde el panel y aviso de actualización (sugerido u obligatorio; tienda o APK) |
+| **3.6** | 09/11 (en curso) · **tercera entrega** | Fase 3 · L | Sismos recientes de todo el mundo (M4,5+) con gráfica, mapa mundial y lista |
+| **3.5** | 05/11 – 06/11 | Fase 3 · L | Descarga del APK desde la página informativa, APK en el bucket subido desde el panel y aviso de actualización (sugerido u obligatorio; tienda o APK) |
 | **3.4** | 05/11 – 06/11 | Fase 3 · L | Plus: insignias dinámicas y foto de perfil |
 | **3.3** | 05/11 – 06/11 | Fase 3 · L, con adelanto de la actividad P | Correo de alerta a los contactos por el API: contacto principal (Para) y copia oculta, caída, urgente, atrapado, batería y ubicación; correo del centro de monitoreo con plantillas |
 | **3.2** | 05/11 – 06/11 (en curso) | Fase 3 · L | Plantillas y editor de mensajes, prioridad de alertas, evento masivo, sismos con gráfica y mapa, página informativa y documentación |
@@ -28,6 +29,15 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 ---
 
 ## Fase 3 · Backend y monitoreo (26/10 – 06/11)
+
+### [3.6] — 09/11 · Sismos recientes de todo el mundo
+
+#### Agregado
+- Selector **«Cerca de mí / Todo el mundo»** en Sismos recientes. «Todo el mundo» usa el catálogo del USGS de **magnitud 4,5 o mayor** (24 h y 7 días) con la misma gráfica de picos, el mapa y la lista; con ubicación, cada sismo trae su distancia.
+- App Android **1.2** (`versionCode 3`).
+
+#### Cambiado
+- El mapa de sismos abre con el **planeta completo** en la vista mundial (acercamiento en pasos de 1/4 para que quepa en cualquier ancho).
 
 ### [3.5] — 05/11 – 06/11 · Descarga del APK y versiones de la app
 

@@ -11,14 +11,26 @@ import { quakeDotSize, quakeLevel, quakePulseSeconds, quakeWaves } from '../util
  * lanza ondas en ráfagas: entre más intenso, más grande el punto, más ondas y más rápido. Se carga de forma diferida.
  * Los textos del USGS van como nodos de texto (nunca como HTML).
  */
-export default function QuakeMap({ quakes, origin, locale }: { quakes: Quake[]; origin: { latitude: number; longitude: number } | null; locale: string }) {
+export default function QuakeMap({
+  quakes,
+  origin,
+  locale,
+  world = false,
+}: {
+  quakes: Quake[];
+  origin: { latitude: number; longitude: number } | null;
+  locale: string;
+  /** Vista mundial: el mapa abre con el planeta completo en vez de acercarse a los puntos. */
+  world?: boolean;
+}) {
   const t = useT().quakes;
   const box = useRef<HTMLDivElement>(null);
   const key = JSON.stringify(quakes.map((q) => [q.id, q.magnitude]));
 
   useEffect(() => {
     if (!box.current) return;
-    const map = L.map(box.current, { zoomControl: true, attributionControl: true }).setView([4.6, -74.1], 5);
+    // En la vista mundial el acercamiento va en pasos de 1/4 para que el planeta completo quepa en cualquier ancho.
+    const map = L.map(box.current, { zoomControl: true, attributionControl: true, worldCopyJump: true, minZoom: 0, zoomSnap: world ? 0.25 : 1 }).setView([4.6, -74.1], 5);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>',
@@ -58,7 +70,8 @@ export default function QuakeMap({ quakes, origin, locale }: { quakes: Quake[]; 
     }
     const frame = () => {
       map.invalidateSize();
-      if (points.length) map.fitBounds(L.latLngBounds(points), { padding: [36, 36], maxZoom: 9 });
+      if (world) map.fitBounds(L.latLngBounds([-58, -180], [75, 180]), { padding: [4, 4] });
+      else if (points.length) map.fitBounds(L.latLngBounds(points), { padding: [36, 36], maxZoom: 9 });
     };
     frame();
     const observer = new ResizeObserver(frame);
@@ -69,7 +82,7 @@ export default function QuakeMap({ quakes, origin, locale }: { quakes: Quake[]; 
     };
     // `key` resume la lista de sismos para no reconstruir el mapa con cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, origin?.latitude, origin?.longitude, locale]);
+  }, [key, origin?.latitude, origin?.longitude, locale, world]);
 
   return <div ref={box} className="quake-map" role="region" aria-label={t.mapLabel} />;
 }

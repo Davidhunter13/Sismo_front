@@ -2,14 +2,14 @@
 import { useRecordOnEnter } from '../components/useBadges';
 import { IonLabel, IonSegment, IonSegmentButton } from '@ionic/react';
 import { withLoader } from '../services/loaderService';
-import { Activity, ExternalLink, Info, Loader2, Map as MapIcon, RefreshCw, WifiOff } from 'lucide-react';
+import { Activity, ExternalLink, Globe2, Info, Loader2, Map as MapIcon, MapPin, RefreshCw, WifiOff } from 'lucide-react';
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { AppLayout } from '../components/AppLayout';
 import { QuakeSpikeChart } from '../components/QuakeSpikeChart';
 import { useAppState } from '../context/appContext';
 import { getLocale } from '../i18n';
 import { useT } from '../i18n/useT';
-import { fetchNearbyQuakes, NEARBY_RADIUS_KM, type Quake, type QuakePeriod } from '../services/quakeService';
+import { fetchQuakes, NEARBY_RADIUS_KM, type Quake, type QuakePeriod, type QuakeScope } from '../services/quakeService';
 
 type Status = 'cargando' | 'listo' | 'error';
 
@@ -25,6 +25,7 @@ export default function QuakesPage() {
   const t = useT().quakes;
   const locale = getLocale(data.settings.language);
   const [period, setPeriod] = useState<QuakePeriod>('day');
+  const [scope, setScope] = useState<QuakeScope>('cerca');
   const [quakes, setQuakes] = useState<Quake[]>([]);
   const [status, setStatus] = useState<Status>('cargando');
   const [loadedAt, setLoadedAt] = useState(() => Date.now());
@@ -36,7 +37,7 @@ export default function QuakesPage() {
   const load = useCallback(async () => {
     setStatus('cargando');
     try {
-      setQuakes(await withLoader(fetchNearbyQuakes(period, origin)));
+      setQuakes(await withLoader(fetchQuakes(period, scope, origin)));
       setLoadedAt(Date.now());
       setStatus('listo');
     } catch {
@@ -44,7 +45,7 @@ export default function QuakesPage() {
     }
     // originKey resume la ubicación para no recargar con cada render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period, originKey]);
+  }, [period, scope, originKey]);
 
   useEffect(() => {
     void load();
@@ -57,8 +58,17 @@ export default function QuakesPage() {
         <IonSegmentButton value="week"><IonLabel>{t.week}</IonLabel></IonSegmentButton>
       </IonSegment>
 
+      <div className="quake-scope" role="group" aria-label={t.scopeLabel}>
+        <button className={`quake-scope__btn${scope === 'cerca' ? ' is-active' : ''}`} aria-pressed={scope === 'cerca'} onClick={() => setScope('cerca')}>
+          <MapPin size={16} aria-hidden="true" /> {t.scopeNear}
+        </button>
+        <button className={`quake-scope__btn${scope === 'mundo' ? ' is-active' : ''}`} aria-pressed={scope === 'mundo'} onClick={() => setScope('mundo')}>
+          <Globe2 size={16} aria-hidden="true" /> {t.scopeWorld}
+        </button>
+      </div>
+
       <p className="small muted">
-        {origin ? t.nearby(NEARBY_RADIUS_KM) : t.colombia}
+        {scope === 'mundo' ? t.world : origin ? t.nearby(NEARBY_RADIUS_KM) : t.colombia}
       </p>
 
       {status === 'listo' && quakes.length > 0 && (
@@ -72,7 +82,7 @@ export default function QuakesPage() {
             <h2 className="card__title"><MapIcon size={18} aria-hidden="true" /> {t.mapTitle}</h2>
             <p className="small muted">{t.mapHint}</p>
             <Suspense fallback={<div className="real-map__placeholder"><Loader2 size={22} className="spin" aria-hidden="true" /> {t.loading}</div>}>
-              <QuakeMap quakes={quakes} origin={origin} locale={locale} />
+              <QuakeMap quakes={quakes} origin={origin} locale={locale} world={scope === 'mundo'} />
             </Suspense>
           </section>
         </>

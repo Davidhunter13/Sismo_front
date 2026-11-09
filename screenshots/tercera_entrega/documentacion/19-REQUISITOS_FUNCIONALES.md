@@ -103,7 +103,7 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | RF-IN-01 | El sistema debe permitir registrar una ficha médica (sangre, alergias, medicamentos, condiciones, notas) y elegir si se comparte en la alerta y el SMS. | PU | Alta |
 | RF-IN-02 | El sistema debe generar un QR médico con la ficha en texto plano, legible por cualquier lector de QR sin internet ni la app. | PU | Alta |
 | RF-IN-03 | El sistema debe mostrar la guía de emergencia (antes, durante, después) con lectura en voz alta; el contenido es administrable. | PU | Media |
-| RF-IN-04 | El sistema debe mostrar los sismos recientes de Colombia (USGS) de las últimas 24 h y 7 días, y los cercanos a la persona. | PU | Media |
+| RF-IN-04 | El sistema debe mostrar los sismos recientes (USGS) de las últimas 24 h y 7 días: **cerca de la persona** (o en Colombia si no hay ubicación) y de **todo el mundo** (magnitud 4,5 o mayor), con gráfica, mapa y lista. | PU | Media |
 | RF-IN-05 | El sistema debe permitir gestionar la mochila de emergencia (ítems sugeridos del catálogo, vencimientos y revisión periódica). | PU | Media |
 | RF-IN-06 | El sistema debe ofrecer simulacros con cronómetro, la encuesta de usabilidad SUS y estadísticas (con exportación CSV). | PU | Media |
 | RF-IN-07 | El sistema debe recordar hacer un simulacro si nunca se hizo o pasaron 90 días. | SIS | Baja |

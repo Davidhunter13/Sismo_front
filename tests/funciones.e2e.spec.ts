@@ -61,6 +61,23 @@ test('sismos recientes: muestra solo los de Colombia sin ubicación', async ({ p
   await expect(rows.first().locator('.quake-mag')).toHaveText('4.8');
 });
 
+test('sismos recientes: «Todo el mundo» muestra los de cualquier país, con mapa', async ({ page }) => {
+  await onboard(page);
+  await goTo(page, '/sismos', 'Sismos recientes');
+  const v = view(page);
+  await expect(v.locator('.quake-row')).toHaveCount(1);
+  const mundo = v.getByRole('button', { name: 'Todo el mundo' });
+  await mundo.click();
+  await expect(mundo).toHaveAttribute('aria-pressed', 'true');
+  await expect(v.getByText('Sismos de magnitud 4,5 o mayor en todo el mundo.')).toBeVisible();
+  const rows = v.locator('.quake-row');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Japón');
+  await expect(v.locator('.quake-map .quake-pin')).toHaveCount(2);
+  await v.getByRole('button', { name: 'Cerca de mí' }).click();
+  await expect(rows).toHaveCount(1);
+});
+
 test('alerta: botón 123 y métricas de activación', async ({ page }) => {
   await onboard(page, false);
   await activateAlert(page);

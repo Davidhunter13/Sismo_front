@@ -1,6 +1,6 @@
 // Nota de Transparencia: Código generado/refactorizado con asistencia de IA Generativa (Claude Code) bajo la Política ODTI012 del CCS. Requiere supervisión y validación humana permanente.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { distanceKm, fetchNearbyQuakes } from './quakeService';
+import { distanceKm, fetchNearbyQuakes, fetchQuakes } from './quakeService';
 
 const feature = (id: string, lat: number, lng: number, extra: Record<string, unknown> = {}) => ({
   id,
@@ -50,6 +50,20 @@ describe('fetchNearbyQuakes', () => {
     const quakes = await fetchNearbyQuakes('day', { latitude: 4.65, longitude: -74.1 });
     expect(quakes).toHaveLength(1);
     expect(quakes[0].url).toBe('');
+  });
+
+  it('mundo: no filtra por zona, usa el catálogo de magnitud 4,5 y calcula la distancia si hay ubicación', async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ features: [feature('lima', -12.0, -77.0, { time: 1 }), feature('tokio', 35.6, 139.7, { time: 2 })] }), { status: 200 }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const sinUbicacion = await fetchQuakes('week', 'mundo', null);
+    expect(sinUbicacion.map((q) => q.id)).toEqual(['tokio', 'lima']);
+    expect(sinUbicacion[0].distanceKm).toBeUndefined();
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toContain('4.5_week.geojson');
+    const conUbicacion = await fetchQuakes('day', 'mundo', { latitude: 4.65, longitude: -74.1 });
+    expect(conUbicacion.find((q) => q.id === 'lima')?.distanceKm).toBeGreaterThan(1500);
+    expect(String((fetchMock.mock.calls[1] as unknown[])[0])).toContain('4.5_day.geojson');
   });
 
   it('propaga el error HTTP', async () => {

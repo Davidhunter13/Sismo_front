@@ -2,7 +2,7 @@
 
 # SISMO — Avances de la tercera entrega
 
-**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.5 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
+**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.6 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
 
 Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshots/tercera_entrega/`. Cuando un diagrama o un documento cambia, se copia el de la segunda entrega como base y se actualiza la copia (los de la segunda entrega no se tocan); en la sección 4 se explica qué cambió y por qué. Lo anterior está en [`../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md`](../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
@@ -25,6 +25,7 @@ Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshot
 | **Foto de perfil** | — | Tomar o elegir la foto; se guarda en el bucket, se ve en la app, en el panel y **en los correos** |
 | Producción | Textos de «demostración» visibles | En producción **no aparece nada de demo**; «Borrar todos los datos» solo en desarrollo |
 | **App Android: descarga y versiones** | El APK se compartía a mano | Botón **«Descargar para Android»** en la página informativa, **APK en el bucket** subido desde el panel y **aviso de actualización** (sugerido u obligatorio; tienda o APK) |
+| **Sismos recientes** | Solo los de Colombia o a menos de 500 km de la persona | Además **«Todo el mundo»**: sismos de magnitud 4,5 o mayor de todo el planeta, con gráfica de picos, mapa mundial y lista |
 
 ---
 
@@ -136,6 +137,14 @@ Las insignias **no estaban en el plan**: se agregaron como un plus para que la g
 - **Una sola fuente de versión:** `versionCode` y `versionName` de `android/app/build.gradle`. La compilación los inyecta en la app y escribe `version.json` dentro del APK, que es lo que lee el panel.
 - La versión web no muestra el aviso (siempre es la última).
 
+### 2.15 Sismos recientes de todo el mundo
+
+- **Selector «Cerca de mí / Todo el mundo»** en Sismos recientes, debajo de «Últimas 24 h / Últimos 7 días».
+- **Cerca de mí** se comporta como antes: sismos de magnitud 2,5 o mayor a menos de 500 km de la última ubicación, o en Colombia si no hay ubicación.
+- **Todo el mundo** muestra los sismos de **magnitud 4,5 o mayor de todo el planeta** (catálogo `4.5_day` / `4.5_week` del USGS). Con 2,5 serían cientos por semana y el mapa no se leería.
+- Usa la misma **gráfica de picos**, el **mapa** (abre con el planeta completo, en cualquier ancho de pantalla) y la **lista** con el enlace al detalle del USGS. Si la persona tiene ubicación, cada sismo muestra a cuántos kilómetros está.
+- Igual que antes, **la ubicación no se envía**: se descarga el listado general y se filtra en el teléfono. Solo app; sin cambios en el backend ni en la base de datos.
+
 ---
 
 ## 3. Base de datos
@@ -164,7 +173,7 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 
 | Diagrama o documento | Por qué cambió |
 |---|---|
-| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos, marcar el contacto principal, poner foto de perfil, ganar insignias, ver Mis insignias, **descargar la app (APK) y actualizarla** |
+| `01a` Casos de uso de la persona usuaria | Nuevos casos: avisar por correo a los contactos, marcar el contacto principal, poner foto de perfil, ganar insignias, ver Mis insignias, **descargar la app (APK) y actualizarla**; «Consultar sismos recientes» ahora es **cerca y en todo el mundo** |
 | `01b` Casos de uso del operador | Nuevos casos: enviar correo a los contactos, ver los correos enviados, administrar insignias, subirlas al bucket, ver foto, insignias y perfil, y **publicar el APK y la versión** (superadministrador) |
 | `02b` Actividades: alerta SOS y correo | El correo se pide al API (alarma o caída), con sus respuestas y los avisos por urgente, atrapado y batería |
 | `03a` Secuencia: alerta SOS y correo | Nuevo recorrido: app → API → modelo (destinatarios, bitácora, límite) → librería `Sismo_correo` → servicio de correo |
@@ -172,16 +181,16 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 | `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()`, `version()`, `Sismo_info::android()`, `apk_estado()`, `apk_subir()`, `apk_version_guardar()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
 | `12`, `13`, `14` Modelos de base de datos | Bitácoras de correo, 4 tablas de insignias y columnas `es_principal_correo` y `foto` (19 tablas) |
 | `BASE_DE_DATOS_SISMO.md` | Mismas razones que los modelos, y el estado «contactos» de las plantillas |
-| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias), RF-FP-01 a 05 (foto) y RF-AV-01 a 05 (descarga y versiones de la app) |
+| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias), RF-FP-01 a 05 (foto) y RF-AV-01 a 05 (descarga y versiones de la app); RF-IN-04 cambia (sismos de todo el mundo) |
 | 22 Diccionario de datos | Contrato del correo y dominios de valores (tipos de correo, estado «contactos», claves `app_*` de la versión) |
-| 23 API y endpoints | Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto`, `GET /version`, `Sismo_info/android` y los del panel (correo, insignias, foto, APK y versión) |
+| 23 API y endpoints | Catálogo del USGS de magnitud 4,5 o mayor para «Todo el mundo». Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto`, `GET /version`, `Sismo_info/android` y los del panel (correo, insignias, foto, APK y versión) |
 | `03f` Secuencia: la persona gana insignias (**nuevo**) | No existía: acciones con cola sin internet → API → registrar y evaluar → aviso (en cola si hay alerta activa) |
 | `03g` Secuencia: foto de perfil (**nuevo**) | No existía: app → API → `Sismo_foto` → bucket `sismo/perfil/` → URL firmada → panel y correos |
 | `03h` Secuencia: publicar el APK y actualizar la app (**nuevo**) | No existía: panel → bucket `sismo/app/` → versión en `sismo_parametros` → `GET /version` → aviso sugerido u obligatorio → tienda o descarga firmada |
 | `BASE_DE_DATOS_SISMO.md` (parámetros) | Claves `app_*` de la versión de la app en `sismo_parametros` |
 | 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta), R-22 (rendimiento), R-23 (actualización obligatoria en una emergencia) y R-24 (APK fuera de una tienda) |
 | 29 Evidencias visuales | Evidencias de la tercera entrega |
-| 30 Registro de cambios | Versiones 3.3 (correo), 3.4 (plus: insignias y foto) y 3.5 (descarga del APK y versiones) |
+| 30 Registro de cambios | Versiones 3.3 (correo), 3.4 (plus: insignias y foto), 3.5 (descarga del APK y versiones) y 3.6 (sismos de todo el mundo) |
 
 ---
 
@@ -217,7 +226,7 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 
 ## 7. Evidencias
 
-Carpeta `screenshots/tercera_entrega/2026-11-05/` (**63 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
+Carpeta `screenshots/tercera_entrega/2026-11-05/` (**66 evidencias**, datos ficticios). Índice en [`../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md`](../../screenshots/tercera_entrega/documentacion/29-EVIDENCIAS_VISUALES.md).
 
 **`visual/visual_front/`** (app, 390×844):
 
@@ -236,6 +245,8 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**63 evidencias**, datos fict
 | `11-inicio-perfil-completado-y-mis-insignias.png` | Inicio: «Perfil completado» con lo que falta y «Mis insignias» (§2.10) |
 | `12-aviso-version-nueva.png` | Aviso «Hay una versión nueva» con «Descargar la nueva versión» y «Ahora no» (§2.14) |
 | `13-actualizacion-obligatoria.png` | «Actualice SISMO para seguir» con «Abrir la tienda» y «Tengo una emergencia» (§2.14) |
+| `14-sismos-todo-el-mundo.png` | Sismos recientes con «Todo el mundo»: magnitud 4,5 o mayor y gráfica de picos con datos reales del USGS (§2.15) |
+| `15-mapa-sismos-del-mundo.png` | Mapa con el planeta completo y los sismos de las últimas 24 h (§2.15) |
 
 **`visual/visual_back/`** (correos y panel):
 
@@ -276,6 +287,7 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**63 evidencias**, datos fict
 | `14-produccion-sin-demo.png` | `env.ts`: en producción no aparece nada de demostración |
 | `15-aviso-de-actualizacion.png` | `versionService.ts`: versión sugerida u obligatoria según el `versionCode` |
 | `16-version-desde-build-gradle.png` | `vite.config.ts`: versión desde `build.gradle` y `version.json` dentro del APK |
+| `17-sismos-de-todo-el-mundo.png` | `quakeService.ts`: «Cerca de mí» (radio o Colombia) o «Todo el mundo» (M4,5+), con distancia si hay ubicación |
 
 **`codigo/codigo_back/`**:
 
@@ -306,7 +318,7 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**63 evidencias**, datos fict
 
 ## 8. Estado de verificación
 
-- Pruebas unitarias: **199 de 199** (28 archivos; incluye el aviso de actualización, correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
+- Pruebas unitarias: **200 de 200** (28 archivos; incluye sismos de todo el mundo, el aviso de actualización, correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
 - Pruebas e2e (celular y escritorio): **130 de 130** el 05/11, repetidas después de agregar el aviso de actualización (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
 - `eslint` y `tsc -b` sin errores; PHP sin errores de sintaxis.
 - API de insignias y foto probados contra el backend local con una cuenta de prueba que se eliminó al final (acciones inválidas → 422, sin token → 401, foto inválida → 422, foto subida y descargada con URL firmada).

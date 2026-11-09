@@ -7,6 +7,8 @@ import { getT } from '../i18n';
  * No se envía la ubicación del usuario: se descarga el listado mundial y se filtra en el dispositivo.
  */
 export type QuakePeriod = 'day' | 'week';
+/** Alcance: «cerca» (radio desde la ubicación o Colombia) o «mundo» (todo el planeta, magnitud 4,5 o mayor). */
+export type QuakeScope = 'cerca' | 'mundo';
 
 export interface Quake {
   id: string;
@@ -20,9 +22,16 @@ export interface Quake {
   distanceKm?: number;
 }
 
-const FEEDS: Record<QuakePeriod, string> = {
-  day: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
-  week: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson',
+const FEEDS: Record<QuakeScope, Record<QuakePeriod, string>> = {
+  cerca: {
+    day: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson',
+    week: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson',
+  },
+  // En el mundo se toman desde magnitud 4,5: con 2,5 serían cientos de sismos por semana y el mapa no se leería.
+  mundo: {
+    day: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson',
+    week: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson',
+  },
 };
 
 /** Recuadro aproximado de Colombia, usado cuando no hay ubicación del usuario. */
@@ -59,18 +68,27 @@ function parseFeature(f: unknown): Quake | null {
   };
 }
 
+type Origin = { latitude: number; longitude: number } | null;
+
 /**
- * Sismos cercanos: dentro de NEARBY_RADIUS_KM de `origin`, o dentro de Colombia si no hay ubicación.
- * Ordenados del más reciente al más antiguo.
+ * Sismos del periodo, del más reciente al más antiguo.
+ *  - cerca: dentro de NEARBY_RADIUS_KM de `origin`, o dentro de Colombia si no hay ubicación;
+ *  - mundo: todos los de magnitud 4,5 o mayor del planeta (con ubicación, cada uno trae su distancia).
  */
-export async function fetchNearbyQuakes(period: QuakePeriod, origin: { latitude: number; longitude: number } | null): Promise<Quake[]> {
+export async function fetchQuakes(period: QuakePeriod, scope: QuakeScope, origin: Origin): Promise<Quake[]> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(FEEDS[period], { signal: ctrl.signal });
+    const res = await fetch(FEEDS[scope][period], { signal: ctrl.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = (await res.json()) as { features?: unknown[] };
     const quakes = (Array.isArray(json.features) ? json.features : []).map(parseFeature).filter((q): q is Quake => q !== null);
+    if (scope === 'mundo') {
+      const all = origin
+        ? quakes.map((q) => ({ ...q, distanceKm: distanceKm(origin.latitude, origin.longitude, q.latitude, q.longitude) }))
+        : quakes;
+      return all.sort((a, b) => b.time - a.time);
+    }
     const nearby = origin
       ? quakes
           .map((q) => ({ ...q, distanceKm: distanceKm(origin.latitude, origin.longitude, q.latitude, q.longitude) }))
@@ -82,4 +100,9 @@ export async function fetchNearbyQuakes(period: QuakePeriod, origin: { latitude:
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Sismos cercanos (alcance «cerca»). */
+export function fetchNearbyQuakes(period: QuakePeriod, origin: Origin): Promise<Quake[]> {
+  return fetchQuakes(period, 'cerca', origin);
 }

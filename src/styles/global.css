@@ -428,6 +428,12 @@ ion-alert.sismo-alert .alert-radio-label { color: var(--text); }
 .stat-table tbody th { text-align: left; font-weight: 600; white-space: normal; }
 
 /* ---------- Sismos recientes ---------- */
+/* Selector «Cerca de mí / Todo el mundo» de Sismos recientes */
+.quake-scope { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quake-scope__btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--card); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+.quake-scope__btn.is-active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.quake-scope__btn:focus-visible { outline: 3px solid var(--navy-soft); outline-offset: 2px; }
 .quake-list { list-style: none; margin: 0; padding: 0; }
 .quake-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .quake-row:last-child { border-bottom: 0; }
