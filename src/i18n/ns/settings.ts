@@ -82,6 +82,7 @@ const es = {
     offline: 'Se necesita conexión con el servidor para eliminar la cuenta. Intente de nuevo cuando tenga internet.',
     error: 'No se pudo eliminar la cuenta. Intente de nuevo.',
   },
+  accountGone: 'Su cuenta ya no existe en el servidor. Regístrese de nuevo y agregue sus contactos.',
   backup: {
     title: 'Respaldo y recuperación',
     hint: 'Si pierde o cambia de teléfono, recupere sus contactos, alertas, ficha médica y demás datos con un código de recuperación.',
@@ -200,6 +201,7 @@ const en: typeof es = {
     offline: 'A connection to the server is needed to delete the account. Try again when you are online.',
     error: 'The account could not be deleted. Please try again.',
   },
+  accountGone: 'Your account no longer exists on the server. Sign up again and add your contacts.',
   backup: {
     title: 'Backup and recovery',
     hint: 'If you lose or change your phone, recover your contacts, alerts, medical record and other data with a recovery code.',

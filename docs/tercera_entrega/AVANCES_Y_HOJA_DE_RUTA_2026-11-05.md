@@ -2,7 +2,7 @@
 
 # SISMO — Avances de la tercera entrega
 
-**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.6 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
+**Fecha:** 5 de noviembre de 2026 · **Versión:** 3.7 · **Fase del plan:** 3 · actividad L (05/11 – 06/11), con adelanto de la actividad P «Correo de alertas en producción y pruebas reales» (16/11 – 20/11).
 
 Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshots/tercera_entrega/`. Cuando un diagrama o un documento cambia, se copia el de la segunda entrega como base y se actualiza la copia (los de la segunda entrega no se tocan); en la sección 4 se explica qué cambió y por qué. Lo anterior está en [`../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md`](../segunda_entrega/AVANCES_Y_HOJA_DE_RUTA_2026-11-04.md).
 
@@ -25,6 +25,7 @@ Desde esta entrega, todo lo nuevo queda en `docs/tercera_entrega/` y `screenshot
 | **Foto de perfil** | — | Tomar o elegir la foto; se guarda en el bucket, se ve en la app, en el panel y **en los correos** |
 | Producción | Textos de «demostración» visibles | En producción **no aparece nada de demo**; «Borrar todos los datos» solo en desarrollo |
 | **App Android: descarga y versiones** | El APK se compartía a mano | Botón **«Descargar para Android»** en la página informativa, **APK en el bucket** subido desde el panel y **aviso de actualización** (sugerido u obligatorio; tienda o APK) |
+| **Reinstalar la app** | Desinstalar y volver a instalar creaba otro usuario | El servidor **reconoce el mismo teléfono** y devuelve su cuenta con sus datos; en un **teléfono nuevo**, el código de recuperación. Si la cuenta se borró en el servidor, la app **vuelve al registro** en vez de recrearla |
 | **Sismos recientes** | Solo los de Colombia o a menos de 500 km de la persona | Además **«Todo el mundo»**: sismos de magnitud 4,5 o mayor de todo el planeta, con gráfica de picos, mapa mundial y lista |
 
 ---
@@ -145,6 +146,17 @@ Las insignias **no estaban en el plan**: se agregaron como un plus para que la g
 - Usa la misma **gráfica de picos**, el **mapa** (abre con el planeta completo, en cualquier ancho de pantalla) y la **lista** con el enlace al detalle del USGS. Si la persona tiene ubicación, cada sismo muestra a cuántos kilómetros está.
 - Igual que antes, **la ubicación no se envía**: se descarga el listado general y se filtra en el teléfono. Solo app; sin cambios en el backend ni en la base de datos.
 
+### 2.16 Mismo teléfono al reinstalar, teléfono nuevo y cuenta borrada
+
+La app no pide usuario ni contraseña: el servidor le entrega al teléfono un identificador y un token que la app guarda en su almacenamiento. Android borra ese almacenamiento al desinstalar, y antes la app reinstalada creaba **otro usuario**.
+
+- **Mismo teléfono (reinstalar):** en Android la app envía al registrarse el identificador del teléfono (`ANDROID_ID`, que no cambia al reinstalar si el APK tiene la misma firma). Si ese teléfono ya tenía una cuenta activa, `POST sismo/registro` devuelve **la misma cuenta** (`recuperado: true`) con un token nuevo; la app descarga sus datos y entra a Inicio con sus contactos, alertas, insignias y foto. El token de la instalación anterior deja de servir.
+- **Teléfono nuevo:** sigue el **código de recuperación** (Configuración → «Respaldo y recuperación»). Al usarlo, el teléfono nuevo queda vinculado a la cuenta recuperada (y se le quita a la cuenta vacía que se creó al abrir la app); así, una reinstalación posterior en ese teléfono también la reconoce.
+- **Instalaciones anteriores:** al actualizar la app se vinculan solas, una vez (`POST sismo/equipo`).
+- **Privacidad:** el servidor guarda solo un **HMAC-SHA256** del identificador (`sismo_usuarios.hash_equipo`), con la clave de la variable de entorno `SISMO_CLAVE_EQUIPO`. En la web y en iOS no se usa.
+- **Cuenta borrada en el servidor** (eliminada, usuarios vaciados desde el panel o recuperada en otro teléfono): la app ya **no la vuelve a crear con los datos del teléfono**. Borra los datos locales, muestra «Su cuenta ya no existe en el servidor. Regístrese de nuevo y agregue sus contactos.» y lleva a **Bienvenida** para registrarse desde cero. **Nunca interrumpe una emergencia:** con una alerta activa o un simulacro espera a que terminen.
+- Al volver a Bienvenida se registra un dispositivo nuevo y vacío, igual que en una instalación nueva, para que el SOS llegue al centro de monitoreo aunque la persona aún no termine el registro.
+
 ---
 
 ## 3. Base de datos
@@ -163,6 +175,8 @@ Script idempotente `2026-11-05-sismo-insignias.sql` y semilla `2026-11-05-sismo-
 
 Script idempotente `2026-11-05-sismo-version-app.sql` (**no crea tablas**): 4 filas en `sismo_parametros` para la versión de la app (`app_version_actual`, `app_version_minima`, `app_version_nombre`, `app_enlace_tienda`). Estas claves no aparecen en el editor de parámetros de los operadores ni en los catálogos que descarga la app; solo las edita el superadministrador.
 
+Script idempotente `2026-11-09-sismo-equipo.sql` (**no crea tablas**): columna `sismo_usuarios.hash_equipo` (`CHAR(64)`, HMAC-SHA256 del identificador del teléfono Android) y su índice `ix_sismo_usuarios_equipo`.
+
 En total, **19 tablas** (sin cambios). Si el script aún no se ejecutó, la API responde `correo_no_disponible` y la app muestra «sin servidor»; el resto sigue funcionando.
 
 ---
@@ -178,19 +192,20 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 | `02b` Actividades: alerta SOS y correo | El correo se pide al API (alarma o caída), con sus respuestas y los avisos por urgente, atrapado y batería |
 | `03a` Secuencia: alerta SOS y correo | Nuevo recorrido: app → API → modelo (destinatarios, bitácora, límite) → librería `Sismo_correo` → servicio de correo |
 | `03e` Secuencia: correo del operador a los contactos (**nuevo**) | No existía: panel → `Sismo_admin` → lista blanca → modelo → `Sismo_correo` → servicio de correo |
-| `04a` Clases del backend | `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()`, `version()`, `Sismo_info::android()`, `apk_estado()`, `apk_subir()`, `apk_version_guardar()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
-| `12`, `13`, `14` Modelos de base de datos | Bitácoras de correo, 4 tablas de insignias y columnas `es_principal_correo` y `foto` (19 tablas) |
+| `04a` Clases del backend | `registro()` con el equipo, `equipo()`, `correo_alerta()`, `correo_contactos()`, `insignias()`, `foto()`, `version()`, `Sismo_info::android()`, `apk_estado()`, `apk_subir()`, `apk_version_guardar()` y los endpoints de insignias del panel; `Sismo_insignias_model`; librerías `Sismo_correo`, `Sismo_insignias_reglas`, `Sismo_foto` y `PHP_Mailer` |
+| `12`, `13`, `14` Modelos de base de datos | Bitácoras de correo, 4 tablas de insignias y columnas `es_principal_correo`, `foto` y `hash_equipo` (19 tablas) |
 | `BASE_DE_DATOS_SISMO.md` | Mismas razones que los modelos, y el estado «contactos» de las plantillas |
-| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias), RF-FP-01 a 05 (foto) y RF-AV-01 a 05 (descarga y versiones de la app); RF-IN-04 cambia (sismos de todo el mundo) |
-| 22 Diccionario de datos | Contrato del correo y dominios de valores (tipos de correo, estado «contactos», claves `app_*` de la versión) |
-| 23 API y endpoints | Catálogo del USGS de magnitud 4,5 o mayor para «Todo el mundo». Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto`, `GET /version`, `Sismo_info/android` y los del panel (correo, insignias, foto, APK y versión) |
+| 19 Requisitos funcionales | RF-CO-03, 04 y 08 cambian; nuevos RF-CO-07 a 11 (correo), RF-IG-01 a 07 (insignias), RF-FP-01 a 05 (foto) y RF-AV-01 a 05 (descarga y versiones de la app); RF-IN-04 cambia (sismos de todo el mundo); RF-SI-02 cambia y nuevos RF-SI-06 a 08 (reinstalar, teléfono nuevo y cuenta borrada) |
+| 22 Diccionario de datos | Columna `hash_equipo`. Contrato del correo y dominios de valores (tipos de correo, estado «contactos», claves `app_*` de la versión) |
+| 23 API y endpoints | `registro` y `recuperar` con `equipo` y nuevo `POST /equipo`. Catálogo del USGS de magnitud 4,5 o mayor para «Todo el mundo». Nuevos `POST /correo_alerta/{id}`, `/insignias`, `/foto`, `GET /version`, `Sismo_info/android` y los del panel (correo, insignias, foto, APK y versión) |
 | `03f` Secuencia: la persona gana insignias (**nuevo**) | No existía: acciones con cola sin internet → API → registrar y evaluar → aviso (en cola si hay alerta activa) |
 | `03g` Secuencia: foto de perfil (**nuevo**) | No existía: app → API → `Sismo_foto` → bucket `sismo/perfil/` → URL firmada → panel y correos |
+| `03i` Secuencia: reinstalar, teléfono nuevo y cuenta borrada (**nuevo**) | No existía: registro con el equipo → misma cuenta o cuenta nueva; código de recuperación que vincula el teléfono; 401 → borrar el teléfono y volver al registro |
 | `03h` Secuencia: publicar el APK y actualizar la app (**nuevo**) | No existía: panel → bucket `sismo/app/` → versión en `sismo_parametros` → `GET /version` → aviso sugerido u obligatorio → tienda o descarga firmada |
 | `BASE_DE_DATOS_SISMO.md` (parámetros) | Claves `app_*` de la versión de la app en `sismo_parametros` |
-| 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta), R-22 (rendimiento), R-23 (actualización obligatoria en una emergencia) y R-24 (APK fuera de una tienda) |
+| 28 Registro de riesgos | R-18 (uso indebido del correo), R-19 (token), R-20 (foto de perfil), R-21 (insignias durante una alerta), R-22 (rendimiento), R-23 (actualización obligatoria en una emergencia), R-24 (APK fuera de una tienda), R-25 (identificador del teléfono) y R-26 (cuenta borrada en el servidor) |
 | 29 Evidencias visuales | Evidencias de la tercera entrega |
-| 30 Registro de cambios | Versiones 3.3 (correo), 3.4 (plus: insignias y foto), 3.5 (descarga del APK y versiones) y 3.6 (sismos de todo el mundo) |
+| 30 Registro de cambios | Versiones 3.3 (correo), 3.4 (plus: insignias y foto), 3.5 (descarga del APK y versiones), 3.6 (sismos de todo el mundo) y 3.7 (reinstalar sin duplicar usuarios) |
 
 ---
 
@@ -220,6 +235,7 @@ Se copiaron de la segunda entrega y se actualizaron las copias en `screenshots/t
 - El correo depende de internet en el teléfono; sin red, la alerta local y los SMS siguen funcionando.
 - **APK sin firma de publicación:** por ahora se publica el APK firmado con la clave de depuración de Android Studio; el teléfono pide permitir «orígenes desconocidos». Para la tienda hará falta una firma de publicación.
 - **Tamaño de subida en producción:** el servidor debe aceptar archivos del tamaño del APK (`upload_max_filesize` y `post_max_size`; hoy ~5,6 MB). Si no, el panel dice «El APK es demasiado grande para el servidor».
+- **Firma del APK y reinstalación:** el teléfono se reconoce mientras el APK tenga la misma firma. Al cambiar a la firma de publicación (tienda), el identificador cambia y las cuentas existentes deben usar el código de recuperación una vez.
 - La subida del APK y el guardado de la versión desde el panel se probaron con la API simulada; falta probarlos con una sesión real de superadministrador.
 
 ---
@@ -318,8 +334,8 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**66 evidencias**, datos fict
 
 ## 8. Estado de verificación
 
-- Pruebas unitarias: **200 de 200** (28 archivos; incluye sismos de todo el mundo, el aviso de actualización, correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
-- Pruebas e2e (celular y escritorio): **130 de 130** el 05/11, repetidas después de agregar el aviso de actualización (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
+- Pruebas unitarias: **205 de 205** (28 archivos; incluye reinstalar en el mismo teléfono, teléfono nuevo con código, cuenta borrada en el servidor, sismos de todo el mundo, el aviso de actualización, correo, insignias, cola sin internet, aviso que nunca sale con alerta activa, «Nueva», foto pendiente, perfil completado y textos de producción).
+- Pruebas e2e (celular y escritorio): **130 de 130** el 09/11 con los sismos de todo el mundo; además, la nueva `cuenta-inexistente.e2e.spec.ts` (4 de 4): cuenta borrada → Bienvenida sin datos ni resubida, y con alerta activa espera. Antes: **130 de 130** el 05/11, repetidas después de agregar el aviso de actualización (incluye la nueva `insignias-foto.e2e.spec.ts`: tarjetas, pestañas, aviso centrado, sin aviso durante una alerta, «Ver mis insignias» y «Nueva», foto con y sin internet).
 - `eslint` y `tsc -b` sin errores; PHP sin errores de sintaxis.
 - API de insignias y foto probados contra el backend local con una cuenta de prueba que se eliminó al final (acciones inválidas → 422, sin token → 401, foto inválida → 422, foto subida y descargada con URL firmada).
 - Evaluación de 100 insignias: < 1 s por petición.
@@ -335,8 +351,9 @@ Carpeta `screenshots/tercera_entrega/2026-11-05/` (**66 evidencias**, datos fict
 2. Crear en el servidor la variable de entorno `CORREO_SERVICIO_TOKEN` (y, si cambia, `CORREO_SERVICIO_URL`).
 3. Recompilar la app (`npm run build` / APK); ya no se usa `VITE_ALERT_EMAIL_URL`.
 4. Ejecutar `docs/superpowers/sql/2026-11-05-sismo-version-app.sql` (versión de la app).
-5. Revisar que `upload_max_filesize` y `post_max_size` del servidor acepten el APK, y subirlo desde el panel (tarjeta «App para Android (APK)»).
-6. Para cada versión nueva: subir `versionCode`/`versionName` en `android/app/build.gradle`, compilar, subir el APK desde el panel y aceptar ponerlo como versión actual (la mínima solo si la anterior ya no debe usarse).
+5. Ejecutar `docs/superpowers/sql/2026-11-09-sismo-equipo.sql` **antes** de subir el backend (sin la columna, el registro de usuarios nuevos falla) y crear la variable de entorno `SISMO_CLAVE_EQUIPO` (texto aleatorio largo; si no existe se usa la `encryption_key` de la configuración). No cambiarla después: los teléfonos ya vinculados dejarían de reconocerse.
+6. Revisar que `upload_max_filesize` y `post_max_size` del servidor acepten el APK, y subirlo desde el panel (tarjeta «App para Android (APK)»).
+7. Para cada versión nueva: subir `versionCode`/`versionName` en `android/app/build.gradle`, compilar, subir el APK desde el panel y aceptar ponerlo como versión actual (la mínima solo si la anterior ya no debe usarse).
 
 ---
 

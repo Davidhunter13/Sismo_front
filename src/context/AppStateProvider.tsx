@@ -6,7 +6,7 @@ import type {
 } from '../types';
 import { setLang } from '../i18n';
 import { clearData, createEmptyData, loadData, newId, saveData } from '../services/storageService';
-import { queueChanges, startSync, type ServerState } from '../services/syncService';
+import { accountGone as accountGoneStored, clearAccountGone, queueChanges, startSync, type ServerState } from '../services/syncService';
 import { forgetBadges, recordAction, startBadges } from '../services/badgeService';
 import { badgeActionsFromDiff } from '../services/badgeActions';
 import { forgetPhoto } from '../services/photoService';
@@ -72,7 +72,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }
     prevDataRef.current = data;
   }, [data]);
-  useEffect(() => startSync(() => dataRef.current), []);
+  // Si el servidor reconoce el teléfono (la app se reinstaló), se restauran sus datos en vez de crear otra cuenta.
+  const restoreRef = useRef<(server: ServerState) => void>(() => undefined);
+  // Cuenta borrada en el servidor: AccountGoneGuard borra el teléfono y lleva al registro (nunca en una alerta).
+  const [accountGone, setAccountGone] = useState(() => accountGoneStored());
+  useEffect(() => startSync(() => dataRef.current, (server) => restoreRef.current(server), () => setAccountGone(true)), []);
   // Insignias: ingreso del día, cola pendiente y descarga de las ganadas.
   useEffect(() => startBadges(), []);
 
@@ -349,6 +353,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       };
     });
   }, []);
+  useEffect(() => {
+    restoreRef.current = restoreFromServer;
+  }, [restoreFromServer]);
 
   const wipeAfterAccountDeletion = useCallback(() => {
     stopAlertSignals();
@@ -358,6 +365,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     forgetPhoto();
     setData(createEmptyData());
   }, []);
+
+  const finishAccountGone = useCallback(() => {
+    wipeAfterAccountDeletion();
+    clearAccountGone();
+    setAccountGone(false);
+  }, [wipeAfterAccountDeletion]);
 
   const resetAll = useCallback(() => {
     stopAlertSignals();
@@ -392,6 +405,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     resetDemoData,
     resetAll,
     wipeAfterAccountDeletion,
+    accountGone,
+    finishAccountGone,
     restoreFromServer,
   };
 

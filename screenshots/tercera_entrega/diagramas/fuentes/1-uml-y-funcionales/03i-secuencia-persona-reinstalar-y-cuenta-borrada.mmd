@@ -1,0 +1,40 @@
+%% title: Diagrama de secuencia — Reinstalar en el mismo teléfono, teléfono nuevo y cuenta borrada · tercera entrega
+sequenceDiagram
+  autonumber
+  actor P as Persona usuaria
+  participant A as App SISMO (Android)
+  participant API as Backend · Sismo
+  participant BD as sismo_usuarios
+  Note over P,BD: Mismo teléfono: desinstala y vuelve a instalar
+  P->>A: Abre la app reinstalada (sin token guardado)
+  A->>A: Lee el identificador del teléfono (ANDROID_ID)
+  A->>API: POST registro {plataforma, equipo}
+  API->>API: HMAC-SHA256 del equipo (clave SISMO_CLAVE_EQUIPO)
+  API->>BD: ¿Cuenta activa con ese hash_equipo?
+  alt El teléfono ya tenía cuenta
+    API->>BD: Token nuevo (el anterior deja de servir)
+    API-->>A: 200 {uuid, token, recuperado: true}
+    A->>API: GET estado
+    API-->>A: Ajustes, contactos, alertas, ficha y más
+    A-->>P: Inicio con sus datos (no se crea otro usuario)
+  else Teléfono sin cuenta
+    API->>BD: Nueva cuenta con hash_equipo
+    API-->>A: 201 {uuid, token, recuperado: false}
+    A-->>P: Bienvenida y registro
+  end
+  Note over P,BD: Teléfono nuevo: código de recuperación
+  P->>A: Configuración → Recuperar mis datos (código)
+  A->>API: POST recuperar {codigo, plataforma, equipo}
+  API->>BD: Token nuevo, código usado y vincula el equipo (se quita de la cuenta vacía)
+  API-->>A: 200 {uuid, token}
+  A-->>P: Sus datos en el teléfono nuevo
+  Note over P,BD: Cuenta borrada en el servidor
+  A->>API: Cualquier petición con el token
+  API-->>A: 401 (la cuenta ya no existe)
+  A->>A: Olvida token y cola, y no la recrea con los datos viejos
+  alt Alerta activa o simulacro
+    A-->>P: Espera a que termine (nunca interrumpe una emergencia)
+  else Sin emergencia
+    A->>A: Borra los datos del teléfono
+    A-->>P: «Su cuenta ya no existe…» y Bienvenida para registrarse de nuevo
+  end

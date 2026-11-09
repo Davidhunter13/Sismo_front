@@ -43,7 +43,8 @@ El backend está hecho en **CodeIgniter 3 (PHP 7.3)** y se comunica en **JSON**.
 
 | Método | Ruta | Token | Cuerpo | Respuesta correcta | Errores propios |
 |---|---|---|---|---|---|
-| `POST` | `/registro` | No | `{"plataforma":"android"\|"ios"\|"web"}` | **201** `{"uuid_dispositivo","token"}` (el token se entrega solo una vez) | 422 |
+| `POST` | `/registro` | No | `{"plataforma":"android"\|"ios"\|"web", "equipo"?}` | **201** `{"uuid_dispositivo","token","recuperado":false}` (el token se entrega solo una vez) · **200** `recuperado: true` si el teléfono Android ya tenía cuenta (misma cuenta, token nuevo) | 422 |
+| `POST` | `/equipo` | Sí | `{"equipo"}` | **200** `{"ok":true}` vincula el teléfono a la cuenta (instalaciones anteriores) | 401 · 422 `equipo_invalido` |
 | `GET` | `/estado` | Sí | — | **200** todos los datos de la persona en formato `AppData` (para restaurar) | 401 |
 | `PUT` | `/ajustes` | Sí | `{settings, locationPermission, lastLocation, postQuakeDone}` | **200** `{"ok":true}` | 401, 422 |
 | `PUT` | `/contactos/{id}` | Sí | `Contact` (incluye `emailPrimary`) | **200** `{"ok":true}` | 401, 422 |
@@ -58,7 +59,7 @@ El backend está hecho en **CodeIgniter 3 (PHP 7.3)** y se comunica en **JSON**.
 | `PUT` | `/ficha_medica` | Sí | `MedicalInfo` (se cifra con AES-256-GCM) | **200** `{"ok":true}` | 401, 422, **503** sin llave |
 | `DELETE` | `/ficha_medica` | Sí | — | **200** `{"ok":true}` | 401 |
 | `POST` | `/codigo_recuperacion` | Sí | — | **201** `{"codigo":"XXXX-XXXX-XXXX"}` (invalida el anterior; no vence) | 401 |
-| `POST` | `/recuperar` | No | `{"codigo","plataforma"}` | **200** `{"uuid_dispositivo","token"}` (token nuevo; el teléfono anterior queda revocado) | **404** `codigo_invalido` (responde tras 1 s) |
+| `POST` | `/recuperar` | No | `{"codigo","plataforma","equipo"?}` (vincula el teléfono nuevo) | **200** `{"uuid_dispositivo","token"}` (token nuevo; el teléfono anterior queda revocado) | **404** `codigo_invalido` (responde tras 1 s) |
 | `GET` | `/atencion` | Sí | — | **200** `{"atencion":{alertId,status,note,at}\|null}` | 401 |
 | `GET` | `/catalogos` | No | — | **200** catálogos, guía y parámetros con su `version` | 503 |
 | `POST` | `/eliminar_cuenta` | Sí | — | **200** borrado lógico en cascada + supresión de datos personales; token y código revocados | 401 |

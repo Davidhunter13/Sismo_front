@@ -41,6 +41,7 @@ erDiagram
         INT id PK
         CHAR uuid_dispositivo UK
         CHAR hash_token UK
+        CHAR hash_equipo
         VARCHAR nombre
         VARCHAR plataforma
         DATETIME fecha_ultima_sincronizacion
@@ -212,6 +213,7 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `id` | `INT UNSIGNED` (PK, autoincremento) | No | — | Identificador del usuario (un dispositivo) |
 | `uuid_dispositivo` | `CHAR(36)` | No | — | UUID v4 público del dispositivo, generado por el servidor al registrarse |
 | `hash_token` | `CHAR(64)` | No | — | SHA-256 del token de acceso (el token nunca se guarda en claro) |
+| `hash_equipo` | `CHAR(64)` | Sí | — | HMAC-SHA256 del identificador del teléfono Android (`ANDROID_ID`): reconoce el mismo teléfono al reinstalar; NULL = sin vincular |
 | `nombre` | `VARCHAR(120)` | Sí | — | Nombre que la persona escribió en la app |
 | `foto` | `VARCHAR(255)` | Sí | — | Ruta de la foto de perfil en el bucket (`sismo/perfil/<archivo>.jpg`); NULL = sin foto. Nunca una URL: se entrega firmada por 15 min |
 | `plataforma` | `VARCHAR(20)` | No | `'web'` | `android` \| `ios` \| `web` |
@@ -220,7 +222,7 @@ Columnas de auditoría comunes a **todas** las tablas (no se repiten abajo):
 | `fecha_expiracion_codigo` | `DATETIME` | Sí | — | Vencimiento (UTC) del código; NULL = no vence (código creado por la persona) |
 | `activo` | `TINYINT(1)` | No | `1` | 1 = activo, 0 = revocado / cuenta eliminada |
 
-Índices únicos: `uq_sismo_usuarios_uuid (uuid_dispositivo)`, `uq_sismo_usuarios_token (hash_token)`, `uq_sismo_usuarios_codigo (hash_codigo_recuperacion)`.
+Índices únicos: `uq_sismo_usuarios_uuid (uuid_dispositivo)`, `uq_sismo_usuarios_token (hash_token)`, `uq_sismo_usuarios_codigo (hash_codigo_recuperacion)`. Índice `ix_sismo_usuarios_equipo (hash_equipo)`.
 
 ### 2.2 `sismo_ajustes_usuarios`: configuración y última ubicación
 
@@ -612,6 +614,7 @@ Si la persona no registró nombre, se quita el comodín y se corrige la puntuaci
 |---|---|---|
 | Token de acceso del teléfono | `sismo_usuarios.hash_token` | Solo su SHA-256; el token real nunca se guarda |
 | Código de recuperación | `sismo_usuarios.hash_codigo_recuperacion` | Solo su SHA-256; un solo uso; el del panel vence en 48 h |
+| Identificador del teléfono | `sismo_usuarios.hash_equipo` | Solo su HMAC-SHA256 (clave en `SISMO_CLAVE_EQUIPO`); solo Android |
 | Ficha médica (dato de salud) | `sismo_fichas_medicas_usuarios.datos_cifrados` | Cifrada AES-256-GCM; llave fuera de la base de datos |
 | Nombre, teléfono y correo de contactos | `sismo_contactos_usuarios` | Acceso solo por el dueño (token) y por operadores autorizados del panel |
 | Ubicaciones | `sismo_ajustes_usuarios`, `sismo_alertas_usuarios`, `sismo_puntos_encuentro_usuarios` | Igual que arriba |

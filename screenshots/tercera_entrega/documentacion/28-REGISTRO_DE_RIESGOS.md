@@ -33,6 +33,8 @@ Versión 1.0 · 4 de noviembre de 2026.
 | R-22 | Evaluar las insignias hace lenta la sincronización | Media | Medio | Toda la actividad de la persona se trae en 2 consultas por petición e inserción en lote (de ~17 s a < 1 s con 100 insignias y la base de datos remota) | Mitigado |
 | R-23 | La actualización obligatoria impide pedir ayuda | Baja | Alto | La pantalla obligatoria nunca aparece con una alerta activa, en la pantalla de alerta ni en un simulacro, y tiene «Tengo una emergencia» (lleva al SOS y pausa 30 min); la versión mínima la cambia solo el superadministrador | Mitigado |
 | R-24 | APK distribuido fuera de una tienda (firma de depuración, instalación de orígenes desconocidos) | Media | Medio | Solo el superadministrador lo publica; se valida que sea un APK y su MD5; descarga con URL firmada temporal; cuando haya tienda, el enlace se configura en el panel y el aviso la usa | Abierto |
+| R-25 | El identificador del teléfono sirve para tomar una cuenta | Baja | Alto | Solo se guarda su HMAC-SHA256 con clave en variable de entorno; solo Android; el identificador es aleatorio de 64 bits por app y firma; al reconocerlo se entrega un token nuevo y el anterior deja de servir | Mitigado |
+| R-26 | Una base vaciada por error borra los datos de los teléfonos | Baja | Alto | La app solo borra el teléfono cuando el servidor responde que el token no existe (401), nunca durante una alerta o un simulacro; respaldos de la base de datos del servidor y código de recuperación | Mitigado |
 | R-19 | El token del servicio de correo queda expuesto | Media | Alto | Se lee de la variable de entorno `CORREO_SERVICIO_TOKEN`; las versiones anteriores de la librería lo tenían en el código: conviene rotarlo | Abierto |
 
 ## Mapa de calor

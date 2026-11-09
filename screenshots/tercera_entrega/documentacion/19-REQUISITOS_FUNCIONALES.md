@@ -121,9 +121,12 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | ID | Requisito | Rol | Prioridad |
 |---|---|---|---|
 | RF-SI-01 | Todo cambio debe guardarse primero en el teléfono y subirse al servidor por recurso (ajustes, contactos, alertas, puntos, encuestas, kit, ficha médica). | SIS | Alta |
-| RF-SI-02 | Sin conexión, los cambios deben esperar en una cola persistente y subirse solos al volver la red, con reintentos; si el token deja de ser válido, la app debe registrarse de nuevo y subir todo. | SIS | Alta |
+| RF-SI-02 | Sin conexión, los cambios deben esperar en una cola persistente y subirse solos al volver la red, con reintentos; si el token deja de ser válido porque la cuenta ya no existe, se aplica RF-SI-08. | SIS | Alta |
 | RF-SI-03 | El sistema debe avisar «Sin conexión: sus datos se guardarán apenas tenga conexión» y mostrar los cambios pendientes. | SIS | Media |
 | RF-SI-04 | La app debe descargar los catálogos al abrirse y usar la última copia (o los valores por defecto) sin conexión. | SIS | Media |
+| RF-SI-06 | En Android, al reinstalar la app en el **mismo teléfono**, el servidor debe reconocerlo (hash del identificador del teléfono) y devolver su cuenta con sus datos en vez de crear otro usuario. | SIS | Alta |
+| RF-SI-07 | En un **teléfono nuevo**, el código de recuperación debe devolver la cuenta y vincular el teléfono nuevo a ella. | SIS | Alta |
+| RF-SI-08 | Si la cuenta ya no existe en el servidor, la app debe borrar los datos del teléfono y llevar al registro (sin recrearla con los datos viejos), **nunca durante una alerta activa o un simulacro**. | SIS | Alta |
 
 ## RF-PA · Panel de monitoreo
 

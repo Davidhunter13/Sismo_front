@@ -10,6 +10,7 @@ import { useAppState } from './context/appContext';
 import AlertDetailPage from './pages/AlertDetailPage';
 import AlertPage from './pages/AlertPage';
 import BadgesPage from './pages/BadgesPage';
+import { AccountGoneGuard } from './components/AccountGoneGuard';
 import { BadgeCelebration } from './components/BadgeCelebration';
 import ContactsPage from './pages/ContactsPage';
 import EmergencyGuidePage from './pages/EmergencyGuidePage';
@@ -96,6 +97,8 @@ function Routes() {
       <BadgeCelebration />
       {/* Aviso de actualización (solo Android): tampoco aparece durante una alerta o un simulacro. */}
       <UpdateNotice />
+      {/* Cuenta borrada en el servidor: vuelve al registro (nunca durante una alerta o un simulacro). */}
+      <AccountGoneGuard />
       <IonRouterOutlet>
         <Route exact path="/bienvenida" component={WelcomePage} />
         <Route exact path="/registro" component={SetupPage} />

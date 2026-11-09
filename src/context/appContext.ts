@@ -42,6 +42,10 @@ export interface AppStateValue {
   resetAll: () => void;
   /** Tras eliminar la cuenta: borra todo en el teléfono sin enviar nada al servidor. */
   wipeAfterAccountDeletion: () => void;
+  /** El servidor dijo que la cuenta ya no existe: la app debe borrar el teléfono y volver al registro. */
+  accountGone: boolean;
+  /** Borra los datos del teléfono y permite registrar una cuenta nueva (lo llama AccountGoneGuard). */
+  finishAccountGone: () => void;
   /** Reemplaza los datos locales por los recuperados del servidor. */
   restoreFromServer: (server: ServerState) => void;
 }

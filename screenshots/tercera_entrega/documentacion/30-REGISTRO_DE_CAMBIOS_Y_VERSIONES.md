@@ -10,7 +10,8 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 
 | Versión | Periodo | Fase · actividad del plan | Resumen |
 |---|---|---|---|
-| **3.6** | 09/11 (en curso) · **tercera entrega** | Fase 3 · L | Sismos recientes de todo el mundo (M4,5+) con gráfica, mapa mundial y lista |
+| **3.7** | 09/11 (en curso) · **tercera entrega** | Fase 3 · L | Reinstalar en el mismo teléfono sin duplicar usuarios, teléfono nuevo con código y cuenta borrada → registro |
+| **3.6** | 09/11 | Fase 3 · L | Sismos recientes de todo el mundo (M4,5+) con gráfica, mapa mundial y lista |
 | **3.5** | 05/11 – 06/11 | Fase 3 · L | Descarga del APK desde la página informativa, APK en el bucket subido desde el panel y aviso de actualización (sugerido u obligatorio; tienda o APK) |
 | **3.4** | 05/11 – 06/11 | Fase 3 · L | Plus: insignias dinámicas y foto de perfil |
 | **3.3** | 05/11 – 06/11 | Fase 3 · L, con adelanto de la actividad P | Correo de alerta a los contactos por el API: contacto principal (Para) y copia oculta, caída, urgente, atrapado, batería y ubicación; correo del centro de monitoreo con plantillas |
@@ -29,6 +30,17 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 ---
 
 ## Fase 3 · Backend y monitoreo (26/10 – 06/11)
+
+### [3.7] — 09/11 · Reinstalar sin duplicar usuarios
+
+#### Agregado
+- `POST sismo/registro` acepta `equipo` (identificador del teléfono Android): si ese teléfono ya tenía cuenta, devuelve la misma con un token nuevo (`recuperado: true`) y la app descarga sus datos.
+- `POST sismo/recuperar` acepta `equipo` y vincula el teléfono nuevo a la cuenta recuperada; nuevo `POST sismo/equipo` para vincular las instalaciones anteriores.
+- Columna `sismo_usuarios.hash_equipo` (HMAC-SHA256; script `2026-11-09-sismo-equipo.sql`) y variable de entorno `SISMO_CLAVE_EQUIPO`.
+- App Android **1.3** (`versionCode 4`) con `@capacitor/device`.
+
+#### Cambiado
+- Si la cuenta ya no existe en el servidor (401), la app **ya no la recrea** con los datos del teléfono: borra el teléfono y lleva a Bienvenida, nunca durante una alerta o un simulacro.
 
 ### [3.6] — 09/11 · Sismos recientes de todo el mundo
 

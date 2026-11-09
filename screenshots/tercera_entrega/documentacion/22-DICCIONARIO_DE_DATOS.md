@@ -15,7 +15,7 @@ El diccionario completo, tabla por tabla, está en **[`../diagramas/BASE_DE_DATO
 
 | Tabla | Descripción | Filas por persona |
 |---|---|---|
-| `sismo_usuarios` | Dispositivo registrado (token y código de recuperación como SHA-256) | 1 |
+| `sismo_usuarios` | Dispositivo registrado (token y código de recuperación como SHA-256; identificador del teléfono como HMAC-SHA256) | 1 |
 | `sismo_ajustes_usuarios` | Configuración y última ubicación | 0..1 |
 | `sismo_contactos_usuarios` | Contactos de emergencia | 0..n |
 | `sismo_alertas_usuarios` | Alertas SOS y métricas | 0..n |

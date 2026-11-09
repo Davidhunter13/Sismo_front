@@ -2,6 +2,7 @@
 import type { AppData } from '../types';
 import { createEmptyData } from './storageService';
 import { DEMO_ENABLED } from '../utils/env';
+import { deviceIdentifier } from './deviceIdService';
 
 /**
  * Sincronización con el backend (API REST en CodeIgniter 3, ver docs/segunda_entrega/BACKEND_Y_SINCRONIZACION.md).
@@ -31,6 +32,10 @@ interface Device {
 
 const OUTBOX_KEY = 'sismo:v1:outbox';
 const DEVICE_KEY = 'sismo:v1:dispositivo';
+/** Identificador del teléfono ya vinculado a la cuenta en el servidor (para no repetir el aviso). */
+const LINKED_KEY = 'sismo:v1:equipo_vinculado';
+/** La cuenta ya no existe en el servidor (borrada o base vaciada): la app debe volver al registro. */
+const ACCOUNT_GONE_KEY = 'sismo:v1:cuenta_inexistente';
 const TIMEOUT_MS = 10_000;
 const RETRY_EVERY_MS = 60_000;
 /** Reintentos inmediatos ante 429/5xx/red (espera exponencial 1 s, 2 s, 4 s); después espera al siguiente ciclo. */
@@ -232,17 +237,58 @@ async function send(base: string, op: { method: string; path: string; body?: unk
 }
 
 let getData: (() => AppData) | null = null;
+let onRestored: ((state: ServerState) => void) | null = null;
+let onAccountGone: (() => void) | null = null;
+
+/** true si el servidor dijo que la cuenta ya no existe y la app aún no volvió al registro. */
+export function accountGone(): boolean {
+  return read<boolean>(ACCOUNT_GONE_KEY, false) === true;
+}
+
+/** La app ya borró los datos del teléfono y volvió al registro: se puede registrar una cuenta nueva. */
+export function clearAccountGone(): void {
+  write(ACCOUNT_GONE_KEY, null);
+}
 let flushing: Promise<void> | null = null;
 
+const currentPlatform = () =>
+  /android/i.test(navigator.userAgent) ? 'android' : /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : 'web';
+
+/** Instalaciones de antes de esta función: vincula el teléfono a la cuenta una sola vez. */
+async function linkDevice(base: string, device: Device): Promise<void> {
+  const id = await deviceIdentifier();
+  if (!id || read<string | null>(LINKED_KEY, null) === id) return;
+  const { outcome } = await send(base, { method: 'POST', path: 'equipo', body: { equipo: id } }, device.token);
+  if (outcome === 'ok') write(LINKED_KEY, id);
+}
+
 async function ensureDevice(base: string): Promise<Device | null> {
+  // Cuenta borrada en el servidor: no se crea otra con los datos viejos; primero la persona se registra de nuevo.
+  if (accountGone()) return null;
   const known = read<Device | null>(DEVICE_KEY, null);
-  if (known?.token) return known;
-  const platform = /android/i.test(navigator.userAgent) ? 'android' : /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : 'web';
-  const { outcome, json } = await send(base, { method: 'POST', path: 'registro', body: { plataforma: platform } });
-  const reply = json as { uuid_dispositivo?: string; token?: string } | null;
+  if (known?.token) {
+    await linkDevice(base, known);
+    return known;
+  }
+  const equipo = await deviceIdentifier();
+  const body: Record<string, string> = { plataforma: currentPlatform() };
+  if (equipo) body.equipo = equipo;
+  const { outcome, json } = await send(base, { method: 'POST', path: 'registro', body });
+  const reply = json as { uuid_dispositivo?: string; token?: string; recuperado?: boolean } | null;
   if (outcome !== 'ok' || !reply?.token || !reply.uuid_dispositivo) return null;
   const device = { uuid: reply.uuid_dispositivo, token: reply.token };
+  if (reply.recuperado) {
+    // El servidor reconoció este teléfono (la app se reinstaló): se descargan sus datos en vez de crear otra cuenta.
+    const state = await send(base, { method: 'GET', path: 'estado' }, device.token);
+    if (state.outcome !== 'ok' || !state.json) return null; // se reintenta en el siguiente ciclo
+    write(DEVICE_KEY, device);
+    if (equipo) write(LINKED_KEY, equipo);
+    saveOutbox([]);
+    onRestored?.(state.json as ServerState);
+    return device;
+  }
   write(DEVICE_KEY, device);
+  if (equipo) write(LINKED_KEY, equipo);
   // Primer registro: se sube todo lo que ya existía en el teléfono (historial incluido).
   if (getData) saveOutbox(mergeOutbox(fullSyncOperations(getData()), loadOutbox()));
   return device;
@@ -255,22 +301,21 @@ export function flush(): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.resolve();
   if (flushing) return flushing;
   flushing = (async () => {
-    let device = await ensureDevice(base);
+    const device = await ensureDevice(base);
     if (!device) return;
-    let reRegistered = false;
     while (loadOutbox().length > 0) {
       const op = loadOutbox()[0];
       const { outcome } = await send(base, op, device.token);
       if (outcome === 'retry') return;
       if (outcome === 'unauthorized') {
-        // Token revocado, cuenta eliminada o base vaciada: se registra de nuevo de inmediato (una vez por ciclo)
-        // y se resube todo lo del teléfono.
+        // La cuenta ya no existe (borrada desde el panel, base vaciada o recuperada en otro teléfono): no se
+        // vuelve a crear con lo que hay en el teléfono. Se olvida el token y la cola, y la app lleva al registro.
         write(DEVICE_KEY, null);
-        if (reRegistered) return;
-        reRegistered = true;
-        device = await ensureDevice(base);
-        if (!device) return;
-        continue;
+        write(LINKED_KEY, null);
+        write(ACCOUNT_GONE_KEY, true);
+        saveOutbox([]);
+        onAccountGone?.();
+        return;
       }
       if (outcome === 'drop') console.warn('[sismo-sync] operación rechazada por el servidor', op.method, op.path);
       // Solo se quita si la operación sigue siendo la primera (pudo reemplazarse mientras viajaba).
@@ -284,11 +329,16 @@ export function flush(): Promise<void> {
 }
 
 /**
- * Arranca la sincronización. `data` devuelve el estado actual (para la primera subida completa).
+ * Arranca la sincronización. `data` devuelve el estado actual (para la primera subida completa); `restored`
+ * recibe los datos del servidor cuando reconoce el teléfono tras reinstalar la app.
  * Devuelve la función que detiene los temporizadores y oyentes.
  */
-export function startSync(data: () => AppData): () => void {
+export function startSync(data: () => AppData, restored?: (state: ServerState) => void, gone?: () => void): () => void {
   getData = data;
+  onRestored = restored ?? null;
+  onAccountGone = gone ?? null;
+  // Quedó pendiente de una sesión anterior (la app se cerró antes de volver al registro).
+  if (accountGone()) onAccountGone?.();
   if (!syncEndpoint()) return () => undefined;
   const run = () => void flush();
   const onVisible = () => {
@@ -347,8 +397,10 @@ export type RecoverResult = { ok: true; state: ServerState } | { ok: false; reas
 export async function recoverAccount(code: string): Promise<RecoverResult> {
   const base = syncEndpoint();
   if (!base) return { ok: false, reason: 'sin_red' };
-  const platform = /android/i.test(navigator.userAgent) ? 'android' : /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : 'web';
-  const res = await send(base, { method: 'POST', path: 'recuperar', body: { codigo: code.trim(), plataforma: platform } });
+  const equipo = await deviceIdentifier();
+  const body: Record<string, string> = { codigo: code.trim(), plataforma: currentPlatform() };
+  if (equipo) body.equipo = equipo;
+  const res = await send(base, { method: 'POST', path: 'recuperar', body });
   const reply = res.json as { uuid_dispositivo?: string; token?: string } | null;
   if (res.outcome === 'drop') return { ok: false, reason: 'codigo_invalido' };
   if (res.outcome !== 'ok' || !reply?.token || !reply.uuid_dispositivo) return { ok: false, reason: 'sin_red' };
@@ -356,6 +408,7 @@ export async function recoverAccount(code: string): Promise<RecoverResult> {
   const state = await send(base, { method: 'GET', path: 'estado' }, device.token);
   if (state.outcome !== 'ok' || !state.json) return { ok: false, reason: 'sin_red' };
   write(DEVICE_KEY, device);
+  if (equipo) write(LINKED_KEY, equipo);
   saveOutbox([]);
   return { ok: true, state: state.json as ServerState };
 }
@@ -370,6 +423,7 @@ export async function deleteAccount(): Promise<'ok' | 'sin_red' | 'error'> {
   const device = read<Device | null>(DEVICE_KEY, null);
   const forget = () => {
     write(DEVICE_KEY, null);
+    write(LINKED_KEY, null);
     saveOutbox([]);
   };
   // Sin servidor o sin registrar: no hay nada que borrar en el servidor.
@@ -424,5 +478,7 @@ export function deviceToken(): string | null {
 export function __resetSyncForTests(): void {
   memoryOutbox = null;
   getData = null;
+  onRestored = null;
+  onAccountGone = null;
   flushing = null;
 }
