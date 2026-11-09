@@ -330,3 +330,27 @@ test('«Ver mis insignias» en el aviso: lleva a la página, cierra todos los av
   await expect(notice(page)).toHaveCount(0);
   await expect(view(page).locator('.my-badges-card .new-dot')).toHaveCount(0);
 });
+
+test('durante el registro no sale el aviso de insignias; al terminar aparece en Inicio', async ({ page }) => {
+  const m = await mockApi(page);
+  m.pendingNew = [fresh];
+  await page.addInitScript((api) => {
+    localStorage.setItem('sismo:v1:api_pruebas', api);
+    if (!localStorage.getItem('sismo:v1:data')) {
+      localStorage.setItem('sismo:v1:data', JSON.stringify({ version: 1, settings: { onboarded: false, userName: '' } }));
+    }
+  }, API);
+  await page.goto('/registro');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('sismo:v1:insignias_aviso'))).not.toBeNull();
+  await page.waitForTimeout(1500);
+  await expect(notice(page)).toHaveCount(0);
+
+  // Termina el registro: la insignia que esperaba aparece en Inicio.
+  await page.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem('sismo:v1:data') ?? '{}');
+    localStorage.setItem('sismo:v1:data', JSON.stringify({ ...d, settings: { ...d.settings, onboarded: true, userName: 'Ana Demo' } }));
+  });
+  await page.goto('/inicio');
+  await expect(notice(page)).toBeVisible();
+  await expect(notice(page)).toContainText('Con cara');
+});

@@ -37,9 +37,10 @@ La app vive en el repositorio `Sismo_front` (rama `main`); el backend, en su pro
 - `POST sismo/registro` acepta `equipo` (identificador del teléfono Android): si ese teléfono ya tenía cuenta, devuelve la misma con un token nuevo (`recuperado: true`) y la app descarga sus datos.
 - `POST sismo/recuperar` acepta `equipo` y vincula el teléfono nuevo a la cuenta recuperada; nuevo `POST sismo/equipo` para vincular las instalaciones anteriores.
 - Columna `sismo_usuarios.hash_equipo` (HMAC-SHA256; script `2026-11-09-sismo-equipo.sql`) y variable de entorno `SISMO_CLAVE_EQUIPO`.
-- App Android **1.3** (`versionCode 4`) con `@capacitor/device`.
+- App Android **1.3** (`versionCode 4`) con `@capacitor/device`, y **1.4** (`versionCode 5`) sin el aviso de insignias durante el registro.
 
 #### Cambiado
+- El aviso «¡Ganaste una insignia!» ya no sale durante el registro (Bienvenida, Registro o mientras no lo termine); aparece en Inicio al terminar.
 - Si la cuenta ya no existe en el servidor (401), la app **ya no la recrea** con los datos del teléfono: borra el teléfono y lleva a Bienvenida, nunca durante una alerta o un simulacro.
 
 ### [3.6] — 09/11 · Sismos recientes de todo el mundo

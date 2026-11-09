@@ -12,7 +12,7 @@ import { BadgeArt, LevelTag } from './BadgeArt';
 /**
  * Aviso «¡Ganaste una insignia!»: muestra una a la vez las insignias nuevas en cola.
  * NUNCA aparece con una alerta activa, en la pantalla de alerta ni durante un simulacro (ver badgeGate): si llega
- * una insignia en ese momento queda en cola y se muestra cuando la alerta termina. Si el aviso está abierto y se
+ * una insignia en ese momento queda en cola y se muestra cuando la alerta termina. Tampoco durante el registro. Si el aviso está abierto y se
  * activa una alerta, desaparece sin descartarse. Solo se cierra con sus botones.
  *
  * «Ver mis insignias» lleva a la página y cierra TODOS los avisos en cola: quedan con la marca «Nueva» en la lista
@@ -45,7 +45,7 @@ export function BadgeCelebration() {
   const enInsignias = pathname === '/insignias';
   useSyncExternalStore(subscribeBadges, badgesVersion);
   const queue = pendingNotices();
-  const current = enInsignias ? null : nextBadgeNotice(queue, { activeAlertId: data.activeAlertId, pathname, drillActive: drill !== null });
+  const current = enInsignias ? null : nextBadgeNotice(queue, { activeAlertId: data.activeAlertId, pathname, drillActive: drill !== null, registering: !data.settings.onboarded });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const currentId = current?.id;
 

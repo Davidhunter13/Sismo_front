@@ -31,3 +31,24 @@ describe('aviso «¡Ganaste una insignia!» durante una alerta', () => {
     expect(canShowBadgeNotice({ activeAlertId: null, pathname: '/alertas-viejas' })).toBe(true);
   });
 });
+
+describe('aviso «¡Ganaste una insignia!» durante el registro', () => {
+  const queue = [{ id: 1 }];
+
+  it('no sale en Bienvenida ni en Registro', () => {
+    expect(nextBadgeNotice(queue, { activeAlertId: null, pathname: '/bienvenida' })).toBeNull();
+    expect(nextBadgeNotice(queue, { activeAlertId: null, pathname: '/registro' })).toBeNull();
+  });
+
+  it('no sale mientras la persona no termine el registro, en ninguna pantalla', () => {
+    expect(nextBadgeNotice(queue, { activeAlertId: null, pathname: '/contactos', registering: true })).toBeNull();
+  });
+
+  it('al terminar el registro, la insignia que esperaba aparece en Inicio', () => {
+    expect(nextBadgeNotice(queue, { activeAlertId: null, pathname: '/inicio', registering: false })).toEqual({ id: 1 });
+  });
+
+  it('el aviso de actualización no cambia: canShowBadgeNotice no mira el registro', () => {
+    expect(canShowBadgeNotice({ activeAlertId: null, pathname: '/registro' })).toBe(true);
+  });
+});

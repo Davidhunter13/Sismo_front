@@ -64,7 +64,7 @@ Cada requisito tiene un identificador `RF-XX-NN`, el rol que lo usa y su priorid
 | RF-IG-02 | Las reglas deben ser configurables: cantidad, periodo, días seguidos, franja horaria, días de la semana, tiempo máximo del simulacro, porcentaje del perfil y metas de otras insignias. | OP | Media |
 | RF-IG-03 | Una insignia puede ser **secreta** (solo muestra una pista), **con fechas** (solo se gana entre `fecha_inicio` y `fecha_fin`) y **con vencimiento** (dura N días y se puede volver a ganar). | OP | Media |
 | RF-IG-04 | La app debe mostrar **Mis insignias** (ganadas, por ganar con progreso, secretas y vencidas), la tarjeta **«Perfil completado»** (porcentaje y qué falta) y el aviso **«¡Ganaste una insignia!»**. | PU | Media |
-| RF-IG-05 | El aviso «¡Ganaste una insignia!» **nunca debe aparecer con una alerta activa**: se guarda y se muestra cuando la alerta termina. Las alertas reales no dan insignias. | SIS | Alta |
+| RF-IG-05 | El aviso «¡Ganaste una insignia!» **nunca debe aparecer con una alerta activa ni durante el registro**: se guarda y se muestra cuando la alerta termina o en Inicio al terminar el registro. Las alertas reales no dan insignias. | SIS | Alta |
 | RF-IG-06 | La app debe guardar las acciones sin internet y enviarlas al sincronizar (máximo 50 por envío, hasta 30 días atrás); el servidor solo acepta los hechos de una lista blanca. | SIS | Media |
 | RF-IG-07 | El panel debe permitir crear, editar, activar y desactivar insignias con su imagen, ver quién las ganó y la auditoría. Las imágenes nuevas quedan en el servidor hasta que el operador presione **«Subir a bucket»**, que las sube a `sismo/insignias/` y las borra del servidor. | OP | Media |
 
